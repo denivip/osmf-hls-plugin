@@ -1,0 +1,6 @@
+Plugin for OSMF 2.0 for Apple HLS Streaming.
+Updated version of Matthew Kaufman's code:
+ - added correct quality switching (works similar to F4M streaming)
+and in future will be add DVR support and other features
+
+Sorry for my English =(
