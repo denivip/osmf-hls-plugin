@@ -24,17 +24,16 @@
  
  package org.denivip.osmf.net.httpstreaming.hls
 {
-	import flash.events.Event;
 	import flash.net.URLRequest;
 	import flash.utils.ByteArray;
-	
-	import mx.effects.easing.Back;
 	
 	import org.denivip.osmf.elements.m3u8Classes.M3U8Item;
 	import org.denivip.osmf.elements.m3u8Classes.M3U8Playlist;
 	import org.denivip.osmf.elements.m3u8Classes.M3U8PlaylistParser;
 	import org.osmf.events.HTTPStreamingEvent;
 	import org.osmf.events.HTTPStreamingIndexHandlerEvent;
+	import org.osmf.events.MediaError;
+	import org.osmf.events.MediaErrorEvent;
 	import org.osmf.events.ParseEvent;
 	import org.osmf.logging.Log;
 	import org.osmf.logging.Logger;
@@ -56,6 +55,8 @@
 	 */
 	public class HTTPStreamingHLSIndexHandler extends HTTPStreamingIndexHandlerBase
 	{
+		private static const MAX_ERRORS:int = 2;
+		
 		private var _indexInfo:HTTPStreamingHLSIndexInfo;
 		private var _baseURL:String;
 		private var _rateVec:Vector.<HTTPStreamingM3U8IndexRateItem>;
@@ -65,6 +66,9 @@
 		
 		private var _streamNames:Array;
 		private var _streamQualityRates:Array;
+		
+		private var _prevPlaylist:String;
+		private var _matchCounter:int;
 		
 		override public function initialize(indexInfo:Object):void{
 			_indexInfo = indexInfo as HTTPStreamingHLSIndexInfo;
@@ -116,7 +120,18 @@
 			
 			var ba:ByteArray = ByteArray(data);
 			var pl_str:String = ba.readUTFBytes(ba.length);
+			if(pl_str.localeCompare(_prevPlaylist) == 0)
+				++_matchCounter;
 			
+			if(_matchCounter == MAX_ERRORS){ // if delivered playlist again not changed then alert!
+				var mediaErr:MediaError = new MediaError(0, "Stream is stuck. Playlist on server don't updated!");
+				dispatchEvent(new MediaErrorEvent(MediaErrorEvent.MEDIA_ERROR, false, false, mediaErr));
+				
+				logger.error("Stream is stuck. Playlist on server don't updated!");
+			}
+			
+			_prevPlaylist = pl_str;
+				
 			// simple parsing && update rate items
 			var parser:M3U8PlaylistParser = new M3U8PlaylistParser();
 			parser.addEventListener(ParseEvent.PARSE_COMPLETE, onComplete);
@@ -169,22 +184,20 @@
 			notifyTotalDuration(item.totalTime, quality, item.live);
 			
 			if(item.live){
-				if(_absoluteSegment == 0 && _segment == 0) // Initialize live playback
-				{
+				if(_absoluteSegment == 0 && _segment == 0){ // Initialize live playback
 					_absoluteSegment = item.sequenceNumber + _segment;
 				}
 				
-				if(_absoluteSegment != (item.sequenceNumber + _segment)) // We re-loaded the live manifest, need to re-normalize the list
-				{
+				if(_absoluteSegment != (item.sequenceNumber + _segment)){ // We re-loaded the live manifest, need to re-normalize the list
 					_segment = _absoluteSegment - item.sequenceNumber;
 					if(_segment < 0)
 					{
 						_segment=0;
 						_absoluteSegment = item.sequenceNumber;
 					}
+					_matchCounter = 0; // reset error counter!
 				}
-				if(_segment >= manifest.length) // Try to force a reload
-				{
+				if(_segment >= manifest.length){ // Try to force a reload
 					dispatchEvent(new HTTPStreamingIndexHandlerEvent(HTTPStreamingIndexHandlerEvent.REQUEST_LOAD_INDEX, false, false, item.live, 0, null, null, new URLRequest(_rateVec[quality].url), _rateVec[quality], false));						
 					return new HTTPStreamRequest(HTTPStreamRequestKind.LIVE_STALL, null, 1.0);
 				} 
@@ -247,7 +260,16 @@
 				metaInfo.duration = 0;
 			
 			sdo.objects = ["onMetaData", metaInfo];
-			dispatchEvent(new HTTPStreamingEvent(HTTPStreamingEvent.SCRIPT_DATA, false, false , 0, sdo, FLVTagScriptDataMode.IMMEDIATE));
+			dispatchEvent(
+				new HTTPStreamingEvent(
+					HTTPStreamingEvent.SCRIPT_DATA,
+					false,
+					false,
+					0,
+					sdo,
+					FLVTagScriptDataMode.IMMEDIATE
+				)
+			);
 		}
 		
 		private function updateRateItem(playlist:M3U8Playlist, item:HTTPStreamingM3U8IndexRateItem):void{
