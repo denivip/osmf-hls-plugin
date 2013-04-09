@@ -1,6 +1,7 @@
-Plugin for OSMF 2.0 for Apple HLS Streaming.
-Updated version of Matthew Kaufman's code:
- - added correct quality switching (works similar to F4M streaming)
-and in future will be add DVR support and other features
-
-Sorry for my English =(
+HLS-OSMF-Plugin is an OSMF 2.0 plugin for Apple HTTP Live Streaming.
+It can play back m3u8 links to multi-bitrate streams, just as in Adobe HTTP Dynamic Streaming. Also, the plugin supports VOD and Live/DVR.
+Use case:
+1) In SMP simple add line: 
+    plugin_hls: "HLSDynamicPlugin.swf"
+  into flashvars part
+2) In your custom OSMF player you can link HLSPlugin.swc lib into project and simple load it with factory.

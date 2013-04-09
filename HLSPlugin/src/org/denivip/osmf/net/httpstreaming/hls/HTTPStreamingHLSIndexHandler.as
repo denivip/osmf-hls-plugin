@@ -55,7 +55,7 @@
 	 */
 	public class HTTPStreamingHLSIndexHandler extends HTTPStreamingIndexHandlerBase
 	{
-		private static const MAX_ERRORS:int = 2;
+		private static const MAX_ERRORS:int = 10;
 		
 		private var _indexInfo:HTTPStreamingHLSIndexInfo;
 		private var _baseURL:String;
@@ -131,7 +131,7 @@
 			}
 			
 			_prevPlaylist = pl_str;
-				
+			
 			// simple parsing && update rate items
 			var parser:M3U8PlaylistParser = new M3U8PlaylistParser();
 			parser.addEventListener(ParseEvent.PARSE_COMPLETE, onComplete);
