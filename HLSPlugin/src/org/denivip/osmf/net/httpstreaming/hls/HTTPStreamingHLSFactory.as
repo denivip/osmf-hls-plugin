@@ -30,11 +30,14 @@ package org.denivip.osmf.net.httpstreaming.hls
 	import org.osmf.elements.VideoElement;
 	import org.osmf.media.MediaElement;
 	import org.osmf.media.MediaResourceBase;
+	import org.osmf.metadata.Metadata;
+	import org.osmf.metadata.MetadataNamespaces;
 	import org.osmf.net.DynamicStreamingItem;
 	import org.osmf.net.httpstreaming.HTTPStreamingFactory;
 	import org.osmf.net.httpstreaming.HTTPStreamingFileHandlerBase;
 	import org.osmf.net.httpstreaming.HTTPStreamingIndexHandlerBase;
 	import org.osmf.net.httpstreaming.HTTPStreamingIndexInfoBase;
+	import org.osmf.net.httpstreaming.dvr.DVRInfo;
 	
 	/**
 	 * HLS Streaming factory
@@ -84,9 +87,44 @@ package org.denivip.osmf.net.httpstreaming.hls
 				streams.push(rItem);
 			}
 			
-			indexInfo = new HTTPStreamingHLSIndexInfo(res.url, streams);
+			//DVR
+			var dvrMetadata:Metadata = res.getMetadataValue(MetadataNamespaces.DVR_METADATA) as Metadata;
+			var dvrInfo:DVRInfo = createDVRInfo(dvrMetadata);
+			
+			indexInfo = new HTTPStreamingHLSIndexInfo(res.url, streams, dvrInfo);
 			
 			return indexInfo;
+			
+			// service part =)
+			function createDVRInfo(metadata:Metadata):DVRInfo{
+				if (metadata == null){
+					return null;
+				}
+				
+				var dvrInfo:DVRInfo = new DVRInfo();
+				dvrInfo.id = "";
+				dvrInfo.beginOffset = NaN;
+				dvrInfo.endOffset = NaN;
+				dvrInfo.windowDuration = NaN;
+				dvrInfo.offline = false;
+				if (metadata.getValue(MetadataNamespaces.HTTP_STREAMING_DVR_ID_KEY) != null){
+					dvrInfo.id = metadata.getValue(MetadataNamespaces.HTTP_STREAMING_DVR_ID_KEY) as String;
+				}
+				if (metadata.getValue(MetadataNamespaces.HTTP_STREAMING_DVR_BEGIN_OFFSET_KEY) != null){
+					dvrInfo.beginOffset = metadata.getValue(MetadataNamespaces.HTTP_STREAMING_DVR_BEGIN_OFFSET_KEY) as uint;
+				}
+				if (metadata.getValue(MetadataNamespaces.HTTP_STREAMING_DVR_END_OFFSET_KEY) != null){
+					dvrInfo.endOffset = metadata.getValue(MetadataNamespaces.HTTP_STREAMING_DVR_END_OFFSET_KEY) as uint;
+				}
+				if (metadata.getValue(MetadataNamespaces.HTTP_STREAMING_DVR_WINDOW_DURATION_KEY) != null){
+					dvrInfo.windowDuration = metadata.getValue(MetadataNamespaces.HTTP_STREAMING_DVR_WINDOW_DURATION_KEY) as int;
+				}
+				if (metadata.getValue(MetadataNamespaces.HTTP_STREAMING_DVR_OFFLINE_KEY) != null){
+					dvrInfo.offline = metadata.getValue(MetadataNamespaces.HTTP_STREAMING_DVR_OFFLINE_KEY) as Boolean;
+				}
+				
+				return dvrInfo;
+			}
 		}
 	}
 }

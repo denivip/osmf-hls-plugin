@@ -27,9 +27,12 @@
 	import flash.net.URLRequest;
 	import flash.utils.ByteArray;
 	
+	import mx.states.OverrideBase;
+	
 	import org.denivip.osmf.elements.m3u8Classes.M3U8Item;
 	import org.denivip.osmf.elements.m3u8Classes.M3U8Playlist;
 	import org.denivip.osmf.elements.m3u8Classes.M3U8PlaylistParser;
+	import org.osmf.events.DVRStreamInfoEvent;
 	import org.osmf.events.HTTPStreamingEvent;
 	import org.osmf.events.HTTPStreamingIndexHandlerEvent;
 	import org.osmf.events.MediaError;
@@ -37,9 +40,11 @@
 	import org.osmf.events.ParseEvent;
 	import org.osmf.logging.Log;
 	import org.osmf.logging.Logger;
+	import org.osmf.net.dvr.DVRUtils;
 	import org.osmf.net.httpstreaming.HTTPStreamRequest;
 	import org.osmf.net.httpstreaming.HTTPStreamRequestKind;
 	import org.osmf.net.httpstreaming.HTTPStreamingIndexHandlerBase;
+	import org.osmf.net.httpstreaming.dvr.DVRInfo;
 	import org.osmf.net.httpstreaming.flv.FLVTagScriptDataMode;
 	import org.osmf.net.httpstreaming.flv.FLVTagScriptDataObject;
 
@@ -69,6 +74,13 @@
 		
 		private var _prevPlaylist:String;
 		private var _matchCounter:int;
+		
+		private var _fromDVR:Boolean;
+		
+		override public function dvrGetStreamInfo(indexInfo:Object):void{
+			_fromDVR = true;
+			initialize(indexInfo);
+		}
 		
 		override public function initialize(indexInfo:Object):void{
 			_indexInfo = indexInfo as HTTPStreamingHLSIndexInfo;
@@ -112,9 +124,10 @@
 		*/
 		override public function processIndexData(data:*, indexContext:Object):void{
 			// refresh index context
+			var rateItem:HTTPStreamingM3U8IndexRateItem = HTTPStreamingM3U8IndexRateItem(indexContext)
 			if(indexContext){
 				if(_absoluteSegment > 0){
-					HTTPStreamingM3U8IndexRateItem(indexContext).clearManifest();
+					rateItem.clearManifest();
 				}
 			}
 			
@@ -136,7 +149,7 @@
 			var parser:M3U8PlaylistParser = new M3U8PlaylistParser();
 			parser.addEventListener(ParseEvent.PARSE_COMPLETE, onComplete);
 			parser.addEventListener(ParseEvent.PARSE_ERROR, onError);
-			parser.parse(pl_str, HTTPStreamingM3U8IndexRateItem(indexContext).urlBase);
+			parser.parse(pl_str, rateItem.urlBase);
 			
 			// service functions
 			function onComplete(e:ParseEvent):void{
@@ -145,7 +158,9 @@
 				
 				var pl:M3U8Playlist = M3U8Playlist(e.data);
 				
-				updateRateItem(pl, HTTPStreamingM3U8IndexRateItem(indexContext));
+				updateRateItem(pl, rateItem);
+				
+				//dispatchDVRStreamInfo(rateItem);
 				
 				notifyRatesReady();
 				notifyIndexReady(_quality);
@@ -236,19 +251,25 @@
 		
 		private function notifyIndexReady(quality:int):void{
 			var item:HTTPStreamingM3U8IndexRateItem = _rateVec[quality];
-			var initialOffset:Number = NaN;
-			if(item.live)
-				initialOffset = item.totalTime - ((item.totalTime/item.manifest.length) * 3);
 			
-			dispatchEvent(
-				new HTTPStreamingIndexHandlerEvent(
-					HTTPStreamingIndexHandlerEvent.INDEX_READY,
-					false,
-					false,
-					item.live,
-					initialOffset
-				)
-			);
+			dispatchDVRStreamInfo(item);
+			
+			if(!_fromDVR){
+				var initialOffset:Number = NaN;
+				if(item.live && _indexInfo.dvrInfo == null)
+					initialOffset = item.totalTime - ((item.totalTime/item.manifest.length) * 3);
+				
+				dispatchEvent(
+					new HTTPStreamingIndexHandlerEvent(
+						HTTPStreamingIndexHandlerEvent.INDEX_READY,
+						false,
+						false,
+						item.live,
+						initialOffset
+					)
+				);
+			}
+			_fromDVR = false;
 		}
 		
 		private function notifyTotalDuration(duration:Number, quality:int, live:Boolean):void{
@@ -268,6 +289,47 @@
 					0,
 					sdo,
 					FLVTagScriptDataMode.IMMEDIATE
+				)
+			);
+		}
+		
+		private function dispatchDVRStreamInfo(item:HTTPStreamingM3U8IndexRateItem):void{
+			var dvrInfo:DVRInfo = _indexInfo.dvrInfo;
+			if(dvrInfo == null) // Nothing todo here!
+				return;
+			
+			dvrInfo.isRecording = item.live; // it's simple if not live then VOD =)
+			var currentDuration:Number = item.totalTime;
+			// make some cheating... 
+			var currentTime:Number = item.totalTime - ((item.totalTime/item.manifest.length) * 3);//item.manifest[_segment].startTime+item.manifest[_segment].duration;//new Date().time/1000; // seconds!
+			
+			// update start time for the first time
+			if(isNaN(dvrInfo.startTime)){
+				//if (!dvrInfo.isRecording){
+					dvrInfo.startTime = 0;
+				/*}else{
+					dvrInfo.startTime = currentTime - currentDuration;
+				}*/
+				
+				if(dvrInfo.startTime > currentTime)
+					dvrInfo.startTime = currentTime;
+			}
+			
+			// update current length of the DVR window 
+			dvrInfo.curLength = currentTime - dvrInfo.startTime;	
+			
+			// adjust the start time if we have a DVR rooling window active
+			if ((dvrInfo.windowDuration != -1) && (dvrInfo.curLength > dvrInfo.windowDuration))
+			{
+				dvrInfo.startTime += dvrInfo.curLength - dvrInfo.windowDuration;
+				dvrInfo.curLength = dvrInfo.windowDuration;
+			}
+			
+			dispatchEvent(new DVRStreamInfoEvent(
+					DVRStreamInfoEvent.DVRSTREAMINFO,
+					false,
+					false,
+					dvrInfo
 				)
 			);
 		}

@@ -16,9 +16,11 @@ package org.denivip.osmf.elements.m3u8Classes
 	import org.osmf.logging.Logger;
 	import org.osmf.media.MediaResourceBase;
 	import org.osmf.media.URLResource;
+	import org.osmf.metadata.Metadata;
 	import org.osmf.metadata.MetadataNamespaces;
 	import org.osmf.net.DynamicStreamingItem;
 	import org.osmf.net.StreamType;
+	import org.osmf.net.httpstreaming.dvr.DVRInfo;
 	import org.osmf.utils.URL;
 	
 	
@@ -30,6 +32,8 @@ package org.denivip.osmf.elements.m3u8Classes
 	 */
 	public class M3U8PlaylistParser extends EventDispatcher
 	{
+		private static const LIVE_CHUNK_LIMIT:int = 4;
+		
 		private var _parsing:Boolean = false;
 		private var _playlist:M3U8Playlist;
 		
@@ -181,6 +185,8 @@ package org.denivip.osmf.elements.m3u8Classes
 			var baseURL:String = value.url != null ? value.url : manifestFolder;
 			baseURL = URL.normalizeRootURL(baseURL);
 			var streamType:String = (value.isLive ? StreamType.LIVE : StreamType.RECORDED);
+			if(streamType == StreamType.LIVE && value.dvrInfo != null)
+				streamType = StreamType.DVR;
 			
 			var streamItems:Vector.<DynamicStreamingItem> = new Vector.<DynamicStreamingItem>;
 			
@@ -216,6 +222,19 @@ package org.denivip.osmf.elements.m3u8Classes
 			
 			resource.addMetadataValue(MetadataNamespaces.DERIVED_RESOURCE_METADATA, originalRes);
 			
+			var dvrInfo:DVRInfo = value.dvrInfo;
+			if(dvrInfo){
+				var metadata:Metadata = new Metadata();
+				
+				metadata.addValue(MetadataNamespaces.HTTP_STREAMING_DVR_BEGIN_OFFSET_KEY, dvrInfo.beginOffset);
+				metadata.addValue(MetadataNamespaces.HTTP_STREAMING_DVR_END_OFFSET_KEY, dvrInfo.endOffset);
+				metadata.addValue(MetadataNamespaces.HTTP_STREAMING_DVR_WINDOW_DURATION_KEY, dvrInfo.windowDuration);
+				metadata.addValue(MetadataNamespaces.HTTP_STREAMING_DVR_OFFLINE_KEY, dvrInfo.offline);
+				metadata.addValue(MetadataNamespaces.HTTP_STREAMING_DVR_ID_KEY, dvrInfo.id);
+				
+				resource.addMetadataValue(MetadataNamespaces.DVR_METADATA, metadata);
+			}
+			
 			return resource;
 		}
 		
@@ -227,13 +246,14 @@ package org.denivip.osmf.elements.m3u8Classes
 			if(processQueue())
 				return;
 			
-			if(_parsing){
+			if(_parsing)
 				return;
-			}
 			
-			if(!_playlist){
+			if(!_playlist)
 				return;
-			}
+			
+			// DVR!!!
+			addDVRInfo(); // after all we add DVRInfo (if it needed of course)
 			
 			dispatchEvent(new ParseEvent(ParseEvent.PARSE_COMPLETE, false, false, _playlist));
 		}
@@ -280,6 +300,23 @@ package org.denivip.osmf.elements.m3u8Classes
 			}else{
 				return false;
 			}
+		}
+		
+		private function addDVRInfo():void{
+			if(!_playlist.isLive || _playlist.totalLength < LIVE_CHUNK_LIMIT)
+				return; // http://fc06.deviantart.net/fs70/f/2011/288/3/c/nothing_to_do_here_by_rober_raik-d4cxltj.png
+			
+			logger.info('DVR!!! \\o/'); // we happy!
+			
+			// black magic...
+			var dvrInfo:DVRInfo = new DVRInfo();
+			//dvrInfo.curLength = _playlist.totalLength;
+			//dvrInfo.windowDuration = _playlist.duration;
+			dvrInfo.id = dvrInfo.url = _playlist.url;
+			dvrInfo.isRecording = true; // if live then in process
+			
+			// attach info into playlist
+			_playlist.dvrInfo = dvrInfo;
 		}
 		
 		private var logger:Logger = Log.getLogger("org.denivip.osmf.elements.m3u8Classes.M3U8PlaylistParser");

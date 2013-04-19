@@ -24,6 +24,7 @@
  
  package org.denivip.osmf.net.httpstreaming.hls
 {
+	import org.osmf.net.httpstreaming.dvr.DVRInfo;
 	import org.osmf.net.httpstreaming.HTTPStreamingIndexInfoBase;
 
 	/**
@@ -33,18 +34,21 @@
 	public class HTTPStreamingHLSIndexInfo extends HTTPStreamingIndexInfoBase
 	{
 		private var _baseURL:String;
+		private var _dvrInfo:DVRInfo;
 		private var _streams:Vector.<HTTPStreamingM3U8IndexRateItem>;
 		
 		public function HTTPStreamingHLSIndexInfo(
 			baseUrl:String,
-			streams:Vector.<HTTPStreamingM3U8IndexRateItem> = null)
+			streams:Vector.<HTTPStreamingM3U8IndexRateItem> = null,
+			dvrInfo:DVRInfo = null)
 		{
 			_baseURL = baseUrl;
 			_streams = streams;
+			_dvrInfo = dvrInfo;
 		}
 		
 		public function get baseURL():String{ return _baseURL; }
-		
+		public function get dvrInfo():DVRInfo{ return _dvrInfo; }
 		public function get streams():Vector.<HTTPStreamingM3U8IndexRateItem>{ return _streams; }
 	}
 }
