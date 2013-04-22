@@ -21,7 +21,6 @@ package org.denivip.osmf.elements
 	import org.osmf.traits.LoadState;
 	import org.osmf.traits.LoadTrait;
 	import org.osmf.traits.LoaderBase;
-	import org.osmf.utils.URL;
 	
 	/**
 	 * Loader for .m3u8 playlist file.

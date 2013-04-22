@@ -24,7 +24,6 @@
  
  package org.denivip.osmf.net.httpstreaming.hls
 {
-	import __AS3__.vec.Vector;
 	
 	internal class HTTPStreamingM3U8IndexRateItem
 	{

@@ -67,10 +67,7 @@ package org.denivip.osmf.elements.m3u8Classes
 				_playlist = playlist;
 			}
 			rootURL = URL.normalizePathForURL(rootURL, true);
-			// hack!
-			/*if(rootURL.charAt(rootURL.length-1) != '/')
-				rootURL += '/';*/
-			
+						
 			var len:int = lines.length;
 			var url:String;
 			for(var i:int = 1; i < len; i++){
@@ -84,7 +81,8 @@ package org.denivip.osmf.elements.m3u8Classes
 				
 				if(String(lines[i]).indexOf('#EXT-X-ENDLIST') == 0){
 					playlist.isLive = false;
-					_playlist.isLive = false;
+					if(_playlist.isLive)
+						_playlist.isLive = false; // reset live flag in root playlist (for multi-quality)
 					continue;
 				}
 				
@@ -294,7 +292,6 @@ package org.denivip.osmf.elements.m3u8Classes
 				var data:String = String(res['data']);
 				var pl:M3U8Playlist = M3U8Playlist(res['playlist']);
 				var url:String = pl.url;
-				//url = url.substring(0, url.lastIndexOf('/'));//URL.getRootUrl(_playlist.url);
 				parse(data, url, pl, true);
 				return true;
 			}else{
@@ -310,11 +307,9 @@ package org.denivip.osmf.elements.m3u8Classes
 			
 			// black magic...
 			var dvrInfo:DVRInfo = new DVRInfo();
-			//dvrInfo.curLength = _playlist.totalLength;
-			//dvrInfo.windowDuration = _playlist.duration;
 			dvrInfo.id = dvrInfo.url = _playlist.url;
 			dvrInfo.isRecording = true; // if live then in process
-			
+			dvrInfo.startTime = 0.0;
 			// attach info into playlist
 			_playlist.dvrInfo = dvrInfo;
 		}

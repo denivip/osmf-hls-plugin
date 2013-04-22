@@ -24,8 +24,8 @@
  
  package org.denivip.osmf.net.httpstreaming.hls
 {
-	import org.osmf.net.httpstreaming.dvr.DVRInfo;
 	import org.osmf.net.httpstreaming.HTTPStreamingIndexInfoBase;
+	import org.osmf.net.httpstreaming.dvr.DVRInfo;
 
 	/**
 	 * Index info for HLS-streaming
