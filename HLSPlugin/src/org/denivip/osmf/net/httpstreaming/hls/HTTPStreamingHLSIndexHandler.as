@@ -69,7 +69,6 @@
 		private var _streamNames:Array;
 		private var _streamQualityRates:Array;
 		
-		private var _parser:M3U8PlaylistParser;
 		// for error handling (if playlist don't update on server)
 		private var _prevPlaylist:String;
 		private var _matchCounter:int;
@@ -118,7 +117,6 @@
 			_streamNames = null;
 			_streamQualityRates = null;
 			
-			_parser = null;
 			_prevPlaylist = null;
 		}
 		
@@ -150,17 +148,16 @@
 			_prevPlaylist = pl_str;
 			
 			// simple parsing && update rate items
-			if(!_parser){
-				_parser = new M3U8PlaylistParser();
-				_parser.addEventListener(ParseEvent.PARSE_COMPLETE, onComplete);
-				_parser.addEventListener(ParseEvent.PARSE_ERROR, onError);
-			}
-			_parser.parse(pl_str, rateItem.urlBase);
+			var parser:M3U8PlaylistParser = new M3U8PlaylistParser();
+			parser.addEventListener(ParseEvent.PARSE_COMPLETE, onComplete);
+			parser.addEventListener(ParseEvent.PARSE_ERROR, onError);
+			
+			parser.parse(pl_str, rateItem.urlBase);
 			
 			// service functions
 			function onComplete(e:ParseEvent):void{
-				_parser.removeEventListener(ParseEvent.PARSE_COMPLETE, onComplete);
-				_parser.removeEventListener(ParseEvent.PARSE_ERROR, onError);
+				parser.removeEventListener(ParseEvent.PARSE_COMPLETE, onComplete);
+				parser.removeEventListener(ParseEvent.PARSE_ERROR, onError);
 				
 				var pl:M3U8Playlist = M3U8Playlist(e.data);
 				
@@ -171,8 +168,8 @@
 			}
 			
 			function onError(e:ParseEvent):void{
-				_parser.removeEventListener(ParseEvent.PARSE_COMPLETE, onComplete);
-				_parser.removeEventListener(ParseEvent.PARSE_ERROR, onError);
+				parser.removeEventListener(ParseEvent.PARSE_COMPLETE, onComplete);
+				parser.removeEventListener(ParseEvent.PARSE_ERROR, onError);
 				
 				// maybe add notification?... do it if you want =)
 				logger.warn("Parse error! Maybe incorrect playlist");
@@ -220,7 +217,7 @@
 					_matchCounter = 0; // reset error counter!
 				}
 				if(_segment >= manifest.length){ // Try to force a reload
-					dispatchEvent(new HTTPStreamingIndexHandlerEvent(HTTPStreamingIndexHandlerEvent.REQUEST_LOAD_INDEX, false, false, item.live, 0, null, null, new URLRequest(_rateVec[quality].url), _rateVec[quality], false));						
+					dispatchEvent(new HTTPStreamingIndexHandlerEvent(HTTPStreamingIndexHandlerEvent.REQUEST_LOAD_INDEX, false, false, item.live, 0, _streamNames, _streamQualityRates, new URLRequest(_rateVec[quality].url), _rateVec[quality], false));						
 					return new HTTPStreamRequest(HTTPStreamRequestKind.LIVE_STALL, null, 1.0);
 				} 
 			}
