@@ -24,6 +24,7 @@
  
  package org.denivip.osmf.net.httpstreaming.hls
 {
+	import flash.external.ExternalInterface;
 	import flash.net.URLRequest;
 	import flash.utils.ByteArray;
 	
@@ -222,9 +223,9 @@
 				} 
 			}
 			
-			if(_segment >= manifest.length) // if playlist ended, then end =)
+			if(_segment >= manifest.length){ // if playlist ended, then end =)
 				return new HTTPStreamRequest(HTTPStreamRequestKind.DONE);
-			else{ // load new chunk
+			}else{ // load new chunk
 				request = new HTTPStreamRequest(HTTPStreamRequestKind.DOWNLOAD, manifest[_segment].url);
 				
 				dispatchEvent(new HTTPStreamingEvent(HTTPStreamingEvent.FRAGMENT_DURATION, false, false, manifest[_segment].duration));
@@ -279,7 +280,7 @@
 		private function notifyTotalDuration(duration:Number, quality:int, live:Boolean):void{
 			var sdo:FLVTagScriptDataObject = new FLVTagScriptDataObject();
 			var metaInfo:Object = new Object();
-			if(!live)
+			if(!live || (live && _indexInfo.dvrInfo))
 				metaInfo.duration = duration;
 			else
 				metaInfo.duration = 0;
