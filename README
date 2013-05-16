@@ -2,9 +2,11 @@ HLS-OSMF-Plugin is an OSMF 2.0 plugin for Apple HTTP Live Streaming.
 
 It was developed for Together Video Camera service and used to playback Apple HLS video streams in Flash video player.
 
-It can play back m3u8 links to multi-bitrate streams, just as in Adobe HTTP Dynamic Streaming. Also, the plugin supports VOD and Live/DVR.
-Use case:
-1) In SMP simple add line: 
+You may find detailed description of the plug in in our blog => http://blog.denivip.ru/index.php/2013/05/osmf-hls-plugin/?lang=en
+
+It can play back m3u8 links to multi-bitrate streams (just as in Adobe HDS), VOD and Live/DVR playlists.
+
+Basic usage:
+1) In SMP simple add line into flashvars part: 
     plugin_hls: "HLSDynamicPlugin.swf"
-  into flashvars part
-2) In your custom OSMF player you can link HLSPlugin.swc lib into project and simple load it with factory.
+2) In your custom OSMF player you can link HLSPlugin.swc lib into project and simply load it with a factory.
