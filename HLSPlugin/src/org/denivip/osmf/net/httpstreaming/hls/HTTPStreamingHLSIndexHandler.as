@@ -308,6 +308,9 @@
 			// make some cheating... 
 			var currentTime:Number = item.totalTime - ((item.totalTime/item.manifest.length) * 3);
 			
+			if(isNaN(dvrInfo.startTime))
+				dvrInfo.startTime = 0.0;
+			
 			// update current length of the DVR window 
 			dvrInfo.curLength = currentTime;// because dvrInfo.startTime is "0.0" =);	
 			

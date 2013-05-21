@@ -37,8 +37,10 @@ package org.denivip.osmf.elements.m3u8Classes
 		}
 		
 		public function addItem(item:M3U8Item):void{
-			item.startTime = _duration;
-			_duration += item.duration;
+			if(!(item is M3U8Playlist)){
+				item.startTime = _duration;
+				_duration += item.duration;
+			}
 			streamItems.push(item);
 		}
 	}

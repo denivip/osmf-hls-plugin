@@ -309,7 +309,7 @@ package org.denivip.osmf.elements.m3u8Classes
 			var dvrInfo:DVRInfo = new DVRInfo();
 			dvrInfo.id = dvrInfo.url = _playlist.url;
 			dvrInfo.isRecording = true; // if live then in process
-			dvrInfo.startTime = 0.0;
+			//dvrInfo.startTime = 0.0;
 			// attach info into playlist
 			_playlist.dvrInfo = dvrInfo;
 		}

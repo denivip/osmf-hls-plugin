@@ -13,7 +13,7 @@ package
 	
 	public class HLSTestPlayer extends Sprite
 	{
-		private static const HLS_VIDEO:String = 'http://edge-1.2gzr.com/517833a9531a48441f2cf4d6.m3u8';
+		private static const HLS_VIDEO:String = 'http://osmfhls.kutu.ru/static/vod/sl_vod.m3u8';
 		
 		public function HLSTestPlayer(){
 			initPlayer();
