@@ -139,11 +139,9 @@
 			if(pl_str.localeCompare(_prevPlaylist) == 0)
 				++_matchCounter;
 			
-			if(_matchCounter == MAX_ERRORS){ // if delivered playlist again not changed then alert!
-				var mediaErr:MediaError = new MediaError(0, "Stream is stuck. Playlist on server don't updated!");
-				dispatchEvent(new MediaErrorEvent(MediaErrorEvent.MEDIA_ERROR, false, false, mediaErr));
-				
+			if(_matchCounter == MAX_ERRORS){ // if delivered playlist again not changed then error_event (or all what you want)
 				logger.error("Stream is stuck. Playlist on server don't updated!");
+				dispatchEvent(new HTTPStreamingEvent(HTTPStreamingEvent.INDEX_ERROR));
 			}
 			
 			_prevPlaylist = pl_str;
