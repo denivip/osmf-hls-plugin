@@ -53,7 +53,7 @@ package org.denivip.osmf.elements.m3u8Classes
 			
 			_parsing = true;
 			
-			var lines:Array = value.split('\n');
+			var lines:Array = value.split('\r\n');
 			
 			if(lines[0] != '#EXTM3U')
 				logger.info('Incorrect header! {0}', lines[0]);

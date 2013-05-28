@@ -176,6 +176,9 @@
 		}
 		
 		override public function getFileForTime(time:Number, quality:int):HTTPStreamRequest{
+			var tempTime:Number = time - 10; // 10 seconds timestamp offset
+			if(tempTime > 0)
+				time = tempTime;
 			_quality = quality;
 			var item:HTTPStreamingM3U8IndexRateItem = _rateVec[quality];
 			var manifest:Vector.<HTTPStreamingM3U8IndexItem> = item.manifest;
