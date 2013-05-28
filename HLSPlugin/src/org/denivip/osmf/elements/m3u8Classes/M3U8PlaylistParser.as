@@ -150,7 +150,7 @@ package org.denivip.osmf.elements.m3u8Classes
 						var par:String = String(params[j]).replace(' ', ''); // remove all spaces
 						
 						if(par.indexOf('BANDWIDTH=') == 0)
-							item.bandwidth = parseInt(par.substr(10)); // 10 = 'BANDWIDTH='.length
+							item.bandwidth = parseInt(par.substr(10))/1000; // 10 = 'BANDWIDTH='.length
 						
 						if(par.indexOf('RESOLUTION=') == 0)
 							item.resolution = par.substr(11); // 11 = 'RESOLUTION='.length

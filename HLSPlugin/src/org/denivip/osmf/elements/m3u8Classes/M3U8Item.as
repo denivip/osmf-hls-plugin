@@ -13,9 +13,9 @@ package org.denivip.osmf.elements.m3u8Classes
 		private var _height:int = -1;
 		
 		/**
-		 * Chunk bitrate
+		 * Chunk bitrate (kbps)
 		 */
-		public var bandwidth:int;
+		public var bandwidth:Number;
 		
 		/**
 		 * Chunk resolution (just for info)
