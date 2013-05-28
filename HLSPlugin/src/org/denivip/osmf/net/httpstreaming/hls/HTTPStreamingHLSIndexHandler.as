@@ -58,6 +58,8 @@
 	 */
 	public class HTTPStreamingHLSIndexHandler extends HTTPStreamingIndexHandlerBase
 	{
+		public static var initialOffset:Number = NaN;
+		
 		private static const MAX_ERRORS:int = 10;
 		
 		private var _indexInfo:HTTPStreamingHLSIndexInfo;
@@ -176,9 +178,12 @@
 		}
 		
 		override public function getFileForTime(time:Number, quality:int):HTTPStreamRequest{
-			var tempTime:Number = time - 10; // 10 seconds timestamp offset
+			/*var tempTime:Number = time - 10; // 10 seconds timestamp offset
 			if(tempTime > 0)
-				time = tempTime;
+				time = tempTime;*/
+			if(!isNaN(initialOffset))
+				time -= initialOffset;
+			
 			_quality = quality;
 			var item:HTTPStreamingM3U8IndexRateItem = _rateVec[quality];
 			var manifest:Vector.<HTTPStreamingM3U8IndexItem> = item.manifest;
