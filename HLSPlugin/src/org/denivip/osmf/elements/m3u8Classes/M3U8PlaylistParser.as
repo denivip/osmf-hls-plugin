@@ -302,6 +302,7 @@ package org.denivip.osmf.elements.m3u8Classes
 		}
 		
 		private function addDVRInfo():void{
+			if(_playlist == null) return;
 			if(!_playlist.isLive || _playlist.totalLength < LIVE_CHUNK_LIMIT)
 				return; // http://fc06.deviantart.net/fs70/f/2011/288/3/c/nothing_to_do_here_by_rober_raik-d4cxltj.png
 			
