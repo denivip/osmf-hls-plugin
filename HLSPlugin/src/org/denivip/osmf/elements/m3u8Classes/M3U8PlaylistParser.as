@@ -53,6 +53,7 @@ package org.denivip.osmf.elements.m3u8Classes
 			
 			_parsing = true;
 			
+			value = value.replace(/\r\n/g, '\n');
 			var lines:Array = value.split('\n');
 			
 			if(lines[0] != '#EXTM3U')
@@ -71,42 +72,36 @@ package org.denivip.osmf.elements.m3u8Classes
 			var len:int = lines.length;
 			var url:String;
 			for(var i:int = 1; i < len; i++){
-				var line:String = lines[i];
-				if(line.charAt(line.length-1) == '\r')
-					line = line.substr(0, line.length-1);
+				lines[i] = lines[i].replace( /^([\s|\t|\n]+)?(.*)([\s|\t|\n]+)?$/gm, "$2" );
 				var item:M3U8Item = null;
 				
-				if(line.indexOf('#EXT-X-MEDIA-SEQUENCE') == 0){
-					var sequence:int = parseInt(line.substr(22)); //22 is length of "#EXT-X-MEDIA-SEQUENCE:"
+				if(String(lines[i]).indexOf('#EXT-X-MEDIA-SEQUENCE') == 0){
+					var sequence:int = parseInt(String(lines[i]).substr(22)); //22 is length of "#EXT-X-MEDIA-SEQUENCE:"
 					playlist.sequenceNumber = sequence;
 					continue;
 				}
 				
-				if(line.indexOf('#EXT-X-ENDLIST') == 0){
+				if(String(lines[i]).indexOf('#EXT-X-ENDLIST') == 0){
 					playlist.isLive = false;
 					if(_playlist.isLive)
 						_playlist.isLive = false; // reset live flag in root playlist (for multi-quality)
 					continue;
 				}
 				
-				if(line.indexOf('#EXTINF:') == 0){
-					var duration:Number = parseFloat(line.substr(8)); // 8 is length of '#EXTINF:'
+				if(String(lines[i]).indexOf('#EXTINF:') == 0){
+					var duration:Number = parseFloat(String(lines[i]).substr(8)); // 8 is length of '#EXTINF:'
 					
 					++i;
 					if(i >= len)
 						throw new Error("Unexpected end of file!");
 					
-					line = lines[i];
-					if(line.charAt(line.length-1) == '\r')
-						line = line.substr(0, line.length-1);
-					
-					if(line.toLowerCase().indexOf("http://") == 0 || line.toLowerCase().indexOf("https://") == 0)
+					if(String(lines[i]).toLowerCase().indexOf("http://") == 0 || String(lines[i]).toLowerCase().indexOf("https://") == 0)
 					{
-						url = line;
+						url = String(lines[i]);
 					}
 					else
 					{
-						var itUrl:String = line;
+						var itUrl:String = String(lines[i]);
 						if(itUrl.charAt() == '/')
 							itUrl = itUrl.substr(1);
 						url = rootURL + itUrl;
@@ -115,22 +110,18 @@ package org.denivip.osmf.elements.m3u8Classes
 					item = new M3U8Item(duration, url);
 				}
 				
-				if(line.indexOf('#EXT-X-STREAM-INF:') == 0){
+				if(String(lines[i]).indexOf('#EXT-X-STREAM-INF:') == 0){
 					++i;
 					if(i >= len)
 						throw new Error("Unexpected end of file!");
 					
-					line = lines[i]
-					if(line.charAt(line.length-1) == '\r')
-						line = line.substr(0, line.length-1);
-					
-					if(line.toLowerCase().indexOf("http://") == 0 || line.toLowerCase().indexOf("https://") == 0)
+					if(String(lines[i]).toLowerCase().indexOf("http://") == 0 || String(lines[i]).toLowerCase().indexOf("https://") == 0)
 					{
-						url = line;
+						url = String(lines[i]);
 					}
 					else
 					{
-						url = rootURL + line;
+						url = rootURL + String(lines[i]);
 					}
 					
 					if(url.search(/(https?|file)\:\/\/.*?\.m3u8(\?.*)?/i) !== -1){ // if item is playlist

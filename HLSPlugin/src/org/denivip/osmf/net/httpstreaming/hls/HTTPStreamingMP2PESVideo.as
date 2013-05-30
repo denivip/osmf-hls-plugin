@@ -30,8 +30,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 
 	internal class HTTPStreamingMP2PESVideo extends HTTPStreamingMP2PESBase
 	{
-		private var _firstChunk:Boolean = true;
-		
 		private var _nalData:ByteArray;
 		
 		private var _vTag:FLVTagVideo;
@@ -95,12 +93,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 					_compositionTime = 0;
 				}
 				
-				// facepalm...
-				if(_firstChunk){
-					HTTPStreamingHLSIndexHandler.initialOffset = _timestamp;
-					_firstChunk = false;
-				}
-
 				// Skip other header data.
 				packet.position += length;
 			}
