@@ -44,15 +44,11 @@ package org.denivip.osmf.net.httpstreaming.hls
 		private var _videoPES:HTTPStreamingMP2PESVideo;
 		private var _doubleBuffer:ByteArray;
 		
-		private var _cachedOutputBytes:ByteArray;
-		private var alternatingYieldCounter:int = 0;
-		
 		public function HTTPStreamingMP2TSFileHandler()
 		{
 			_audioPES = new HTTPStreamingMP2PESAudio;
 			_videoPES = new HTTPStreamingMP2PESVideo;	
 			_doubleBuffer = new ByteArray();
-			alternatingYieldCounter = 0;
 		}
 		
 		override public function beginProcessFile(seek:Boolean, seekTime:Number):void
@@ -62,26 +58,20 @@ package org.denivip.osmf.net.httpstreaming.hls
 
 		override public function get inputBytesNeeded():Number
 		{
-			return _syncFound ? 187 : 1;
+			if(_syncFound)
+				return 187;
+			else
+				return 1;
 		}
 		
 		override public function processFileSegment(input:IDataInput):ByteArray
 		{
-			var bytesAvailableStart:uint = input.bytesAvailable;
-			var output:ByteArray;
-			if (_cachedOutputBytes !== null) {
-				output = _cachedOutputBytes;
-				_cachedOutputBytes = null;
-			}
-			else {
-				output = new ByteArray();
-			}
-			
-			while (true) {
+			while(true)
+			{
 				if(!_syncFound)
 				{
 					if(input.bytesAvailable < 1)
-						break;
+						return null;
 					
 					if(input.readByte() == 0x47)
 						_syncFound = true;
@@ -89,37 +79,30 @@ package org.denivip.osmf.net.httpstreaming.hls
 				else
 				{
 					if(input.bytesAvailable < 187)
-						break;
+						return null;
 					
 					_syncFound = false;
 					var packet:ByteArray = new ByteArray();
 				
 					input.readBytes(packet, 0, 187);
-					
-					var result:ByteArray = processPacket(packet);
-					if (result !== null) {
-						output.writeBytes(result);
-					}
-					
-					if (bytesAvailableStart - input.bytesAvailable > 10000) {
-						alternatingYieldCounter = (alternatingYieldCounter + 1) & 0x03;
-						if (alternatingYieldCounter & 0x01 === 1) {
-							_cachedOutputBytes = output;
-							return null;
-						}
-						break;
-					}
+				
+					return processPacket(packet);	
 				}
 			}
-			return output.length === 0 ? null : output;
+			return null;
 		}
 			
 		override public function endProcessFile(input:IDataInput):ByteArray
 		{
-//			var returnBytes:ByteArray = _cachedOutputBytes;
-//			_cachedOutputBytes = null;
-//			return _cachedOutputBytes;
-			return null;
+			return null;	
+		}
+		
+		private var _initialOffset:Number = NaN;
+		public function get initialOffset():Number{
+			if(!isNaN(_initialOffset))
+				return _initialOffset;
+			else
+				return 0;
 		}
 		
 		private function processPacket(packet:ByteArray):ByteArray
@@ -172,30 +155,33 @@ package org.denivip.osmf.net.httpstreaming.hls
 		
 		private function processES(pid:uint, pusi:Boolean, packet:ByteArray):ByteArray
 		{
+			var output:ByteArray = null;
 			if(pid == 0)	// PAT
 			{
 				if(pusi)
 					processPAT(packet);
-				return new ByteArray();
 			}
 			else if(pid == _pmtPID)
 			{
 				if(pusi)
 					processPMT(packet);
-				return new ByteArray();
 			}
 			else if(pid == _audioPID)
 			{
-				return _audioPES.processES(pusi, packet);
+				output = _audioPES.processES(pusi, packet);
+				
+				if(isNaN(_initialOffset))
+					_initialOffset = _audioPES.timestamp/1000;
 			}
 			else if(pid == _videoPID)
 			{
-				return _videoPES.processES(pusi, packet);
+				output = _videoPES.processES(pusi, packet);
+				
+				if(isNaN(_initialOffset))
+					_initialOffset = _videoPES.timestamp/1000;
 			}
-			else
-			{
-				return new ByteArray();	// ignore all other pids
-			}
+			
+			return output;
 		}
 		
 		private function processPAT(packet:ByteArray):void
@@ -274,14 +260,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 		
 		override public function flushFileSegment(input:IDataInput):ByteArray
 		{
-			var flvBytes:ByteArray;
-//			if (_cachedOutputBytes) {
-//				flvBytes = _cachedOutputBytes;
-//				_cachedOutputBytes = null;
-//			}
-//			else {
-				flvBytes = new ByteArray();
-//			}
+			var flvBytes:ByteArray = new ByteArray();
 			var flvBytesVideo:ByteArray = null;
 			var flvBytesAudio:ByteArray = null;
 			

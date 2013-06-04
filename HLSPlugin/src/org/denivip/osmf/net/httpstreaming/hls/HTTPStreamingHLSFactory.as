@@ -55,7 +55,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 		}
 		override public function createIndexHandler(resource:MediaResourceBase, fileHandler:HTTPStreamingFileHandlerBase):HTTPStreamingIndexHandlerBase
 		{
-			return new HTTPStreamingHLSIndexHandler();
+			return new HTTPStreamingHLSIndexHandler(fileHandler as HTTPStreamingMP2TSFileHandler);
 		}
 		
 		override public function createIndexInfo(resource:MediaResourceBase):HTTPStreamingIndexInfoBase

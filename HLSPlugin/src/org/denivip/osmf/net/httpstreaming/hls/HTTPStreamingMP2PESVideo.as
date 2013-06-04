@@ -24,6 +24,8 @@
  
 package org.denivip.osmf.net.httpstreaming.hls
 {
+	import __AS3__.vec.Vector;
+	
 	import flash.utils.ByteArray;
 	
 	import org.osmf.net.httpstreaming.flv.FLVTagVideo;
@@ -58,7 +60,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 				packet.position += 3;
 				// Need PTS and DTS
 				var flags:uint = (packet.readUnsignedByte() & 0xc0) >> 6;
-				if(flags & 0x03 !== 0x03) { 
+				if(flags != 0x03) { 
 					trace("video PES packet without both PTS and DTS");
 				}
 				
@@ -92,7 +94,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 					_timestamp = Math.round(pts/90);
 					_compositionTime = 0;
 				}
-				
+
 				// Skip other header data.
 				packet.position += length;
 			}

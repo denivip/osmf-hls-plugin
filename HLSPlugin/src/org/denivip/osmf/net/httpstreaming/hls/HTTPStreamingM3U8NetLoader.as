@@ -30,8 +30,8 @@
 	import org.denivip.osmf.net.HLSDynamicStreamingResource;
 	import org.osmf.media.MediaResourceBase;
 	import org.osmf.media.URLResource;
-	import org.osmf.net.httpstreaming.HTTPNetStream;
 	import org.osmf.net.httpstreaming.HTTPStreamingNetLoader;
+	import org.osmf.net.httpstreaming.HTTPNetStream;
 	
 	public class HTTPStreamingM3U8NetLoader extends HTTPStreamingNetLoader
 	{

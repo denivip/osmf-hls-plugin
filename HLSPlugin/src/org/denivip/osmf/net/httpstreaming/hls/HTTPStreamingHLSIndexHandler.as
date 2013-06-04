@@ -24,7 +24,6 @@
  
  package org.denivip.osmf.net.httpstreaming.hls
 {
-	import flash.external.ExternalInterface;
 	import flash.net.URLRequest;
 	import flash.utils.ByteArray;
 	
@@ -34,8 +33,6 @@
 	import org.osmf.events.DVRStreamInfoEvent;
 	import org.osmf.events.HTTPStreamingEvent;
 	import org.osmf.events.HTTPStreamingIndexHandlerEvent;
-	import org.osmf.events.MediaError;
-	import org.osmf.events.MediaErrorEvent;
 	import org.osmf.events.ParseEvent;
 	import org.osmf.logging.Log;
 	import org.osmf.logging.Logger;
@@ -60,6 +57,7 @@
 	{
 		private static const MAX_ERRORS:int = 10;
 		
+		private var _fileHandler:HTTPStreamingMP2TSFileHandler;
 		private var _indexInfo:HTTPStreamingHLSIndexInfo;
 		private var _baseURL:String;
 		private var _rateVec:Vector.<HTTPStreamingM3U8IndexRateItem>;
@@ -75,6 +73,12 @@
 		private var _matchCounter:int;
 		
 		private var _fromDVR:Boolean;
+		
+		public function HTTPStreamingHLSIndexHandler(fileHandler:HTTPStreamingMP2TSFileHandler){
+			super();
+			
+			_fileHandler = fileHandler;
+		}
 		
 		override public function dvrGetStreamInfo(indexInfo:Object):void{
 			_fromDVR = true;
@@ -176,6 +180,11 @@
 		}
 		
 		override public function getFileForTime(time:Number, quality:int):HTTPStreamRequest{
+			
+			time -= _fileHandler.initialOffset;
+			if(time < 0)
+				time = 0;
+			
 			_quality = quality;
 			var item:HTTPStreamingM3U8IndexRateItem = _rateVec[quality];
 			var manifest:Vector.<HTTPStreamingM3U8IndexItem> = item.manifest;

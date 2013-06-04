@@ -47,7 +47,7 @@ package org.denivip.osmf.elements.m3u8Classes
 		
 		public function parse(value:String, rootURL:String=null, playlist:M3U8Playlist=null, internalParse:Boolean=false):void{
 			
-			if(!value){
+			if(!value || value == ''){
 				throw new ArgumentError("Parsed value is missing =(");
 			}
 			

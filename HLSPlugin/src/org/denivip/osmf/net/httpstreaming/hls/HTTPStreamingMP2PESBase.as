@@ -37,6 +37,10 @@
 	    {
 	    	return null;
 	    }
+		
+		public function get timestamp():Number{
+			return _timestamp;
+		}
 	}
 
 
