@@ -64,11 +64,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 			return createHLSIndexInfo(hlsr);
 		}
 		
-		public function createMediaElement():MediaElement{
-			var loader:HTTPStreamingM3U8NetLoader = new HTTPStreamingM3U8NetLoader();
-			return new VideoElement(null, loader);
-		}
-		
 		private function createHLSIndexInfo(res:HLSDynamicStreamingResource):HTTPStreamingHLSIndexInfo{
 			var indexInfo:HTTPStreamingHLSIndexInfo = null;
 			

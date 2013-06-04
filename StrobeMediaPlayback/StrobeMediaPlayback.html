@@ -1,0 +1,92 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+    <head>
+        <title>Strobe Media Playback</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+        <script type="text/javascript" src="lib/swfobject.js">
+        </script>
+        <script type="text/javascript" src="lib/ParsedQueryString.js">
+        </script>
+        <script type="text/javascript">
+            
+            // Collect query parameters in an object that we can
+            // forward to SWFObject:
+            
+            var pqs = new ParsedQueryString();
+            var parameterNames = pqs.params(false);
+            var parameters = {
+                src: "http://edge-1.2gzr.com/5178d5fe531a484b777dacf1.m3u8",
+                autoPlay: "false",
+                verbose: true,
+                controlBarAutoHide: "true",
+                controlBarPosition: "bottom",
+                poster: "images/poster.png",
+                plugin_hls: "HLSDynamicPlugin.swf"
+            };
+            
+            for (var i = 0; i < parameterNames.length; i++) {
+                var parameterName = parameterNames[i];
+                parameters[parameterName] = pqs.param(parameterName) ||
+                parameters[parameterName];
+            }
+            
+       	    var wmodeValue = "direct";
+            var wmodeOptions = ["direct", "opaque", "transparent", "window"];
+            if (parameters.hasOwnProperty("wmode"))
+            {
+            	if (wmodeOptions.indexOf(parameters.wmode) >= 0)
+            	{
+            		wmodeValue = parameters.wmode;
+            	}	            	
+            	delete parameters.wmode;
+            }
+            
+            // Embed the player SWF:	            
+            swfobject.embedSWF(
+				"StrobeMediaPlayback.swf"
+				, "StrobeMediaPlayback"
+				, 640
+				, 480
+				, "10.1.0"
+				, "expressInstall.swf"
+				, parameters
+				, {
+	                allowFullScreen: "true",
+	                wmode: wmodeValue
+	            }
+				, {
+	                name: "StrobeMediaPlayback"
+	            }
+			);
+            
+        </script>
+    </head>
+    <body>
+        <table width="100%" border="0" cellspacing="5">
+            <tr>
+                <td width="43">
+                    <img src="images/adobe-lq.png" alt="" width="43" height="72" />
+                </td>
+                <td width="320" class="Verdana">
+                    Strobe Media Playback
+                </td>
+                <td width="262">
+                    <img src="images/osmf_horizontal_red.png" width="262" height="57" alt="osmf logo"/>
+                </td>
+                <td width="*">
+                </td>
+            </tr>
+        </table>
+        <table width="100%" border="0" cellspacing="5">
+            <tr>
+                <td>
+                    <div id="StrobeMediaPlayback">
+                        <p>
+                            Alternative content
+                        </p>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </body>
+</html>
