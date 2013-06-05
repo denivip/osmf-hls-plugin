@@ -42,13 +42,16 @@ package org.denivip.osmf.net.httpstreaming.hls
 		private var _videoPID:uint;
 		private var _audioPES:HTTPStreamingMP2PESAudio;
 		private var _videoPES:HTTPStreamingMP2PESVideo;
-		private var _doubleBuffer:ByteArray;
+		
+		private var _initialOffset:Number = NaN;
+		
+		private var _cachedOutputBytes:ByteArray;
+		private var alternatingYieldCounter:int = 0;
 		
 		public function HTTPStreamingMP2TSFileHandler()
 		{
 			_audioPES = new HTTPStreamingMP2PESAudio;
-			_videoPES = new HTTPStreamingMP2PESVideo;	
-			_doubleBuffer = new ByteArray();
+			_videoPES = new HTTPStreamingMP2PESVideo;
 		}
 		
 		override public function beginProcessFile(seek:Boolean, seekTime:Number):void
@@ -58,15 +61,12 @@ package org.denivip.osmf.net.httpstreaming.hls
 
 		override public function get inputBytesNeeded():Number
 		{
-			if(_syncFound)
-				return 187;
-			else
-				return 1;
+			return _syncFound ? 187 : 1;
 		}
 		
 		override public function processFileSegment(input:IDataInput):ByteArray
 		{
-			while(true)
+			/*while(true)
 			{
 				if(!_syncFound)
 				{
@@ -89,7 +89,52 @@ package org.denivip.osmf.net.httpstreaming.hls
 					return processPacket(packet);	
 				}
 			}
-			return null;
+			return null;*/
+			var bytesAvailableStart:uint = input.bytesAvailable;
+			var output:ByteArray;
+			if (_cachedOutputBytes !== null) {
+				output = _cachedOutputBytes;
+				_cachedOutputBytes = null;
+			}
+			else {
+				output = new ByteArray();
+			}
+			
+			while (true) {
+				if(!_syncFound)
+				{
+					if(input.bytesAvailable < 1)
+						break;
+					
+					if(input.readByte() == 0x47)
+						_syncFound = true;
+				}
+				else
+				{
+					if(input.bytesAvailable < 187)
+						break;
+					
+					_syncFound = false;
+					var packet:ByteArray = new ByteArray();
+					
+					input.readBytes(packet, 0, 187);
+					
+					var result:ByteArray = processPacket(packet);
+					if (result !== null) {
+						output.writeBytes(result);
+					}
+					
+					if (bytesAvailableStart - input.bytesAvailable > 10000) {
+						alternatingYieldCounter = (alternatingYieldCounter + 1) & 0x03;
+						if (alternatingYieldCounter & 0x01 === 1) {
+							_cachedOutputBytes = output;
+							return null;
+						}
+						break;
+					}
+				}
+			}
+			return output.length === 0 ? null : output;
 		}
 			
 		override public function endProcessFile(input:IDataInput):ByteArray
@@ -97,7 +142,11 @@ package org.denivip.osmf.net.httpstreaming.hls
 			return null;	
 		}
 		
-		private var _initialOffset:Number = NaN;
+		public function resetCache():void{
+			_cachedOutputBytes = null;
+			alternatingYieldCounter = 0;
+		}
+		
 		public function get initialOffset():Number{
 			if(!isNaN(_initialOffset))
 				return _initialOffset;

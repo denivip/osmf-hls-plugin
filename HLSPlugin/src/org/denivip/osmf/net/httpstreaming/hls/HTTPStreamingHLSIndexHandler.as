@@ -180,6 +180,7 @@
 		}
 		
 		override public function getFileForTime(time:Number, quality:int):HTTPStreamRequest{
+			_fileHandler.resetCache();
 			
 			time -= _fileHandler.initialOffset;
 			if(time < 0)
