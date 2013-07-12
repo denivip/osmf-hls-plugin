@@ -88,7 +88,10 @@
 		override public function initialize(indexInfo:Object):void{
 			_indexInfo = indexInfo as HTTPStreamingHLSIndexInfo;
 			if(_indexInfo == null){
-				logger.error("Incorrect indexInfo!");
+				CONFIG::LOGGING
+				{
+					logger.error("Incorrect indexInfo!");
+				}
 				
 				dispatchEvent(new HTTPStreamingEvent(HTTPStreamingEvent.INDEX_ERROR));
 				return;
@@ -144,7 +147,10 @@
 				++_matchCounter;
 			
 			if(_matchCounter == MAX_ERRORS){ // if delivered playlist again not changed then error_event (or all what you want)
-				logger.error("Stream is stuck. Playlist on server don't updated!");
+				CONFIG::LOGGING
+				{
+					logger.error("Stream is stuck. Playlist on server don't updated!");
+				}
 				dispatchEvent(new HTTPStreamingEvent(HTTPStreamingEvent.INDEX_ERROR));
 			}
 			
@@ -175,7 +181,10 @@
 				parser.removeEventListener(ParseEvent.PARSE_ERROR, onError);
 				
 				// maybe add notification?... do it if you want =)
-				logger.warn("Parse error! Maybe incorrect playlist");
+				CONFIG::LOGGING
+				{
+					logger.warn("Parse error! Maybe incorrect playlist");
+				}
 			}
 		}
 		
@@ -348,6 +357,10 @@
 			item.setSequenceNumber(playlist.sequenceNumber);
 			item.setLive(playlist.isLive);
 		}
-		protected var logger:Logger = Log.getLogger("org.denivip.osmf.plugins.hls.HTTPStreamingM3U8IndexHandler");
+		
+		CONFIG::LOGGING
+		{
+			protected var logger:Logger = Log.getLogger("org.denivip.osmf.plugins.hls.HTTPStreamingM3U8IndexHandler");
+		}
 	}
 }

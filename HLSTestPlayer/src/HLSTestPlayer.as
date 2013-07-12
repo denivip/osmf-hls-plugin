@@ -25,7 +25,7 @@ package
 			factory.addEventListener(MediaFactoryEvent.PLUGIN_LOAD_ERROR, onError);
 			factory.loadPlugin(new PluginInfoResource(new HLSPluginInfo()));
 			
-			var res:URLResource = new URLResource( HLS_VIDEO );
+			var res:URLResource = new URLResource( 'http://cs413722.vk.me/v413722557/938/h5neJS2nRH0.jpg' );
 			
 			var element:MediaElement = factory.createMediaElement(res);
 			if(element == null)

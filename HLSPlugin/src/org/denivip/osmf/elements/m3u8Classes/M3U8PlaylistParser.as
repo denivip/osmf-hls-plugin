@@ -56,8 +56,11 @@ package org.denivip.osmf.elements.m3u8Classes
 			value = value.replace(/\r\n/g, '\n');
 			var lines:Array = value.split('\n');
 			
-			if(lines[0] != '#EXTM3U')
-				logger.info('Incorrect header! {0}', lines[0]);
+			CONFIG::LOGGING
+			{
+				if(lines[0] != '#EXTM3U')
+					logger.info('Incorrect header! {0}', lines[0]);
+			}
 			
 			if(!playlist){
 				playlist = new M3U8Playlist(0, rootURL);
@@ -306,7 +309,10 @@ package org.denivip.osmf.elements.m3u8Classes
 			if(!_playlist.isLive || _playlist.totalLength < LIVE_CHUNK_LIMIT)
 				return; // http://fc06.deviantart.net/fs70/f/2011/288/3/c/nothing_to_do_here_by_rober_raik-d4cxltj.png
 			
-			logger.info('DVR!!! \\o/'); // we happy!
+			CONFIG::LOGGING
+			{
+				logger.info('DVR!!! \\o/'); // we happy!
+			}
 			
 			// black magic...
 			var dvrInfo:DVRInfo = new DVRInfo();
@@ -317,6 +323,9 @@ package org.denivip.osmf.elements.m3u8Classes
 			_playlist.dvrInfo = dvrInfo;
 		}
 		
-		private var logger:Logger = Log.getLogger("org.denivip.osmf.elements.m3u8Classes.M3U8PlaylistParser");
+		CONFIG::LOGGING
+		{
+			private var logger:Logger = Log.getLogger("org.denivip.osmf.elements.m3u8Classes.M3U8PlaylistParser");
+		}
 	}
 }
