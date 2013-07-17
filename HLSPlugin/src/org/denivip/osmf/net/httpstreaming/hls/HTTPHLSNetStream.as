@@ -1158,6 +1158,10 @@ package org.denivip.osmf.net.httpstreaming.hls
 		 */
 		private function onDownloadError(event:HTTPStreamingEvent):void
 		{
+			CONFIG::LOGGING
+			{
+				logger.error("Error load chunk: " + event.url + " skip to next");
+			}
 			HTTPHLSStreamSource(_source).loadNextChunk();
 		}
 		
@@ -1865,7 +1869,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 		
 		CONFIG::LOGGING
 		{
-			private static const logger:Logger = Log.getLogger("org.osmf.net.httpstreaming.HTTPNetStream");
+			private static const logger:Logger = Log.getLogger("org.denivip.osmf.net.httpstreaming.HTTPHLSNetStream");
 			private var previouslyLoggedState:String = null;
 		}
 	}

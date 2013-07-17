@@ -26,6 +26,7 @@
 {
 	import flash.net.URLRequest;
 	import flash.utils.ByteArray;
+	import flash.utils.getTimer;
 	
 	import org.denivip.osmf.elements.m3u8Classes.M3U8Item;
 	import org.denivip.osmf.elements.m3u8Classes.M3U8Playlist;
@@ -141,6 +142,11 @@
 			}
 			
 			// get playlist from binary data
+			CONFIG::LOGGING
+			{
+				_reloadTime = getTimer() - _reloadTime;
+				logger.info("Playlist reload time {0} sec", (_reloadTime/1000));
+			}
 			var ba:ByteArray = ByteArray(data);
 			var pl_str:String = ba.readUTFBytes(ba.length);
 			if(pl_str.localeCompare(_prevPlaylist) == 0)
@@ -169,6 +175,13 @@
 				parser.removeEventListener(ParseEvent.PARSE_ERROR, onError);
 				
 				var pl:M3U8Playlist = M3U8Playlist(e.data);
+				
+				CONFIG::LOGGING
+				{
+					logger.info("Playlist ({0}) size:", pl.url);
+					logger.info("chanks num = {0}", pl.streamItems.length);
+					logger.info("duration = {0}", pl.isLive ? 'live' : pl.duration);
+				}
 				
 				updateRateItem(pl, rateItem);
 				
@@ -235,6 +248,10 @@
 					_matchCounter = 0; // reset error counter!
 				}
 				if(_segment >= manifest.length){ // Try to force a reload
+					CONFIG::LOGGING
+					{
+						_reloadTime = getTimer();
+					}
 					dispatchEvent(new HTTPStreamingIndexHandlerEvent(HTTPStreamingIndexHandlerEvent.REQUEST_LOAD_INDEX, false, false, item.live, 0, _streamNames, _streamQualityRates, new URLRequest(_rateVec[quality].url), _rateVec[quality], false));						
 					return new HTTPStreamRequest(HTTPStreamRequestKind.LIVE_STALL, null, 1.0);
 				} 
@@ -361,6 +378,7 @@
 		CONFIG::LOGGING
 		{
 			protected var logger:Logger = Log.getLogger("org.denivip.osmf.plugins.hls.HTTPStreamingM3U8IndexHandler");
+			private var _reloadTime:int;
 		}
 	}
 }

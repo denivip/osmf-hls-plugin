@@ -1014,7 +1014,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 		
 		CONFIG::LOGGING
 		{
-			private static const logger:Logger = Log.getLogger("org.osmf.net.httpstreaming.HTTPStreamSource");
+			private static const logger:Logger = Log.getLogger("org.denivip.osmf.net.httpstreaming.HTTPHLSStreamSource");
 			private var previouslyLoggedState:String = null;
 			
 			private var loggedStreamName:String = null;

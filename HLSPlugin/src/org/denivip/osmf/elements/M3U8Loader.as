@@ -6,6 +6,7 @@ package org.denivip.osmf.elements
 	import flash.events.SecurityErrorEvent;
 	import flash.net.URLLoader;
 	import flash.net.URLRequest;
+	import flash.utils.getTimer;
 	
 	import org.denivip.osmf.elements.m3u8Classes.M3U8Playlist;
 	import org.denivip.osmf.elements.m3u8Classes.M3U8PlaylistParser;
@@ -15,6 +16,8 @@ package org.denivip.osmf.elements
 	import org.osmf.events.MediaError;
 	import org.osmf.events.MediaErrorEvent;
 	import org.osmf.events.ParseEvent;
+	import org.osmf.logging.Log;
+	import org.osmf.logging.Logger;
 	import org.osmf.media.MediaElement;
 	import org.osmf.media.MediaResourceBase;
 	import org.osmf.media.URLResource;
@@ -68,6 +71,7 @@ package org.denivip.osmf.elements
 			playlistLoader.addEventListener(IOErrorEvent.IO_ERROR, onError);
 			playlistLoader.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onError);
 			
+			var loadTime:int = getTimer();
 			// inline functions =) (it's shi... but i don't like 100500 service functions into one class)
 			function onError(e:ErrorEvent):void{
 				playlistLoader.removeEventListener(Event.COMPLETE, onComplete);
@@ -83,7 +87,16 @@ package org.denivip.osmf.elements
 				playlistLoader.removeEventListener(IOErrorEvent.IO_ERROR, onError);
 				playlistLoader.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, onError);
 				
+				loadTime = getTimer() - loadTime;
+				
 				try{
+					CONFIG::LOGGING
+					{
+						logger.info("Playlist {0} loaded", URLResource(loadTrait.resource).url);
+						logger.info("size = {0}Kb", (playlistLoader.bytesLoaded/1024).toFixed(3));
+						logger.info("load time = {0} sec", (loadTime/1000));
+					}
+					
 					var resData:String = String((e.target as URLLoader).data);
 					
 					_parser = new M3U8PlaylistParser();
@@ -118,6 +131,13 @@ package org.denivip.osmf.elements
 		
 		private function finishPlaylistLoading(playlist:M3U8Playlist):void{
 			try{
+				CONFIG::LOGGING
+				{
+					logger.info("Playlist ({0}) size:", playlist.url);
+					logger.info("chanks num = {0}", playlist.streamItems.length);
+					logger.info("duration = {0}", playlist.isLive ? 'live' : playlist.duration);
+				}
+				
 				var resource:MediaResourceBase = _parser.createResource(playlist, URLResource(_loadTrait.resource));
 				var loadedElem:MediaElement = new VideoElement(null, new HTTPStreamingM3U8NetLoader());
 				loadedElem.resource = resource;
@@ -129,6 +149,11 @@ package org.denivip.osmf.elements
 				updateLoadTrait(_loadTrait, LoadState.LOAD_ERROR);
 				_loadTrait.dispatchEvent(new MediaErrorEvent(MediaErrorEvent.MEDIA_ERROR, false, false, new MediaError(e.errorID, e.message)));
 			}
+		}
+		
+		CONFIG::LOGGING
+		{
+			protected var logger:Logger = Log.getLogger("org.denivip.osmf.elements.M3U8Loader");
 		}
 	}
 }
