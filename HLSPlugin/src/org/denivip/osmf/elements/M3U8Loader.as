@@ -10,6 +10,7 @@ package org.denivip.osmf.elements
 	
 	import org.denivip.osmf.elements.m3u8Classes.M3U8Playlist;
 	import org.denivip.osmf.elements.m3u8Classes.M3U8PlaylistParser;
+	import org.denivip.osmf.logging.HLSLogger;
 	import org.denivip.osmf.net.httpstreaming.hls.HTTPStreamingM3U8NetLoader;
 	import org.osmf.elements.VideoElement;
 	import org.osmf.elements.proxyClasses.LoadFromDocumentLoadTrait;
@@ -153,7 +154,7 @@ package org.denivip.osmf.elements
 		
 		CONFIG::LOGGING
 		{
-			protected var logger:Logger = Log.getLogger("org.denivip.osmf.elements.M3U8Loader");
+			protected var logger:HLSLogger = Log.getLogger("org.denivip.osmf.elements.M3U8Loader") as HLSLogger;
 		}
 	}
 }

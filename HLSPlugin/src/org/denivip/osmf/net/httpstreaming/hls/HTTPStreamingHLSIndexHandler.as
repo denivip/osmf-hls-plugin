@@ -31,6 +31,7 @@
 	import org.denivip.osmf.elements.m3u8Classes.M3U8Item;
 	import org.denivip.osmf.elements.m3u8Classes.M3U8Playlist;
 	import org.denivip.osmf.elements.m3u8Classes.M3U8PlaylistParser;
+	import org.denivip.osmf.logging.HLSLogger;
 	import org.osmf.events.DVRStreamInfoEvent;
 	import org.osmf.events.HTTPStreamingEvent;
 	import org.osmf.events.HTTPStreamingIndexHandlerEvent;
@@ -377,7 +378,7 @@
 		
 		CONFIG::LOGGING
 		{
-			protected var logger:Logger = Log.getLogger("org.denivip.osmf.plugins.hls.HTTPStreamingM3U8IndexHandler");
+			protected var logger:HLSLogger = Log.getLogger("org.denivip.osmf.plugins.hls.HTTPStreamingM3U8IndexHandler") as HLSLogger;
 			private var _reloadTime:int;
 		}
 	}

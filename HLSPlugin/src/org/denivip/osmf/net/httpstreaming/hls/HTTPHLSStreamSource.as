@@ -27,12 +27,11 @@ package org.denivip.osmf.net.httpstreaming.hls
 	import flash.utils.ByteArray;
 	import flash.utils.IDataInput;
 	
+	import org.denivip.osmf.logging.HLSLogger;
 	import org.osmf.events.DVRStreamInfoEvent;
 	import org.osmf.events.HTTPStreamingEvent;
 	import org.osmf.events.HTTPStreamingIndexHandlerEvent;
 	import org.osmf.media.MediaResourceBase;
-	import org.osmf.net.qos.FragmentDetails;
-	import org.osmf.net.qos.QualityLevel;
 	import org.osmf.net.httpstreaming.HTTPStreamDownloader;
 	import org.osmf.net.httpstreaming.HTTPStreamHandlerQoSInfo;
 	import org.osmf.net.httpstreaming.HTTPStreamRequest;
@@ -44,6 +43,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 	import org.osmf.net.httpstreaming.IHTTPStreamHandler;
 	import org.osmf.net.httpstreaming.IHTTPStreamSource;
 	import org.osmf.net.httpstreaming.dvr.DVRInfo;
+	import org.osmf.net.qos.FragmentDetails;
+	import org.osmf.net.qos.QualityLevel;
 	import org.osmf.utils.OSMFSettings;
 	import org.osmf.utils.OSMFStrings;
 
@@ -1014,7 +1015,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 		
 		CONFIG::LOGGING
 		{
-			private static const logger:Logger = Log.getLogger("org.denivip.osmf.net.httpstreaming.HTTPHLSStreamSource");
+			private static const logger:HLSLogger = Log.getLogger("org.denivip.osmf.net.httpstreaming.HTTPHLSStreamSource") as HLSLogger;
 			private var previouslyLoggedState:String = null;
 			
 			private var loggedStreamName:String = null;
