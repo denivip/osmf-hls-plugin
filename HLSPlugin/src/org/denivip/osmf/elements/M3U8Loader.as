@@ -72,7 +72,10 @@ package org.denivip.osmf.elements
 			playlistLoader.addEventListener(IOErrorEvent.IO_ERROR, onError);
 			playlistLoader.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onError);
 			
-			var loadTime:int = getTimer();
+			CONFIG::LOGGING
+			{
+				var loadTime:int = getTimer();
+			}
 			// inline functions =) (it's shi... but i don't like 100500 service functions into one class)
 			function onError(e:ErrorEvent):void{
 				playlistLoader.removeEventListener(Event.COMPLETE, onComplete);
@@ -88,11 +91,10 @@ package org.denivip.osmf.elements
 				playlistLoader.removeEventListener(IOErrorEvent.IO_ERROR, onError);
 				playlistLoader.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, onError);
 				
-				loadTime = getTimer() - loadTime;
-				
 				try{
 					CONFIG::LOGGING
 					{
+						loadTime = getTimer() - loadTime;
 						logger.info("Playlist {0} loaded", URLResource(loadTrait.resource).url);
 						logger.info("size = {0}Kb", (playlistLoader.bytesLoaded/1024).toFixed(3));
 						logger.info("load time = {0} sec", (loadTime/1000));

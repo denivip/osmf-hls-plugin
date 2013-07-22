@@ -15,6 +15,7 @@
     <classEntry path="org.denivip.osmf.logging.LogHandler"/>
     <classEntry path="org.denivip.osmf.logging.LogMessage"/>
     <classEntry path="org.denivip.osmf.logging.TraceLogHandler"/>
+    <classEntry path="org.denivip.osmf.logging.GALogHandler"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>
