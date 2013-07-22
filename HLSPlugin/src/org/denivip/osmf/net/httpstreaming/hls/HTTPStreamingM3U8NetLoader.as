@@ -31,7 +31,6 @@
 	import org.osmf.media.MediaResourceBase;
 	import org.osmf.media.URLResource;
 	import org.osmf.net.httpstreaming.HTTPStreamingNetLoader;
-	import org.osmf.net.httpstreaming.HTTPNetStream;
 	
 	public class HTTPStreamingM3U8NetLoader extends HTTPStreamingNetLoader
 	{
@@ -48,6 +47,5 @@
 			var httpNetStream:HTTPHLSNetStream = new HTTPHLSNetStream(connection, new HTTPStreamingHLSFactory(), resource);
 			return httpNetStream;
 		}
-		
 	}
 }

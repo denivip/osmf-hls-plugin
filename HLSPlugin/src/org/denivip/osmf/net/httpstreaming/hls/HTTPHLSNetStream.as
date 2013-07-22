@@ -41,6 +41,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 	import org.osmf.net.NetStreamCodes;
 	import org.osmf.net.NetStreamPlaybackDetailsRecorder;
 	import org.osmf.net.StreamingURLResource;
+	import org.osmf.net.httpstreaming.HTTPNetStream;
 	import org.osmf.net.httpstreaming.HTTPStreamHandlerQoSInfo;
 	import org.osmf.net.httpstreaming.HTTPStreamMixer;
 	import org.osmf.net.httpstreaming.HTTPStreamSource;
@@ -101,7 +102,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 	 * The former is the responsibility of HTTPStreamingIndexHandlerBase,
 	 * the latter the responsibility of HTTPStreamingFileHandlerBase.
 	 */	
-	public class HTTPHLSNetStream extends NetStream
+	public class HTTPHLSNetStream extends HTTPNetStream
 	{
 		/**
 		 * Constructor.
@@ -120,7 +121,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 		 */
 		public function HTTPHLSNetStream( connection:NetConnection, factory:HTTPStreamingFactory, resource:URLResource = null)
 		{
-			super(connection);
+			super(connection, factory, resource);
 			_resource = resource;
 			_factory = factory;
 			
@@ -153,226 +154,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 			_mainTimer = new Timer(OSMFSettings.hdsMainTimerInterval); 
 			_mainTimer.addEventListener(TimerEvent.TIMER, onMainTimer);	
 		}
-		
-		///////////////////////////////////////////////////////////////////////
-		/// Public API overrides
-		///////////////////////////////////////////////////////////////////////
-		
-		override public function set client(object:Object):void
-		{
-			super.client = object;
-			
-			if (client is NetClient && _resource is DynamicStreamingResource)
-			{
-				playbackDetailsRecorder = new NetStreamPlaybackDetailsRecorder(this, client as NetClient, _resource as DynamicStreamingResource);
-			}
-		}
-		
-		/**
-		 * Plays the specified stream with respect to provided arguments.
-		 */
-		override public function play(...args):void 
-		{			
-			processPlayParameters(args);
-			CONFIG::LOGGING
-			{
-				logger.debug("Play initiated for [" + _playStreamName +"] with parameters ( start = " + _playStart.toString() + ", duration = " + _playForDuration.toString() +" ).");
-			}
-			
-			// Signal to the base class that we're entering Data Generation Mode.
-			super.play(null);
-			
-			// Before we feed any TCMessages to the Flash Player, we must feed
-			// an FLV header first.
-			var header:FLVHeader = new FLVHeader();
-			var headerBytes:ByteArray = new ByteArray();
-			header.write(headerBytes);
-			attemptAppendBytes(headerBytes);
-			
-			// Initialize ourselves.
-			_mainTimer.start();
-			_initialTime = -1;
-			_seekTime = -1;
-			_isPlaying = true;
-			_isPaused = false;
-			
-			_notifyPlayStartPending = true;
-			_notifyPlayUnpublishPending = false;
-			
-			changeSourceTo(_playStreamName, _playStart);
-		}
-		
-		/**
-		 * Pauses playback.
-		 */
-		override public function pause():void 
-		{
-			_isPaused = true;
-			super.pause();
-		}
-		
-		/**
-		 * Resumes playback.
-		 */
-		override public function resume():void 
-		{
-			_isPaused = false;
-			super.resume();
-		}
-
-		/**
-		 * Plays the specified stream and supports dynamic switching and alternate audio streams. 
-		 */
-		override public function play2(param:NetStreamPlayOptions):void
-		{
-			switch(param.transition)
-			{
-				case NetStreamPlayTransitions.RESET:
-					play(param.streamName, param.start, param.len);
-					break;
-				
-				case NetStreamPlayTransitions.SWITCH:
-					changeQualityLevelTo(param.streamName);
-					break;
-			
-				case NetStreamPlayTransitions.SWAP:
-					changeAudioStreamTo(param.streamName);
-					break;
-				
-				default:
-					// Not sure which other modes we should add support for.
-					super.play2(param);
-			}
-		} 
-		
-		/**
-		 * Seeks into the media stream for the specified offset in seconds.
-		 */
-		override public function seek(offset:Number):void
-		{
-			if(offset < 0)
-			{
-				offset = 0;		// FMS rule. Seek to <0 is same as seeking to zero.
-			}
-			
-			// we can't seek before the playback starts 
-			if (_state != HTTPStreamingState.INIT)    
-			{
-				if(_initialTime < 0)
-				{
-					_seekTarget = offset + 0;	// this covers the "don't know initial time" case, rare
-				}
-				else
-				{
-					_seekTarget = offset + _initialTime;
-				}
-				
-				setState(HTTPStreamingState.SEEK);
-				
-				dispatchEvent(
-					new NetStatusEvent(
-						NetStatusEvent.NET_STATUS, 
-						false, 
-						false, 
-						{
-							code:NetStreamCodes.NETSTREAM_SEEK_START, 
-							level:"status"
-						}
-					)
-				);		
-			}
-			
-			_notifyPlayUnpublishPending = false;
-		}
-
-		/**
-		 * Closes the NetStream object.
-		 */
-		override public function close():void
-		{
-			if (_videoHandler != null)
-			{
-				_videoHandler.close();
-			}
-			if (_mixer != null)
-			{
-				_mixer.close();
-			}
-			
-			_mainTimer.stop();
-			notifyPlayStop();
-			
-			setState(HTTPStreamingState.HALT);
-			
-			super.close();
-		}
-		
-		/**
-		 * @inheritDoc
-		 */
-		override public function set bufferTime(value:Number):void
-		{
-			super.bufferTime = value;
-			_desiredBufferTime_Min = Math.max(OSMFSettings.hdsMinimumBufferTime, value);
-			_desiredBufferTime_Max = _desiredBufferTime_Min + OSMFSettings.hdsAdditionalBufferTime;
-		}
-		
-		/**
-		 * @inheritDoc
-		 */
-		override public function get time():Number
-		{
-			if(_seekTime >= 0 && _initialTime >= 0)
-			{
-				_lastValidTimeTime = (super.time + _seekTime) - _initialTime; 
-				//  we remember what we say when time is valid, and just spit that back out any time we don't have valid data. This is probably the right answer.
-				//  the only thing we could do better is also run a timer to ask ourselves what it is whenever it might be valid and save that, just in case the
-				//  user doesn't ask... but it turns out most consumers poll this all the time in order to update playback position displays
-			}
-			return _lastValidTimeTime;
-		}
-		
-		/**
-		 * @inheritDoc
-		 */
-		override public function get bytesLoaded():uint
-		{
-			return _bytesLoaded;
-		}
-
-		///////////////////////////////////////////////////////////////////////
-		/// Custom public API - specific to HTTPNetStream 
-		///////////////////////////////////////////////////////////////////////
-		/**
-		 * Get stream information from the associated information.
-		 */ 
-		public function DVRGetStreamInfo(streamName:Object):void
-		{
-			if (_source.isReady)
-			{
-				// TODO: should we re-trigger the event?
-			}
-			else
-			{
-				// TODO: should there be a guard to protect the case where isReady is not yet true BUT play has already been called, so we are in an
-				// "initializing but not yet ready" state? This is only needed if the caller is liable to call DVRGetStreamInfo and then, before getting the
-				// event back, go ahead and call play()
-				_videoHandler.getDVRInfo(streamName);
-			}
-		}
-		
-		/**
-		 * @return true if BestEffortFetch is enabled.
-		 */
-		public function get isBestEffortFetchEnabled():Boolean
-		{
-			return _source != null &&
-				_source.isBestEffortFetchEnabled;
-		}
-		
-		///////////////////////////////////////////////////////////////////////
-		/// Internals
-		///////////////////////////////////////////////////////////////////////
 		
 		/**
 		 * @private
@@ -1163,7 +944,9 @@ package org.denivip.osmf.net.httpstreaming.hls
 			{
 				logger.error("Error load chunk: " + event.url + " skip to next");
 			}
-			HTTPHLSStreamSource(_source).loadNextChunk();
+			if(_source){
+				HTTPHLSStreamSource(_source).loadNextChunk();
+			}
 		}
 		
 		private function onDownloadComplete(event:HTTPStreamingEvent):void
@@ -1662,136 +1445,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 				appendBytes(bytes);
 			}
 		}
-		
-		/**
-		 * @private
-		 * 
-		 * Creates the source object which will be used to consume the associated resource.
-		 */
-		protected function createSource(resource:URLResource):void
-		{
-			var source:IHTTPStreamSource = null;
-			var streamingResource:StreamingURLResource = resource as StreamingURLResource;
-			if (streamingResource == null || streamingResource.alternativeAudioStreamItems == null || streamingResource.alternativeAudioStreamItems.length == 0)
-			{
-				// we are not in alternative audio scenario, we are going to the legacy mode
-				var legacySource:HTTPHLSStreamSource = new HTTPHLSStreamSource(_factory, _resource, this);
-				
-				_source = legacySource;
-				_videoHandler = legacySource;
-			}
-			else
-			{
-				_mixer = new HTTPStreamMixer(this);
-				_mixer.video = new HTTPHLSStreamSource(_factory, _resource, _mixer);
-				
-				_source = _mixer;
-				_videoHandler = _mixer.video;
-			}
-		}
-		///////////////////////////////////////////////////////////////////////////////////
-//		/**
-//		 * @private
-//		 * 
-//		 * Event handler called when the index handler has successfully parse
-//		 * the index information. We are ready to start the playback after this.
-//		 */
-//		private function onIndexReady(event:HTTPStreamingIndexHandlerEvent):void
-//		{
-//			if (_pendingIndexInitializations > 0)
-//			{
-//				// we are using only the offset from main stream
-//				if (event.target == _mediaHandler)
-//				{
-//					_mediaIsReady = true;
-//					if (event.live && _dvrInfo == null && !isNaN(event.offset))
-//					{
-//						_mediaSeekTarget = _audioSeekTarget = event.offset;
-//					}
-//				}
-//				
-//				// if we just initialized an audio stream
-//				if (event.target == _audioHandler)
-//				{
-//					if (_mixer != null && _mixer.videoTime != 0 && _mixer.audioTime != 0)
-//					{
-//						_mediaSeekTarget = _mixer.videoTime / 1000;
-//						_audioSeekTarget = _mixer.audioTime / 1000;
-//					}
-//					else
-//					{
-//						_mediaSeekTarget = _mediaBufferRemaining / 1000;
-//						_audioSeekTarget = _mediaSeekTarget;
-//					}
-//				}
-//				
-//				_pendingIndexInitializations--;
-//				if (_pendingIndexInitializations == 0)
-//				{
-////					setState(HTTPStreamingState.LOAD_SEEK);
-//				}
-//			}
-//		}
-
-//		/**
-//		 * @private
-//		 * 
-//		 * Event handler for all index handler errors.
-//		 */		
-//		private function onIndexError(event:HTTPStreamingEvent):void
-//		{
-//			notifyURLError(null);
-//		}
-//		
-//		/**
-//		 * @private
-//		 * 
-//		 * Event handler for all file handler errors.
-//		 */  
-//		private function onFileError(event:HTTPStreamingEvent):void
-//		{
-//			notifyFileError(null);
-//		}
-//
-//		/**
-//		 * @private
-//		 * 
-//		 * We notify that some error occured when processing the specified file.
-//		 * We actually map all URL errors to NETSTREAM_PLAY_STREAMNOTFOUND NetStatusEvent.
-//		 * You can check the details property to see the url which triggered 
-//		 * this error.
-//		 */
-//		private function notifyFileError(url:String):void
-//		{
-//			dispatchEvent( 
-//				new NetStatusEvent( 
-//					NetStatusEvent.NET_STATUS
-//					, false
-//					, false
-//					, {code:NetStreamCodes.NETSTREAM_PLAY_FILESTRUCTUREINVALID, level:"error", details:url}
-//				)
-//			);
-//		}
-//
-//		/**
-//		 * @private
-//		 * 
-//		 * We notify that it was some error when downloading the desired url.
-//		 * We actually map all URL errors to NETSTREAM_PLAY_STREAMNOTFOUND NetStatusEvent.
-//		 * You can check the details property to see the url which triggered 
-//		 * this error.
-//		 */
-//		private function notifyURLError(url:String):void
-//		{
-//			dispatchEvent(
-//				new NetStatusEvent( 
-//					NetStatusEvent.NET_STATUS
-//					, false
-//					, false
-//					, {code:NetStreamCodes.NETSTREAM_PLAY_STREAMNOTFOUND, level:"error", details:url}
-//				)
-//			);
-//		}
 		
 		private var _desiredBufferTime_Min:Number = 0;
 		private var _desiredBufferTime_Max:Number = 0;
