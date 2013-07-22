@@ -296,8 +296,11 @@
 			
 			if(!_fromDVR){
 				var initialOffset:Number = NaN;
-				if(item.live && _indexInfo.dvrInfo == null)
+				if(item.live && _indexInfo.dvrInfo == null){
 					initialOffset = item.totalTime - ((item.totalTime/item.manifest.length) * 3);
+					if(initialOffset < item.totalTime - 30)
+						initialOffset = item.totalTime - 30;
+				}
 				
 				dispatchEvent(
 					new HTTPStreamingIndexHandlerEvent(

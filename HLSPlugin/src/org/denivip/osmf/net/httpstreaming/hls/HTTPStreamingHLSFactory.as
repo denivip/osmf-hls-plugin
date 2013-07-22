@@ -73,7 +73,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 			var rItem:HTTPStreamingM3U8IndexRateItem;
 			var iItem:HTTPStreamingM3U8IndexItem;
 			for each(var item:HLSDynamicStreamingItem in streamItems){
-				rItem = new HTTPStreamingM3U8IndexRateItem(item.bitrate, item.streamName, 0, item.isLive);
+				rItem = new HTTPStreamingM3U8IndexRateItem(item.bitrate, item.streamName, item.sequenceNumber, item.isLive);
 				
 				for each(var subItem:HLSMediaChunk in item.chunks){
 					iItem = new HTTPStreamingM3U8IndexItem(subItem.duration, subItem.url);

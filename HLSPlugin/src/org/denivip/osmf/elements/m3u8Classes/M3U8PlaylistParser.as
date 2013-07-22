@@ -32,7 +32,7 @@ package org.denivip.osmf.elements.m3u8Classes
 	 */
 	public class M3U8PlaylistParser extends EventDispatcher
 	{
-		private static const LIVE_CHUNK_LIMIT:int = 4;
+		private static const LIVE_CHUNK_LIMIT:int = 10;
 		
 		private var _parsing:Boolean = false;
 		private var _playlist:M3U8Playlist;
@@ -203,7 +203,7 @@ package org.denivip.osmf.elements.m3u8Classes
 					for each(var it:M3U8Item in pl.streamItems){
 						chunks.push(new HLSMediaChunk(it.url, it.startTime, it.duration));
 					}
-					item = new HLSDynamicStreamingItem(pl.url, pl.bandwidth, pl.width, pl.height, chunks);
+					item = new HLSDynamicStreamingItem(pl.url, pl.bandwidth, pl.sequenceNumber, pl.width, pl.height, chunks);
 					item.isLive = pl.isLive;
 					
 					streamItems.push(item);
@@ -216,7 +216,7 @@ package org.denivip.osmf.elements.m3u8Classes
 			}
 			
 			if(!(value.streamItems[0] is M3U8Playlist)){
-				item = new HLSDynamicStreamingItem(value.url, value.bandwidth, value.width, value.height, chunks);
+				item = new HLSDynamicStreamingItem(value.url, value.bandwidth, value.sequenceNumber, value.width, value.height, chunks);
 				item.isLive = value.isLive;
 				streamItems.push(item);
 			}
@@ -306,7 +306,7 @@ package org.denivip.osmf.elements.m3u8Classes
 		
 		private function addDVRInfo():void{
 			if(_playlist == null) return;
-			if(!_playlist.isLive || _playlist.totalLength < LIVE_CHUNK_LIMIT)
+			if(!_playlist.isLive || _playlist.totalLength <= LIVE_CHUNK_LIMIT)
 				return; // http://fc06.deviantart.net/fs70/f/2011/288/3/c/nothing_to_do_here_by_rober_raik-d4cxltj.png
 			
 			CONFIG::LOGGING

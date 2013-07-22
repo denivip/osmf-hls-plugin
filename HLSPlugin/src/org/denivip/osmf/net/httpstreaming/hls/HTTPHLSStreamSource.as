@@ -268,7 +268,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 			{
 				if (_dvrInfo != null)
 				{
-					_seekTarget = Math.floor(_dvrInfo.startTime + _dvrInfo.curLength - OSMFSettings.hdsDVRLiveOffset);
+					_seekTarget = Math.floor(_dvrInfo.startTime + _dvrInfo.curLength - 3 * OSMFSettings.hdsDVRLiveOffset);
 				}
 				else
 				{
