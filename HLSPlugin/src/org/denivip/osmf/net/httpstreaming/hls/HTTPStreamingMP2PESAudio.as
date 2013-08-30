@@ -28,6 +28,8 @@
 	
 	import flash.utils.ByteArray;
 	
+	import org.denivip.osmf.logging.HLSLogger;
+	import org.osmf.logging.Log;
 	import org.osmf.net.httpstreaming.flv.FLVTagAudio;
 
 	internal class HTTPStreamingMP2PESAudio extends HTTPStreamingMP2PESBase
@@ -114,7 +116,11 @@
 			
 			if(flush)
 			{
-				trace("audio flush at state "+_state.toString());
+				;
+				CONFIG::LOGGING
+				{
+					logger.info("audio flush at state "+_state.toString());
+				}
 			}
 			else while(packet.bytesAvailable > 0)
 			{
@@ -141,13 +147,19 @@
 						}
 						else
 						{
-							trace("adts seek 0");
+							CONFIG::LOGGING
+							{
+								logger.info("adts seek 0");
+							}
 						}
 						break;
 					case 1: // final 0xf of flags, first nibble of flags
 						if((value & 0xf0) != 0xf0)
 						{
-							trace("adts seek 1");
+							CONFIG::LOGGING
+							{
+								logger.info("adts seek 1");
+							}
 							_state = 0;
 						}
 						else
@@ -162,10 +174,7 @@
 
 						_state = 3;
 						_profile = (value >> 6) & 0x03;
-						//trace("raw "+value.toString(2));
-						//trace("profile "+_profile.toString(2));
 						_sampleRateIndex = (value >> 2) & 0x0f;
-						//trace("sample rate index "+_sampleRateIndex.toString(2));
 						_audioTimeIncr = getIncrForSRI(_sampleRateIndex);
 						// one private bit
 						_channelConfig = (value & 0x01) << 2; // first bit thereof
@@ -173,7 +182,6 @@
 					case 3:
 
 						_state = 4;
-							//trace("raw "+value.toString(2));
 						_channelConfig += (value >> 6) & 0x03; // rest of channel config
 						// orig/copy bit
 						// home bit
@@ -183,16 +191,12 @@
 						break;
 					case 4:
 						_state = 5;
-							//trace("raw "+value.toString(2));
 						_frameLength += (value) << 3; // bits 10, 9, 8, 7, 6, 5, 4, 3
 						break;
 					case 5:
 						_state = 6;
-							//trace("raw "+value.toString(2));
 						_frameLength += (value & 0xe0) >> 5;
-						//trace("framelen "+_frameLength.toString(2));
 						_remaining = _frameLength - 7;	// XXX crc issue?
-						//trace("remaining: "+_remaining.toString());
 						// buffer fullness
 						break;
 					case 6:
@@ -225,7 +229,6 @@
 							tag.data = _adtsHeader;
 							_needACHeader = false;
 							
-							//trace("adding AC header of "+uint(_adtsHeader[0]).toString(16)+" "+uint(_adtsHeader[1]).toString(16)+" "+uint(_adtsHeader[2]).toString(16)+" "+uint(_adtsHeader[3]).toString(16));
 							tag.write(tagData); // unroll out vector
 						}
 						break;
@@ -255,7 +258,6 @@
 							
 							tag = new FLVTagAudio();
 							tag.timestamp = _audioTime;
-							//trace("audio timestamp " + _audioTime.toString());
 							_audioTime += _audioTimeIncr;
 							tag.soundChannels = FLVTagAudio.SOUND_CHANNELS_STEREO;
 							tag.soundFormat = FLVTagAudio.SOUND_FORMAT_AAC;
@@ -265,24 +267,19 @@
 							tag.data = _audioData;
 							
 							tag.write(tagData); // unrolled out the vector for audio tags
-							//trace("done");
 						}
 						break;
 				} // switch
 			} // while
 			
-			//var text:String = new String();
-			//for(var i:int = 0; i<tagData.length; i++)
-			//	text += uint(tagData[i]).toString(16)+" ";
-				
-			//trace(text);
-			
 			tagData.position = 0;
 			
 			return tagData;
-		};
+		}
+		
+		CONFIG::LOGGING
+		{
+			private var logger:HLSLogger = Log.getLogger('org.denivip.osmf.net.httpstreaming.hls.HTTPStreamingMP2PESAudio') as HLSLogger;
+		}
 	}
-
-
-
 }

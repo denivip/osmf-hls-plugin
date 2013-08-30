@@ -28,6 +28,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 	
 	import flash.utils.ByteArray;
 	
+	import org.denivip.osmf.logging.HLSLogger;
+	import org.osmf.logging.Log;
 	import org.osmf.net.httpstreaming.flv.FLVTagVideo;
 
 	internal class HTTPStreamingMP2PESVideo extends HTTPStreamingMP2PESBase
@@ -60,8 +62,11 @@ package org.denivip.osmf.net.httpstreaming.hls
 				packet.position += 3;
 				// Need PTS and DTS
 				var flags:uint = (packet.readUnsignedByte() & 0xc0) >> 6;
-				if(flags != 0x03) { 
-					trace("video PES packet without both PTS and DTS");
+				CONFIG::LOGGING
+				{
+					if(flags != 0x03) {
+						logger.warn("video PES packet without both PTS and DTS");
+					}
 				}
 				
 				if(flags != 0x03 && flags != 0x02)
@@ -86,7 +91,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 						
 					_timestamp = Math.round(dts/90);
 					_compositionTime =  Math.round(pts/90) - _timestamp;
-					//trace("pts "+pts.toString()+" dts "+dts.toString()+" comp "+_compositionTime.toString() +" stamp "+_timestamp.toString() +" total "+(_compositionTime+_timestamp).toString());
 					length -= 5;
 				}
 				else
@@ -110,8 +114,11 @@ package org.denivip.osmf.net.httpstreaming.hls
 				nal = new HTTPStreamingH264NALU(_nalData); // full length to end, don't need to trim last 3 bytes
 				if(nal.NALtype != 0)
 				{
-					nals.push(nal); // could inline this (see below)	
-					trace("pushed one flush nal of type "+nal.NALtype.toString());
+					nals.push(nal); // could inline this (see below)
+					CONFIG::LOGGING
+					{
+						logger.info("pushed one flush nal of type "+nal.NALtype.toString());
+					}
 				}
 				_nalData = new ByteArray();
 			}
@@ -121,9 +128,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 				
 				// finding only 3-byte start codes is ok as trailing zeros are ignored in most (all?) cases
 				
-				//trace("# "+value.toString(16) + "  at st "+_scState.toString());
-				// unperf
-				// _nalData.writeByte(value);	// in the future we will performance-fix this by keeping indexes and doing block copies, for now we want it to work at all
 				switch(_scState)
 				{
 					case 0:
@@ -140,7 +144,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 						if(value == 0x00)	// more than 2 zeros... no problem
 						{
 							// state stays at 2
-							//trace("ex zero");
 							break;
 						}
 						else if(value == 0x01)
@@ -156,13 +159,15 @@ package org.denivip.osmf.net.httpstreaming.hls
 								nal = new HTTPStreamingH264NALU(_nalData);
 								if(nal.NALtype != 0)
 								{
-									//trace("F NAL TYPE "+nal.NALtype.toString());
 									nals.push(nal); // could inline this as well, rather than stacking and processing later in the function	
 								}
 							}
 							else
 							{
-								trace("length too short! = " + _nalData.length.toString());
+								CONFIG::LOGGING
+								{
+									logger.warn("length too short! = " + _nalData.length.toString());
+								}
 							}
 							_nalData = new ByteArray(); // and start collecting into the next one
 							_scState = 0; // got one, now go back to looking
@@ -170,7 +175,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 						}
 						else
 						{
-							// trace("0, 0,... " + value.toString());
 							_scState = 0; // go back to looking
 							break;
 						}
@@ -245,15 +249,17 @@ package org.denivip.osmf.net.httpstreaming.hls
 			
 			for each(nal in nals)
 			{
-				//trace("   NAL TYPE "+nal.NALtype.toString());
-				
 				if(nal.NALtype == 9)	// AUD -  should read the flags in here too, perhaps
 				{
 					// close the last _vTag and start a new one
-					if(_vTag && _vTagData.length == 0)
-					{
-						trace("zero-length vtag"); // can't happen if we are writing the AUDs in
-						if(avccTag) trace(" avccts "+avccTag.timestamp.toString()+" vtagts "+_vTag.timestamp.toString());
+					if(_vTag && _vTagData.length == 0){
+						; // warnings =|
+						CONFIG::LOGGING
+						{
+							logger.warn("zero-length vtag"); // can't happen if we are writing the AUDs in
+							if(avccTag) 
+								logger.info(" avccts "+avccTag.timestamp.toString()+" vtagts "+_vTag.timestamp.toString());
+						}
 					}
 					
 					if(_vTag && _vTagData.length > 0)
@@ -282,7 +288,10 @@ package org.denivip.osmf.net.httpstreaming.hls
 				{
 					if(_vTag == null)
 					{
-						trace("needed to create vtag");
+						CONFIG::LOGGING
+						{
+							logger.info("needed to create vtag");
+						}
 						_vTag = new FLVTagVideo();
 						_vTagData = new ByteArray(); // we assemble the nalus outside, set at end
 						_vTag.codecID = FLVTagVideo.CODEC_ID_AVC;
@@ -305,7 +314,10 @@ package org.denivip.osmf.net.httpstreaming.hls
 			
 			if(flush)
 			{
-				trace(" *** VIDEO FLUSH CALLED");
+				CONFIG::LOGGING
+				{
+					logger.info(" *** VIDEO FLUSH CALLED");
+				}
 				if(_vTag && _vTagData.length > 0)
 				{
 					_vTag.data = _vTagData; // set at end (see below)
@@ -316,7 +328,10 @@ package org.denivip.osmf.net.httpstreaming.hls
 						avccTag = null;
 					}
 						
-					trace("flushing one vtag");
+					CONFIG::LOGGING
+					{
+						logger.info("flushing one vtag");
+					}
 				}
 				
 				_vTag = null; // can't start new one, don't have the info
@@ -326,14 +341,15 @@ package org.denivip.osmf.net.httpstreaming.hls
 			
 			for each(tag in tags)
 			{
-				//if(tag.avcPacketType == FLVTagVideo.AVC_PACKET_TYPE_SEQUENCE_HEADER)
-				//	trace("seq header "+tag.timestamp.toString());
-				//else
-				//	trace("actually writing a tag time "+tag.timestamp.toString()+" comp "+tag.avcCompositionTimeOffset.toString());
 				tag.write(tagData);
 			}
 			
 			return tagData;
+		}
+		
+		CONFIG::LOGGING
+		{
+			private var logger:HLSLogger = Log.getLogger('org.denivip.osmf.net.httpstreaming.hls.HTTPStreamingMP2PESVideo') as HLSLogger;
 		}
 	
 	} // class

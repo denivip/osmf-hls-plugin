@@ -26,9 +26,10 @@
 {
 	internal class HTTPStreamingM3U8IndexItem
 	{
+		public var startTime:Number;
+		
 		private var _duration:Number;
 		private var _url:String;
-		private var _startTime:Number;
 		private var _discontinuity:Boolean;
 		
 		public function HTTPStreamingM3U8IndexItem(duration:Number, url:String, discontinuity:Boolean = false)
@@ -38,29 +39,10 @@
 			_discontinuity = discontinuity;
 		}
 		
-		public function set startTime(time:Number):void
-		{
-			_startTime = time;
-		}
+		public function get duration():Number{ return _duration; }
 		
-		public function get startTime():Number
-		{
-			return _startTime;
-		}
-
-		public function get duration():Number
-		{
-			return _duration;
-		}
+		public function get url():String{ return _url; }
 		
-		public function get url():String
-		{
-			return _url;
-		}
-		
-		public function get discontinuity():Boolean
-		{
-			return _discontinuity;
-		}
+		public function get discontinuity():Boolean{ return _discontinuity; }
 	}
 }

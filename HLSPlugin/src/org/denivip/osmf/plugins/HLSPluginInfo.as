@@ -1,6 +1,7 @@
 package org.denivip.osmf.plugins
 {
 	import org.denivip.osmf.elements.M3U8Element;
+	import org.denivip.osmf.logging.GALogHandler;
 	import org.denivip.osmf.logging.HLSLoggerFactory;
 	import org.denivip.osmf.logging.LogHandler;
 	import org.denivip.osmf.logging.TraceLogHandler;
@@ -33,6 +34,8 @@ package org.denivip.osmf.plugins
 				var handlers:Vector.<LogHandler> = new Vector.<LogHandler>();
 				// add handlers
 				handlers.push(new TraceLogHandler());
+				//handlers.push(new GALogHandler());
+				
 				Log.loggerFactory = new HLSLoggerFactory(handlers);
 			}
 		}

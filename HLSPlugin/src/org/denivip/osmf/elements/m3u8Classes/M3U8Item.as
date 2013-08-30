@@ -8,6 +8,7 @@ package org.denivip.osmf.elements.m3u8Classes
 		protected var _duration:Number;
 		protected var _url:String;
 		protected var _startTime:Number;
+		protected var _discontinuity:Boolean = false;
 		
 		private var _width:int = -1;
 		private var _height:int = -1;
@@ -23,9 +24,10 @@ package org.denivip.osmf.elements.m3u8Classes
 		public var resolution:String;
 		
 		
-		public function M3U8Item(duration:Number, url:String){
+		public function M3U8Item(duration:Number, url:String, discontinuity:Boolean=false){
 			_url = url;
 			_duration = duration;
+			_discontinuity = discontinuity;
 		}
 
 		/**
@@ -73,6 +75,10 @@ package org.denivip.osmf.elements.m3u8Classes
 		
 		public function set startTime(value:Number):void{
 			_startTime = value;
+		}
+		
+		public function get discontinuity():Boolean{
+			return _discontinuity;
 		}
 	}
 }

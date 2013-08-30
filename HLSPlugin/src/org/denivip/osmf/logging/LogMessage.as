@@ -3,13 +3,15 @@ package org.denivip.osmf.logging
 	internal class LogMessage
 	{
 		private var _level:String;
+		private var _category:String;
 		private var _message:String;
 		private var _params:Array;
 		
 		private var _logMessage:String;
 		
-		public function LogMessage(level:String, message:String, params:Array){
+		public function LogMessage(level:String, category:String, message:String, params:Array){
 			_level = level;
+			_category = category;
 			_message = message;
 			_params = params;
 			
@@ -17,6 +19,8 @@ package org.denivip.osmf.logging
 		}
 		
 		public function get level():String{ return _level; }
+		
+		public function get category():String{ return _category; }
 		
 		public function get message():String{ return _message; }
 		
@@ -35,7 +39,7 @@ package org.denivip.osmf.logging
 			msg += date.toLocaleString() + "." + leadingZeros(date.milliseconds) + " [" + level + "] ";
 			
 			// add category and params
-			msg += "[" + _level + "] " + applyParams(_message, _params);
+			msg += "[" + category + "] " + applyParams(_message, _params);
 			
 			return msg;
 			

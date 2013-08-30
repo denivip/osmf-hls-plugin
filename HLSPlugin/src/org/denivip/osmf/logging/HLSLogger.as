@@ -27,7 +27,7 @@ package org.denivip.osmf.logging
 		protected function logMessage(level:String, message:String, params:Array):void{
 			for(var i:int = 0; i < _handlers.length; i++){
 				var handler:LogHandler = _handlers[i];
-				handler.handleMessage(new LogMessage(level, message, params));
+				handler.handleMessage(new LogMessage(level, category, message, params));
 			}
 		}
 		

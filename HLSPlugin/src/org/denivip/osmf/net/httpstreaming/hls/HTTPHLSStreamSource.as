@@ -27,6 +27,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 	import flash.utils.ByteArray;
 	import flash.utils.IDataInput;
 	
+	import org.denivip.osmf.events.HTTPHLSStreamingEvent;
 	import org.denivip.osmf.logging.HLSLogger;
 	import org.osmf.events.DVRStreamInfoEvent;
 	import org.osmf.events.HTTPStreamingEvent;
@@ -54,8 +55,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 		import org.osmf.logging.Log;
 		import org.osmf.logging.Logger;
 	}
-	
-	[ExcludeClass]
 	
 	/**
 	 * @private
@@ -120,6 +119,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 			_indexHandler.addEventListener(HTTPStreamingIndexHandlerEvent.REQUEST_LOAD_INDEX, onRequestLoadIndex);
 			_indexHandler.addEventListener(DVRStreamInfoEvent.DVRSTREAMINFO, onDVRStreamInfo);
 			_indexHandler.addEventListener(HTTPStreamingEvent.FRAGMENT_DURATION, onFragmentDuration);
+			_indexHandler.addEventListener(HTTPHLSStreamingEvent.DISCONTINUITY, onDiscontinuity);
 			_indexHandler.addEventListener(HTTPStreamingEvent.SCRIPT_DATA, onScriptData);
 			_indexHandler.addEventListener(HTTPStreamingEvent.INDEX_ERROR, onError);
 			
@@ -139,6 +139,10 @@ package org.denivip.osmf.net.httpstreaming.hls
 			{			
 				logger.debug("Provider initialized.");
 			}
+		}
+		
+		private function onDiscontinuity(event:HTTPHLSStreamingEvent):void{
+			_discontinuityOnNextSegment = true;
 		}
 		
 		/**
@@ -247,6 +251,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 			
 			_indexHandler.dispose();
 			
+			_discontinuityOnNextSegment = false;
 			_endFragment = true;
 			_endOfStream = true;
 			_streamName = null;
@@ -571,6 +576,14 @@ package org.denivip.osmf.net.httpstreaming.hls
 						input =  _downloader.getBytes(_fileHandler.inputBytesNeeded);
 						if (input != null)
 						{
+							if(_discontinuityOnNextSegment){
+								CONFIG::LOGGING
+								{
+									logger.info("Timecode Discontinuity: Dispatching DISCONTINUITY event");
+								}
+								_dispatcher.dispatchEvent(new HTTPHLSStreamingEvent(HTTPHLSStreamingEvent.DISCONTINUITY));
+								_discontinuityOnNextSegment = false;
+							}
 							bytes = _fileHandler.processFileSegment(input);
 						}
 						else
@@ -601,6 +614,11 @@ package org.denivip.osmf.net.httpstreaming.hls
 						{
 							bytes = _fileHandler.endProcessFile(input);
 						}
+						if(bytes === null){
+							bytes = new ByteArray();
+						}
+						var flushBytes:ByteArray = _fileHandler.flushFileSegment(new ByteArray());
+						bytes.writeBytes(flushBytes);
 					}
 					
 					var availableQualityLevels:Vector.<QualityLevel> = new Vector.<QualityLevel>;
@@ -1012,6 +1030,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 		private var _bestEffortDownloadResult:String = null;
 		
 		private var _isLiveStalled:Boolean = false;
+		
+		private var _discontinuityOnNextSegment:Boolean = false;
 		
 		CONFIG::LOGGING
 		{

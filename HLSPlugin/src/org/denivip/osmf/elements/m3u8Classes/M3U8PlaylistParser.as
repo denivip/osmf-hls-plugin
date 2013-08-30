@@ -8,9 +8,9 @@ package org.denivip.osmf.elements.m3u8Classes
 	import flash.net.URLRequest;
 	import flash.utils.Dictionary;
 	
+	import org.denivip.osmf.metadata.HLSMetadata;
 	import org.denivip.osmf.net.HLSDynamicStreamingItem;
 	import org.denivip.osmf.net.HLSDynamicStreamingResource;
-	import org.denivip.osmf.net.HLSMediaChunk;
 	import org.osmf.events.ParseEvent;
 	import org.osmf.logging.Log;
 	import org.osmf.logging.Logger;
@@ -19,7 +19,9 @@ package org.denivip.osmf.elements.m3u8Classes
 	import org.osmf.metadata.Metadata;
 	import org.osmf.metadata.MetadataNamespaces;
 	import org.osmf.net.DynamicStreamingItem;
+	import org.osmf.net.DynamicStreamingResource;
 	import org.osmf.net.StreamType;
+	import org.osmf.net.StreamingURLResource;
 	import org.osmf.net.httpstreaming.dvr.DVRInfo;
 	import org.osmf.utils.URL;
 	
@@ -32,282 +34,117 @@ package org.denivip.osmf.elements.m3u8Classes
 	 */
 	public class M3U8PlaylistParser extends EventDispatcher
 	{
-		private static const LIVE_CHUNK_LIMIT:int = 10;
-		
-		private var _parsing:Boolean = false;
-		private var _playlist:M3U8Playlist;
-		
-		private var _queue:Array;
-		private var _unfinishedLoads:int;
-		private var _loadings:Dictionary;
-		
 		public function M3U8PlaylistParser(){
 			// nothing todo here...
 		}
 		
-		public function parse(value:String, rootURL:String=null, playlist:M3U8Playlist=null, internalParse:Boolean=false):void{
+		public function parse(value:String, baseResource:URLResource):void{
 			
 			if(!value || value == ''){
 				throw new ArgumentError("Parsed value is missing =(");
 			}
 			
-			_parsing = true;
+			var lines:Array = value.split(/\r?\n/);
 			
-			value = value.replace(/\r\n/g, '\n');
-			var lines:Array = value.split('\n');
-			
-			CONFIG::LOGGING
-			{
-				if(lines[0] != '#EXTM3U')
-					logger.info('Incorrect header! {0}', lines[0]);
+			if(lines[0] != '#EXTM3U'){
+				;
+				CONFIG::LOGGING
+				{
+					logger.warn('Incorrect header! {0}', lines[0]);
+				}
 			}
 			
-			if(!playlist){
-				playlist = new M3U8Playlist(0, rootURL);
-			}
-			if(!internalParse){
-				_unfinishedLoads = 0;
-				_queue = [];
-				_playlist = playlist;
-			}
-			rootURL = URL.normalizePathForURL(rootURL, true);
-						
-			var len:int = lines.length;
-			var url:String;
-			for(var i:int = 1; i < len; i++){
-				lines[i] = lines[i].replace( /^([\s|\t|\n]+)?(.*)([\s|\t|\n]+)?$/gm, "$2" );
-				var item:M3U8Item = null;
+			var result:MediaResourceBase;
+			var isLive:Boolean = true;
+			var streamItems:Vector.<DynamicStreamingItem>;
+			var tempStreamingRes:StreamingURLResource = null;
+			var tempDynamicRes:DynamicStreamingResource = null;
+			for(var i:int = 1; i < lines.length; i++){
+				var line:String = String(lines[i]).replace(/^([\s|\t|\n]+)?(.*)([\s|\t|\n]+)?$/gm, "$2");
 				
-				if(String(lines[i]).indexOf('#EXT-X-MEDIA-SEQUENCE') == 0){
-					var sequence:int = parseInt(String(lines[i]).substr(22)); //22 is length of "#EXT-X-MEDIA-SEQUENCE:"
-					playlist.sequenceNumber = sequence;
-					continue;
-				}
-				
-				if(String(lines[i]).indexOf('#EXT-X-ENDLIST') == 0){
-					playlist.isLive = false;
-					if(_playlist.isLive)
-						_playlist.isLive = false; // reset live flag in root playlist (for multi-quality)
-					continue;
-				}
-				
-				if(String(lines[i]).indexOf('#EXTINF:') == 0){
-					var duration:Number = parseFloat(String(lines[i]).substr(8)); // 8 is length of '#EXTINF:'
+				if(line.indexOf("#EXTINF:") == 0){
+					result = baseResource;
+					tempStreamingRes = result as StreamingURLResource;
 					
-					++i;
-					if(i >= len)
-						throw new Error("Unexpected end of file!");
-					
-					if(String(lines[i]).toLowerCase().indexOf("http://") == 0 || String(lines[i]).toLowerCase().indexOf("https://") == 0)
-					{
-						url = String(lines[i]);
-					}
-					else
-					{
-						var itUrl:String = String(lines[i]);
-						if(itUrl.charAt() == '/')
-							itUrl = itUrl.substr(1);
-						url = rootURL + itUrl;
-					}
-					
-					item = new M3U8Item(duration, url);
-				}
-				
-				if(String(lines[i]).indexOf('#EXT-X-STREAM-INF:') == 0){
-					++i;
-					if(i >= len)
-						throw new Error("Unexpected end of file!");
-					
-					if(String(lines[i]).toLowerCase().indexOf("http://") == 0 || String(lines[i]).toLowerCase().indexOf("https://") == 0)
-					{
-						url = String(lines[i]);
-					}
-					else
-					{
-						url = rootURL + String(lines[i]);
-					}
-					
-					if(url.search(/(https?|file)\:\/\/.*?\.m3u8(\?.*)?/i) !== -1){ // if item is playlist
-						_unfinishedLoads++;
-						item = new M3U8Playlist(0, url);
-						
-						var loader:URLLoader = new URLLoader();
-						loader.addEventListener(Event.COMPLETE, onLoadComplete);
-						loader.addEventListener(IOErrorEvent.IO_ERROR, onLoadError);
-						loader.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onLoadError);
-						
-						loader.load(new URLRequest(url));
-						
-						if(!_loadings){
-							_loadings = new Dictionary(true);
+					if(tempStreamingRes && tempStreamingRes.streamType == StreamType.LIVE_OR_RECORDED){
+						for(var j:int = i+1; j < lines.length; j++){
+							if(String(lines[j]).indexOf('#EXT-X-ENDLIST') == 0){
+								isLive = false;
+								break;
+							}
 						}
-						
-						_loadings[loader] = item;
-					}else{ // if simple media stream
-						item = new M3U8Item(0, url);
+						if(isLive)
+							tempStreamingRes.streamType = StreamType.LIVE;
 					}
-					// Parse service params
-					var paramsStr:String = String(lines[i-1]).substr(18); // 18 = '#EXT-X-STREAM-INF:'.length
-					var params:Array = paramsStr.split(',');
-					
-					var pLen:int = params.length;
-					for(var j:int = 0; j < pLen; j++){
-						var par:String = String(params[j]).replace(' ', ''); // remove all spaces
-						
-						if(par.indexOf('BANDWIDTH=') == 0)
-							item.bandwidth = parseInt(par.substr(10))/1000; // 10 = 'BANDWIDTH='.length
-						
-						if(par.indexOf('RESOLUTION=') == 0)
-							item.resolution = par.substr(11); // 11 = 'RESOLUTION='.length
-					}
+					break;
 				}
 				
-				if(item != null)
-					playlist.addItem(item);
-			}
-			
-			_parsing = false;
-			
-			if(_unfinishedLoads == 0)// && processQueue())
-				finishParse();
-		}
-		
-		public function createResource(value:M3U8Playlist, originalRes:URLResource):MediaResourceBase{
-			var resource:HLSDynamicStreamingResource;
-			var url:String;
-			
-			var manifestURL:URL = new URL(originalRes.url);
-			var cleanedPath:String = '/'+manifestURL.path;
-			cleanedPath = cleanedPath.substr(0, cleanedPath.lastIndexOf('/'));
-			var manifestFolder:String = manifestURL.protocol+'://' +
-										manifestURL.host +
-										(manifestURL.port != ''? ':' + manifestURL.port : '') +
-										cleanedPath;
-			
-			// create dynamic streaming resource
-			var baseURL:String = value.url != null ? value.url : manifestFolder;
-			baseURL = URL.normalizeRootURL(baseURL);
-			var streamType:String = (value.isLive ? StreamType.LIVE : StreamType.RECORDED);
-			if(streamType == StreamType.LIVE && value.dvrInfo != null)
-				streamType = StreamType.DVR;
-			
-			var streamItems:Vector.<DynamicStreamingItem> = new Vector.<DynamicStreamingItem>;
-			
-			var item:HLSDynamicStreamingItem;
-			var chunks:Vector.<HLSMediaChunk>;
-			
-			for each(var plItem:M3U8Item in value.streamItems){
-				if(plItem is M3U8Playlist){
-					var pl:M3U8Playlist = (plItem as M3U8Playlist);
-					chunks = new Vector.<HLSMediaChunk>();
-					for each(var it:M3U8Item in pl.streamItems){
-						chunks.push(new HLSMediaChunk(it.url, it.startTime, it.duration));
+				if(line.indexOf("#EXT-X-STREAM-INF:") == 0){
+					if(!result){
+						result = new HLSDynamicStreamingResource(baseResource.url);
+						tempDynamicRes = result as DynamicStreamingResource;
+						tempStreamingRes = baseResource as StreamingURLResource;
+						if(tempStreamingRes){
+							tempDynamicRes.streamType = tempStreamingRes.streamType;
+							tempDynamicRes.clipStartTime = tempStreamingRes.clipStartTime;
+							tempDynamicRes.clipEndTime = tempStreamingRes.clipEndTime;
+						}
+						streamItems = new Vector.<DynamicStreamingItem>();
 					}
-					item = new HLSDynamicStreamingItem(pl.url, pl.bandwidth, pl.sequenceNumber, pl.width, pl.height, chunks);
-					item.isLive = pl.isLive;
 					
-					streamItems.push(item);
-				}else{
-					if(!chunks)
-						chunks = new Vector.<HLSMediaChunk>();
+					var bw:Number;
+					if(line.search(/BANDWIDTH=(\d+)/) > 0)
+						bw = parseFloat(line.match(/BANDWIDTH=(\d+)/)[1])/1000;
 					
-					chunks.push(new HLSMediaChunk(plItem.url, plItem.startTime, plItem.duration));
+					var width:int = -1;
+					var height:int = -1;
+					if(line.search(/RESOLUTION=(\d+)x(\d+)/) > 0){
+						width = parseInt(line.match(/RESOLUTION=(\d+)x(\d+)/)[1]);
+						height = parseInt(line.match(/RESOLUTION=(\d+)x(\d+)/)[2]);
+					}
+					
+					var name:String = lines[i+1];
+					streamItems.push(new HLSDynamicStreamingItem(name, bw, width, height));
+					
+					DynamicStreamingResource(result).streamItems = streamItems;
 				}
 			}
 			
-			if(!(value.streamItems[0] is M3U8Playlist)){
-				item = new HLSDynamicStreamingItem(value.url, value.bandwidth, value.sequenceNumber, value.width, value.height, chunks);
-				item.isLive = value.isLive;
-				streamItems.push(item);
+			if(tempDynamicRes && tempDynamicRes.streamItems){
+				if(tempDynamicRes.streamItems.length == 1){
+					tempStreamingRes = baseResource as StreamingURLResource;
+					if(tempStreamingRes){
+						var url:String = tempDynamicRes.host + tempDynamicRes.streamItems[0].streamName;
+						result = new StreamingURLResource(
+							url,
+							tempStreamingRes.streamType,
+							tempStreamingRes.clipStartTime,
+							tempStreamingRes.clipEndTime,
+							tempStreamingRes.connectionArguments,
+							tempStreamingRes.urlIncludesFMSApplicationInstance,
+							tempStreamingRes.drmContentData
+						);
+					}
+				}else if(baseResource.getMetadataValue(MetadataNamespaces.RESOURCE_INITIAL_INDEX) != null){
+					var initialIndex:int = baseResource.getMetadataValue(MetadataNamespaces.RESOURCE_INITIAL_INDEX) as int;
+					tempDynamicRes.initialIndex = initialIndex < 0 ? 0 : (initialIndex >= tempDynamicRes.streamItems.length) ? (tempDynamicRes.streamItems.length-1) : initialIndex;
+				}
 			}
 			
-			resource = new HLSDynamicStreamingResource(baseURL, streamType, streamItems);
+			var hlsMetadata:HLSMetadata = new HLSMetadata();
+			result.addMetadataValue(HLSMetadata.HLS_METADATA, hlsMetadata);
 			
-			resource.addMetadataValue(MetadataNamespaces.DERIVED_RESOURCE_METADATA, originalRes);
-			
-			var dvrInfo:DVRInfo = value.dvrInfo;
-			if(dvrInfo){
-				var metadata:Metadata = new Metadata();
-				
-				metadata.addValue(MetadataNamespaces.HTTP_STREAMING_DVR_BEGIN_OFFSET_KEY, dvrInfo.beginOffset);
-				metadata.addValue(MetadataNamespaces.HTTP_STREAMING_DVR_END_OFFSET_KEY, dvrInfo.endOffset);
-				metadata.addValue(MetadataNamespaces.HTTP_STREAMING_DVR_WINDOW_DURATION_KEY, dvrInfo.windowDuration);
-				metadata.addValue(MetadataNamespaces.HTTP_STREAMING_DVR_OFFLINE_KEY, dvrInfo.offline);
-				metadata.addValue(MetadataNamespaces.HTTP_STREAMING_DVR_ID_KEY, dvrInfo.id);
-				
-				resource.addMetadataValue(MetadataNamespaces.DVR_METADATA, metadata);
+			var httpMetadata:Metadata = new Metadata();
+			result.addMetadataValue(MetadataNamespaces.HTTP_STREAMING_METADATA, httpMetadata);
+			if(result is StreamingURLResource && StreamingURLResource(result).streamType == StreamType.DVR){
+				var dvrMetadata:Metadata = new Metadata();
+				result.addMetadataValue(MetadataNamespaces.DVR_METADATA, dvrMetadata);
 			}
 			
-			return resource;
+			dispatchEvent(new ParseEvent(ParseEvent.PARSE_COMPLETE, false, false, result));
 		}
-		
 		/*
-			Service functions
-		*/
-		
-		private function finishParse():void{
-			if(processQueue())
-				return;
-			
-			if(_parsing)
-				return;
-			
-			if(!_playlist)
-				return;
-			
-			// DVR!!!
-			addDVRInfo(); // after all we add DVRInfo (if it needed of course)
-			
-			dispatchEvent(new ParseEvent(ParseEvent.PARSE_COMPLETE, false, false, _playlist));
-		}
-		
-		
-		private function onLoadComplete(event:Event):void{
-			var loader:URLLoader = event.target as URLLoader;
-			
-			loader.removeEventListener(Event.COMPLETE, onLoadComplete);
-			loader.removeEventListener(IOErrorEvent.IO_ERROR, onLoadError);
-			loader.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, onLoadError);
-			
-			var data:String = String(loader.data);
-			var playlist:M3U8Playlist = _loadings[loader];
-			delete _loadings[loader];
-			
-			_queue.push(
-				{data:data, playlist:playlist}
-			);
-			
-			_unfinishedLoads--;
-			
-			if(_unfinishedLoads == 0)
-				processQueue();
-		}
-		
-		private function onLoadError(event:Event):void{
-			_unfinishedLoads--;
-			dispatchEvent(new ParseEvent(ParseEvent.PARSE_ERROR));
-		}
-		
-		private function processQueue():Boolean{
-			if(_parsing)
-				return true;
-			
-			if(_queue.length > 0){
-				var res:Object = _queue.pop();
-				var data:String = String(res['data']);
-				var pl:M3U8Playlist = M3U8Playlist(res['playlist']);
-				var url:String = pl.url;
-				parse(data, url, pl, true);
-				return true;
-			}else{
-				return false;
-			}
-		}
-		
 		private function addDVRInfo():void{
-			if(_playlist == null) return;
-			if(!_playlist.isLive || _playlist.totalLength <= LIVE_CHUNK_LIMIT)
-				return; // http://fc06.deviantart.net/fs70/f/2011/288/3/c/nothing_to_do_here_by_rober_raik-d4cxltj.png
 			
 			CONFIG::LOGGING
 			{
@@ -316,13 +153,12 @@ package org.denivip.osmf.elements.m3u8Classes
 			
 			// black magic...
 			var dvrInfo:DVRInfo = new DVRInfo();
-			dvrInfo.id = dvrInfo.url = _playlist.url;
+			dvrInfo.id = dvrInfo.url = '';
 			dvrInfo.isRecording = true; // if live then in process
 			//dvrInfo.startTime = 0.0;
 			// attach info into playlist
-			_playlist.dvrInfo = dvrInfo;
 		}
-		
+		*/
 		CONFIG::LOGGING
 		{
 			private var logger:Logger = Log.getLogger("org.denivip.osmf.elements.m3u8Classes.M3U8PlaylistParser");

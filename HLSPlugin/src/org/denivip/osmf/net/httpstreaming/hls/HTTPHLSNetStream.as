@@ -30,6 +30,9 @@ package org.denivip.osmf.net.httpstreaming.hls
 	import flash.utils.ByteArray;
 	import flash.utils.Timer;
 	
+	import mx.core.mx_internal;
+	
+	import org.denivip.osmf.events.HTTPHLSStreamingEvent;
 	import org.denivip.osmf.logging.HLSLogger;
 	import org.osmf.events.DVRStreamInfoEvent;
 	import org.osmf.events.HTTPStreamingEvent;
@@ -62,7 +65,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 	import org.osmf.net.qos.QoSInfo;
 	import org.osmf.net.qos.QualityLevel;
 	import org.osmf.utils.OSMFSettings;
-	import org.osmf.utils.OSMFStrings;
 	
 	CONFIG::LOGGING 
 	{	
@@ -102,8 +104,13 @@ package org.denivip.osmf.net.httpstreaming.hls
 	 * The former is the responsibility of HTTPStreamingIndexHandlerBase,
 	 * the latter the responsibility of HTTPStreamingFileHandlerBase.
 	 */	
-	public class HTTPHLSNetStream extends HTTPNetStream
+	public class HTTPHLSNetStream extends NetStream
 	{
+		// Buffer control
+		private static const BUFFER_SIZE_PAUSE:Number = 32;
+		private static const BUFFER_SIZE_BIG:Number = 16;
+		private static const BUFFER_SIZE_DEF:Number = OSMFSettings.hdsMinimumBufferTime;
+		
 		/**
 		 * Constructor.
 		 * 
@@ -121,7 +128,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 		 */
 		public function HTTPHLSNetStream( connection:NetConnection, factory:HTTPStreamingFactory, resource:URLResource = null)
 		{
-			super(connection, factory, resource);
+			super(connection);
 			_resource = resource;
 			_factory = factory;
 			
@@ -133,6 +140,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 			addEventListener(HTTPStreamingEvent.TRANSITION_COMPLETE, 	onTransitionComplete);
 			addEventListener(HTTPStreamingEvent.ACTION_NEEDED, 			onActionNeeded);
 			addEventListener(HTTPStreamingEvent.DOWNLOAD_ERROR,			onDownloadError);
+			addEventListener(HTTPHLSStreamingEvent.DISCONTINUITY,		onDiscontinuity);
 			
 			addEventListener(HTTPStreamingEvent.DOWNLOAD_COMPLETE,		onDownloadComplete);
 			
@@ -154,6 +162,226 @@ package org.denivip.osmf.net.httpstreaming.hls
 			_mainTimer = new Timer(OSMFSettings.hdsMainTimerInterval); 
 			_mainTimer.addEventListener(TimerEvent.TIMER, onMainTimer);	
 		}
+		
+		///////////////////////////////////////////////////////////////////////
+		/// Public API overrides
+		///////////////////////////////////////////////////////////////////////
+		
+		override public function set client(object:Object):void
+		{
+			super.client = object;
+			
+			if (client is NetClient && _resource is DynamicStreamingResource)
+			{
+				playbackDetailsRecorder = new NetStreamPlaybackDetailsRecorder(this, client as NetClient, _resource as DynamicStreamingResource);
+			}
+		}
+		
+		/**
+		 * Plays the specified stream with respect to provided arguments.
+		 */
+		override public function play(...args):void 
+		{			
+			processPlayParameters(args);
+			CONFIG::LOGGING
+			{
+				logger.debug("Play initiated for [" + _playStreamName +"] with parameters ( start = " + _playStart.toString() + ", duration = " + _playForDuration.toString() +" ).");
+			}
+			
+			// Signal to the base class that we're entering Data Generation Mode.
+			super.play(null);
+			
+			// Before we feed any TCMessages to the Flash Player, we must feed
+			// an FLV header first.
+			var header:FLVHeader = new FLVHeader();
+			var headerBytes:ByteArray = new ByteArray();
+			header.write(headerBytes);
+			attemptAppendBytes(headerBytes);
+			
+			// Initialize ourselves.
+			_mainTimer.start();
+			_initialTime = -1;
+			_seekTime = -1;
+			_isPlaying = true;
+			_isPaused = false;
+			
+			_notifyPlayStartPending = true;
+			_notifyPlayUnpublishPending = false;
+			
+			changeSourceTo(_playStreamName, _playStart);
+		}
+		
+		/**
+		 * Pauses playback.
+		 */
+		override public function pause():void 
+		{
+			_isPaused = true;
+			super.pause();
+		}
+		
+		/**
+		 * Resumes playback.
+		 */
+		override public function resume():void 
+		{
+			_isPaused = false;
+			super.resume();
+		}
+
+		/**
+		 * Plays the specified stream and supports dynamic switching and alternate audio streams. 
+		 */
+		override public function play2(param:NetStreamPlayOptions):void
+		{
+			switch(param.transition)
+			{
+				case NetStreamPlayTransitions.RESET:
+					play(param.streamName, param.start, param.len);
+					break;
+				
+				case NetStreamPlayTransitions.SWITCH:
+					changeQualityLevelTo(param.streamName);
+					break;
+			
+				case NetStreamPlayTransitions.SWAP:
+					changeAudioStreamTo(param.streamName);
+					break;
+				
+				default:
+					// Not sure which other modes we should add support for.
+					super.play2(param);
+			}
+		} 
+		
+		/**
+		 * Seeks into the media stream for the specified offset in seconds.
+		 */
+		override public function seek(offset:Number):void
+		{
+			if(offset < 0)
+			{
+				offset = 0;		// FMS rule. Seek to <0 is same as seeking to zero.
+			}
+			
+			// we can't seek before the playback starts 
+			if (_state != HTTPStreamingState.INIT)    
+			{
+				if(_initialTime < 0)
+				{
+					_seekTarget = offset + 0;	// this covers the "don't know initial time" case, rare
+				}
+				else
+				{
+					_seekTarget = offset + _initialTime;
+				}
+				
+				setState(HTTPStreamingState.SEEK);
+				
+				dispatchEvent(
+					new NetStatusEvent(
+						NetStatusEvent.NET_STATUS, 
+						false, 
+						false, 
+						{
+							code:NetStreamCodes.NETSTREAM_SEEK_START, 
+							level:"status"
+						}
+					)
+				);		
+			}
+			
+			_notifyPlayUnpublishPending = false;
+		}
+
+		/**
+		 * Closes the NetStream object.
+		 */
+		override public function close():void
+		{
+			if (_videoHandler != null)
+			{
+				_videoHandler.close();
+			}
+			if (_mixer != null)
+			{
+				_mixer.close();
+			}
+			
+			_mainTimer.stop();
+			notifyPlayStop();
+			
+			setState(HTTPStreamingState.HALT);
+			
+			super.close();
+		}
+		
+		/**
+		 * @inheritDoc
+		 */
+		override public function set bufferTime(value:Number):void
+		{
+			super.bufferTime = value;
+			_desiredBufferTime_Min = Math.max(OSMFSettings.hdsMinimumBufferTime, value);
+			_desiredBufferTime_Max = _desiredBufferTime_Min + OSMFSettings.hdsAdditionalBufferTime;
+		}
+		
+		/**
+		 * @inheritDoc
+		 */
+		override public function get time():Number
+		{
+			if(_seekTime >= 0 && _initialTime >= 0)
+			{
+				_lastValidTimeTime = (super.time + _seekTime) - _initialTime; 
+				//  we remember what we say when time is valid, and just spit that back out any time we don't have valid data. This is probably the right answer.
+				//  the only thing we could do better is also run a timer to ask ourselves what it is whenever it might be valid and save that, just in case the
+				//  user doesn't ask... but it turns out most consumers poll this all the time in order to update playback position displays
+			}
+			return _lastValidTimeTime;
+		}
+		
+		/**
+		 * @inheritDoc
+		 */
+		override public function get bytesLoaded():uint
+		{
+			return _bytesLoaded;
+		}
+
+		///////////////////////////////////////////////////////////////////////
+		/// Custom public API - specific to HTTPNetStream 
+		///////////////////////////////////////////////////////////////////////
+		/**
+		 * Get stream information from the associated information.
+		 */ 
+		public function DVRGetStreamInfo(streamName:Object):void
+		{
+			if (_source.isReady)
+			{
+				// TODO: should we re-trigger the event?
+			}
+			else
+			{
+				// TODO: should there be a guard to protect the case where isReady is not yet true BUT play has already been called, so we are in an
+				// "initializing but not yet ready" state? This is only needed if the caller is liable to call DVRGetStreamInfo and then, before getting the
+				// event back, go ahead and call play()
+				_videoHandler.getDVRInfo(streamName);
+			}
+		}
+		
+		/**
+		 * @return true if BestEffortFetch is enabled.
+		 */
+		public function get isBestEffortFetchEnabled():Boolean
+		{
+			return _source != null &&
+				_source.isBestEffortFetchEnabled;
+		}
+		
+		///////////////////////////////////////////////////////////////////////
+		/// Internals
+		///////////////////////////////////////////////////////////////////////
 		
 		/**
 		 * @private
@@ -281,7 +509,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 				if (audioResource != null)
 				{
 					// audio handler is not dispatching events on the NetStream
-					_mixer.audio = new HTTPHLSStreamSource(_factory, audioResource, _mixer);
+					_mixer.audio = new HTTPStreamSource(_factory, audioResource, _mixer);
 					_mixer.audio.open(_desiredAudioStreamName);
 				}
 				else
@@ -310,6 +538,31 @@ package org.denivip.osmf.net.httpstreaming.hls
 			
 			switch(event.info.code)
 			{
+				case NetStreamCodes.NETSTREAM_PLAY_START:
+					if(!_started){
+						bufferTime = BUFFER_SIZE_DEF;
+						_started = true;
+						CONFIG::LOGGING
+						{
+							logger.debug("Playback started. Buffer size = "+bufferTime);
+						}
+					}
+					break;
+				case NetStreamCodes.NETSTREAM_PAUSE_NOTIFY:
+					bufferTime = BUFFER_SIZE_PAUSE;
+					CONFIG::LOGGING
+					{
+						logger.debug("Playback paused. Buffer size ="+bufferTime);
+					}
+					break;
+				case NetStreamCodes.NETSTREAM_UNPAUSE_NOTIFY:
+					bufferTime = bufferLength;
+					CONFIG::LOGGING
+					{
+						logger.debug("Playback unpaused. Buffer size ="+bufferTime);
+					}
+					break;
+				
 				case NetStreamCodes.NETSTREAM_BUFFER_EMPTY:
 					emptyBufferInterruptionSinceLastQoSUpdate = true;
 					_wasBufferEmptied = true;
@@ -325,6 +578,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 							_notifyPlayUnpublishPending = false; 
 						}
 					}
+					bufferTime = BUFFER_SIZE_DEF;
 					break;
 				
 				case NetStreamCodes.NETSTREAM_BUFFER_FULL:
@@ -333,6 +587,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 					{
 						logger.debug("Received NETSTREAM_BUFFER_FULL. _wasBufferEmptied = "+_wasBufferEmptied+" bufferLength "+this.bufferLength);
 					}
+					bufferTime = BUFFER_SIZE_BIG;
 					break;
 				
 				case NetStreamCodes.NETSTREAM_BUFFER_FLUSH:
@@ -359,7 +614,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 						{
 							logger.debug("Seek notify caught and stopped");
 						}
-					}					
+					}
+					bufferTime = BUFFER_SIZE_DEF;
 					break;
 			}
 			
@@ -949,6 +1205,31 @@ package org.denivip.osmf.net.httpstreaming.hls
 			}
 		}
 		
+		private function onDiscontinuity(event:HTTPHLSStreamingEvent):void{
+			CONFIG::LOGGING
+			{
+				logger.debug("Timecode discontinuity: We need to to an appendBytesAction in order to reset NetStream internal state");
+			}
+			
+			CONFIG::FLASH_10_1
+			{
+				appendBytesAction(NetStreamAppendBytesAction.RESET_BEGIN);
+			}
+			
+			// Before we feed any TCMessages to the Flash Player, we must feed
+			// an FLV header first.
+			var header:FLVHeader = new FLVHeader();
+			var headerBytes:ByteArray = new ByteArray();
+			header.write(headerBytes);
+			attemptAppendBytes(headerBytes);
+			
+			if (_flvParser) {
+				var bytes:ByteArray = new ByteArray();
+				_flvParser.flush(bytes);
+				_flvParser = null;
+			}
+		}
+		
 		private function onDownloadComplete(event:HTTPStreamingEvent):void
 		{
 			CONFIG::LOGGING
@@ -1446,6 +1727,33 @@ package org.denivip.osmf.net.httpstreaming.hls
 			}
 		}
 		
+		/**
+		 * @private
+		 * 
+		 * Creates the source object which will be used to consume the associated resource.
+		 */
+		protected function createSource(resource:URLResource):void
+		{
+			var source:IHTTPStreamSource = null;
+			var streamingResource:StreamingURLResource = resource as StreamingURLResource;
+			if (streamingResource == null || streamingResource.alternativeAudioStreamItems == null || streamingResource.alternativeAudioStreamItems.length == 0)
+			{
+				// we are not in alternative audio scenario, we are going to the legacy mode
+				var legacySource:HTTPHLSStreamSource = new HTTPHLSStreamSource(_factory, _resource, this);
+				
+				_source = legacySource;
+				_videoHandler = legacySource;
+			}
+			else
+			{
+				_mixer = new HTTPStreamMixer(this);
+				_mixer.video = new HTTPStreamSource(_factory, _resource, _mixer);
+				
+				_source = _mixer;
+				_videoHandler = _mixer.video;
+			}
+		}
+		
 		private var _desiredBufferTime_Min:Number = 0;
 		private var _desiredBufferTime_Max:Number = 0;
 
@@ -1510,6 +1818,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 		
 		private var _bytesLoaded:uint = 0;
 
+		private var _started:Boolean = false;
+		
 		private var _wasSourceLiveStalled:Boolean = false;
 		private var _issuedLiveStallNetStatus:Boolean = false;
 		private var _wasBufferEmptied:Boolean = false;	// true if the player is waiting for BUFFER_FULL.
@@ -1523,7 +1833,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 		
 		CONFIG::LOGGING
 		{
-			private static const logger:HLSLogger = Log.getLogger("org.denivip.osmf.net.httpstreaming.HTTPHLSNetStream") as HLSLogger;
+			private static const logger:HLSLogger = Log.getLogger("org.denivip.osmf.net.httpstreaming.hls.HTTPHLSNetStream") as HLSLogger;
 			private var previouslyLoggedState:String = null;
 		}
 	}

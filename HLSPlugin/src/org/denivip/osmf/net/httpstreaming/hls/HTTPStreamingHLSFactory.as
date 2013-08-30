@@ -24,20 +24,15 @@
 
 package org.denivip.osmf.net.httpstreaming.hls
 {
-	import org.denivip.osmf.net.HLSDynamicStreamingItem;
 	import org.denivip.osmf.net.HLSDynamicStreamingResource;
-	import org.denivip.osmf.net.HLSMediaChunk;
-	import org.osmf.elements.VideoElement;
-	import org.osmf.media.MediaElement;
 	import org.osmf.media.MediaResourceBase;
-	import org.osmf.metadata.Metadata;
-	import org.osmf.metadata.MetadataNamespaces;
+	import org.osmf.media.URLResource;
 	import org.osmf.net.DynamicStreamingItem;
+	import org.osmf.net.DynamicStreamingResource;
 	import org.osmf.net.httpstreaming.HTTPStreamingFactory;
 	import org.osmf.net.httpstreaming.HTTPStreamingFileHandlerBase;
 	import org.osmf.net.httpstreaming.HTTPStreamingIndexHandlerBase;
 	import org.osmf.net.httpstreaming.HTTPStreamingIndexInfoBase;
-	import org.osmf.net.httpstreaming.dvr.DVRInfo;
 	
 	/**
 	 * HLS Streaming factory
@@ -60,11 +55,38 @@ package org.denivip.osmf.net.httpstreaming.hls
 		
 		override public function createIndexInfo(resource:MediaResourceBase):HTTPStreamingIndexInfoBase
 		{
-			var hlsr:HLSDynamicStreamingResource = resource as HLSDynamicStreamingResource;
-			return createHLSIndexInfo(hlsr);
+			return createHLSIndexInfo(URLResource(resource));
 		}
 		
-		private function createHLSIndexInfo(res:HLSDynamicStreamingResource):HTTPStreamingHLSIndexInfo{
+		private function createHLSIndexInfo(res:URLResource):HTTPStreamingHLSIndexInfo{
+			
+			var baseURL:String = '';
+			var streamInfos:Vector.<HLSStreamInfo> = new Vector.<HLSStreamInfo>();
+			var dynamicRes:DynamicStreamingResource;
+			
+			if(res is DynamicStreamingResource){
+				dynamicRes = res as DynamicStreamingResource;
+				
+				for each(var dsi:DynamicStreamingItem in dynamicRes.streamItems){
+					var params:Object = {};
+					
+					if(dsi.width > 0)
+						params.width = dsi.width;
+					
+					if(dsi.height > 0)
+						params.height = dsi.height;
+					
+					streamInfos.push(new HLSStreamInfo(dsi.streamName, dsi.bitrate, params));
+				}
+				
+				baseURL = dynamicRes.host;
+			}else{
+				streamInfos.push(new HLSStreamInfo(res.url, 0, {}));
+			}
+			
+			return new HTTPStreamingHLSIndexInfo(baseURL, streamInfos);
+			
+			/*
 			var indexInfo:HTTPStreamingHLSIndexInfo = null;
 			
 			var streamItems:Vector.<DynamicStreamingItem> = res.streamItems;//res.playlist;
@@ -76,7 +98,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 				rItem = new HTTPStreamingM3U8IndexRateItem(item.bitrate, item.streamName, item.sequenceNumber, item.isLive);
 				
 				for each(var subItem:HLSMediaChunk in item.chunks){
-					iItem = new HTTPStreamingM3U8IndexItem(subItem.duration, subItem.url);
+					iItem = new HTTPStreamingM3U8IndexItem(subItem.duration, subItem.url, subItem.discontinuity);
 					rItem.addIndexItem(iItem);
 				}
 				streams.push(rItem);
@@ -120,6 +142,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 				
 				return dvrInfo;
 			}
+			*/
 		}
 	}
 }

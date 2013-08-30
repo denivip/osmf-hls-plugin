@@ -11,7 +11,7 @@ package org.denivip.osmf.elements
 	import org.denivip.osmf.elements.m3u8Classes.M3U8Playlist;
 	import org.denivip.osmf.elements.m3u8Classes.M3U8PlaylistParser;
 	import org.denivip.osmf.logging.HLSLogger;
-	import org.denivip.osmf.net.httpstreaming.hls.HTTPStreamingM3U8NetLoader;
+	import org.denivip.osmf.net.httpstreaming.hls.HTTPStreamingHLSNetLoader;
 	import org.osmf.elements.VideoElement;
 	import org.osmf.elements.proxyClasses.LoadFromDocumentLoadTrait;
 	import org.osmf.events.MediaError;
@@ -107,7 +107,7 @@ package org.denivip.osmf.elements
 					_parser.addEventListener(ParseEvent.PARSE_COMPLETE, parseComplete);
 					_parser.addEventListener(ParseEvent.PARSE_ERROR, parseError);
 					
-					_parser.parse(resData, URLResource(loadTrait.resource).url);
+					_parser.parse(resData, URLResource(loadTrait.resource));
 				}catch(err:Error){
 					updateLoadTrait(loadTrait, LoadState.LOAD_ERROR);
 					dispatchEvent(new MediaErrorEvent(MediaErrorEvent.MEDIA_ERROR, false, false, new MediaError(err.errorID, err.message)));
@@ -123,8 +123,7 @@ package org.denivip.osmf.elements
 			_parser.removeEventListener(ParseEvent.PARSE_COMPLETE, parseComplete);
 			_parser.removeEventListener(ParseEvent.PARSE_ERROR, parseError);
 			
-			var playlist:M3U8Playlist = M3U8Playlist(event.data);
-			finishPlaylistLoading(playlist);
+			finishPlaylistLoading(MediaResourceBase(event.data));
 		}
 		
 		private function parseError(event:ParseEvent):void{
@@ -132,17 +131,17 @@ package org.denivip.osmf.elements
 			_parser.removeEventListener(ParseEvent.PARSE_ERROR, parseError);
 		}
 		
-		private function finishPlaylistLoading(playlist:M3U8Playlist):void{
+		private function finishPlaylistLoading(resource:MediaResourceBase):void{
 			try{
+				/*
 				CONFIG::LOGGING
 				{
 					logger.info("Playlist ({0}) size:", playlist.url);
 					logger.info("chanks num = {0}", playlist.streamItems.length);
 					logger.info("duration = {0}", playlist.isLive ? 'live' : playlist.duration);
 				}
-				
-				var resource:MediaResourceBase = _parser.createResource(playlist, URLResource(_loadTrait.resource));
-				var loadedElem:MediaElement = new VideoElement(null, new HTTPStreamingM3U8NetLoader());
+				*/
+				var loadedElem:MediaElement = new VideoElement(null, new HTTPStreamingHLSNetLoader());
 				loadedElem.resource = resource;
 				
 				LoadFromDocumentLoadTrait(_loadTrait).mediaElement = loadedElem;

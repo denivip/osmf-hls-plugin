@@ -27,87 +27,52 @@
 	
 	internal class HTTPStreamingM3U8IndexRateItem
 	{
+		public var sequenceNumber:int;
+		public var isLive:Boolean;
+		public var targetDuration:Number;
+		
 		private var _bw:Number;
 		private var _url:String;
 		private var _manifest:Vector.<HTTPStreamingM3U8IndexItem>;
 		private var _totalTime:Number;
-		private var _sequenceNumber:int; // Stores the #EXT-X-MEDIA-SEQUENCE value for the current manifest (needed for live streaming)
-		private var _live:Boolean;
 		
-		public function HTTPStreamingM3U8IndexRateItem(bw:Number = 0, url:String = null, seqNum:int = 0, live:Boolean = true) // Live is true for all streams until we get a #EXT-X-ENDLIST tag
+		public function HTTPStreamingM3U8IndexRateItem(
+			bw:Number = 0,
+			url:String = null,
+			seqNum:int = 0,
+			live:Boolean = true  // Live is true for all streams until we get a #EXT-X-ENDLIST tag
+		)
 		{
 			_bw = bw;
 			_url = url;
 			_manifest = new Vector.<HTTPStreamingM3U8IndexItem>;
 			_totalTime = 0;
-			_sequenceNumber = seqNum;
-			_live = live;
+			
+			sequenceNumber = seqNum;
+			isLive = live;
 		}
 		
-		public function get bw():Number
-		{
-			return _bw;
-		}
+		public function get bw():Number{ return _bw; }
 		
-		public function get url():String
-		{
-			return _url;
-		}
+		public function get url():String{ return _url; }
 		
-		public function get live():Boolean
-		{
-			return _live;
-		}
-		
-		public function get urlBase():String
-		{
+		public function get urlBase():String{ 
 			var offset:int;
 			offset = _url.lastIndexOf("/");
 			return _url.substr(0, offset+1);
 		}
 		
-		public function get totalTime():Number
-		{
-			return _totalTime;
-		}
+		public function get totalTime():Number{ return _totalTime; }
 		
-		public function get sequenceNumber():int
-		{
-			return _sequenceNumber;
-		}
-		
-		public function setSequenceNumber(seqNum:int):void
-		{
-			_sequenceNumber = seqNum;
-		}
-		
-		public function setLive(live:Boolean):void
-		{
-			_live = live;
-		}
-		
-		public function addIndexItem(item:HTTPStreamingM3U8IndexItem):void
-		{
+		public function addIndexItem(item:HTTPStreamingM3U8IndexItem):void{
 			item.startTime = _totalTime;
 			_totalTime += item.duration;
 			_manifest.push(item);
-		}
-		
-		public function clearManifest():void
-		{
-			_manifest = new Vector.<HTTPStreamingM3U8IndexItem>;
-			_totalTime = 0;
-		}
-		
-		public static function sortComparison(item1:HTTPStreamingM3U8IndexRateItem, item2:HTTPStreamingM3U8IndexRateItem):Number
-		{
-			return item1._bw - item2._bw;
 		}
 		
 		public function get manifest():Vector.<HTTPStreamingM3U8IndexItem>
 		{
 			return _manifest;
 		}
-		
 	}
 }

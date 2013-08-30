@@ -10,12 +10,23 @@ package org.denivip.osmf.net
 	{
 		public function HLSDynamicStreamingResource(
 			url:String,
-			streamType:String = null,
-			streamItems:Vector.<DynamicStreamingItem> = null
+			streamType:String = null
 		)
 		{
 			super(url, streamType);
-			this.streamItems = streamItems;
+		}
+		
+		override public function indexFromName(name:String):int{
+			var index:int = 0;
+			
+			while(index < streamItems.length){
+				if(streamItems[index].streamName == name)
+					return index;
+				
+				index++;
+			}
+			
+			return -1;
 		}
 	}
 }

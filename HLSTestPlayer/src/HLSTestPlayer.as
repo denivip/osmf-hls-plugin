@@ -13,7 +13,7 @@ package
 	
 	public class HLSTestPlayer extends Sprite
 	{
-		private static const HLS_VIDEO:String = 'http://osmfhls.kutu.ru/static/vod/sl_vod.m3u8';
+		private static const HLS_VIDEO:String = 'http://www.codecomposer.net/hls/playlist.m3u8';
 		
 		public function HLSTestPlayer(){
 			initPlayer();
@@ -25,7 +25,7 @@ package
 			factory.addEventListener(MediaFactoryEvent.PLUGIN_LOAD_ERROR, onError);
 			factory.loadPlugin(new PluginInfoResource(new HLSPluginInfo()));
 			
-			var res:URLResource = new URLResource( 'http://cs413722.vk.me/v413722557/938/h5neJS2nRH0.jpg' );
+			var res:URLResource = new URLResource( HLS_VIDEO );
 			
 			var element:MediaElement = factory.createMediaElement(res);
 			if(element == null)

@@ -31,6 +31,7 @@
 	import org.denivip.osmf.elements.m3u8Classes.M3U8Item;
 	import org.denivip.osmf.elements.m3u8Classes.M3U8Playlist;
 	import org.denivip.osmf.elements.m3u8Classes.M3U8PlaylistParser;
+	import org.denivip.osmf.events.HTTPHLSStreamingEvent;
 	import org.denivip.osmf.logging.HLSLogger;
 	import org.osmf.events.DVRStreamInfoEvent;
 	import org.osmf.events.HTTPStreamingEvent;
@@ -65,16 +66,20 @@
 		private var _rateVec:Vector.<HTTPStreamingM3U8IndexRateItem>;
 		private var _segment:int;
 		private var _absoluteSegment:int;
-		private var _quality:int;
+		private var _quality:int = -1;
 		
 		private var _streamNames:Array;
 		private var _streamQualityRates:Array;
+		private var _streamURLs:Array;
 		
 		// for error handling (if playlist don't update on server)
 		private var _prevPlaylist:String;
 		private var _matchCounter:int;
 		
+		private var _DVR:Boolean;
 		private var _fromDVR:Boolean;
+		private var _dvrInfo:DVRInfo;
+		private var _dvrStartTime:Number;
 		
 		public function HTTPStreamingHLSIndexHandler(fileHandler:HTTPStreamingMP2TSFileHandler){
 			super();
@@ -83,41 +88,37 @@
 		}
 		
 		override public function dvrGetStreamInfo(indexInfo:Object):void{
+			_DVR = true;
 			_fromDVR = true;
 			initialize(indexInfo);
 		}
 		
 		override public function initialize(indexInfo:Object):void{
 			_indexInfo = indexInfo as HTTPStreamingHLSIndexInfo;
-			if(_indexInfo == null){
-				CONFIG::LOGGING
-				{
-					logger.error("Incorrect indexInfo!");
-				}
-				
+			if( !_indexInfo ||
+				!_indexInfo.streams ||
+				_indexInfo.streams.length <= 0 ){
 				dispatchEvent(new HTTPStreamingEvent(HTTPStreamingEvent.INDEX_ERROR));
 				return;
 			}
 			
+			_baseURL = _indexInfo.baseURL.substr(0, indexInfo.baseURL.lastIndexOf('/')+1);
 			_streamNames = [];
 			_streamQualityRates = [];
-			_quality = 0;
+			_streamURLs = [];
 			
-			_rateVec = _indexInfo.streams;
-			
-			// prepare data for multiquality
-			var streamsCount:int = _rateVec.length;
-			for(var quality:int = 0; quality < streamsCount; quality++){
-				var item:HTTPStreamingM3U8IndexRateItem = _rateVec[quality];
-				
-				if(item){
-					_streamNames[quality] = item.url;
-					_streamQualityRates[quality] = item.bw;
-				}
+			for each(var hsi:HLSStreamInfo in _indexInfo.streams){
+				_streamNames.push(hsi.streamName);
+				_streamQualityRates.push(hsi.bitrate);
+				var url:String = _baseURL + hsi.streamName;
+				_streamURLs.push(url);
 			}
 			
+			_rateVec = new Vector.<HTTPStreamingM3U8IndexRateItem>(_indexInfo.streams.length);
+			
 			notifyRatesReady();
-			notifyIndexReady(_quality);
+			
+			dispatchEvent(new HTTPStreamingIndexHandlerEvent(HTTPStreamingIndexHandlerEvent.REQUEST_LOAD_INDEX, false, false, false, NaN, null, null, new URLRequest(_streamURLs[0]), 0, true));
 		}
 		
 		override public function dispose():void{
@@ -126,6 +127,7 @@
 			
 			_streamNames = null;
 			_streamQualityRates = null;
+			_streamURLs = null;
 			
 			_prevPlaylist = null;
 		}
@@ -134,23 +136,16 @@
 			used only in live streaming
 		*/
 		override public function processIndexData(data:*, indexContext:Object):void{
-			// refresh index context
-			var rateItem:HTTPStreamingM3U8IndexRateItem = HTTPStreamingM3U8IndexRateItem(indexContext)
-			if(indexContext){
-				if(_absoluteSegment > 0){
-					rateItem.clearManifest();
-				}
-			}
-			
-			// get playlist from binary data
 			CONFIG::LOGGING
 			{
 				_reloadTime = getTimer() - _reloadTime;
 				logger.info("Playlist reload time {0} sec", (_reloadTime/1000));
 			}
-			var ba:ByteArray = ByteArray(data);
-			var pl_str:String = ba.readUTFBytes(ba.length);
-			if(pl_str.localeCompare(_prevPlaylist) == 0)
+			
+			var quality:int = indexContext as int;
+			data = String(data).replace(/\\\s*[\r?\n]\s*/g, "");
+			
+			if(String(data).localeCompare(_prevPlaylist) == 0)
 				++_matchCounter;
 			
 			if(_matchCounter == MAX_ERRORS){ // if delivered playlist again not changed then error_event (or all what you want)
@@ -161,59 +156,97 @@
 				dispatchEvent(new HTTPStreamingEvent(HTTPStreamingEvent.INDEX_ERROR));
 			}
 			
-			_prevPlaylist = pl_str;
+			_prevPlaylist = String(data);
 			
-			// simple parsing && update rate items
-			var parser:M3U8PlaylistParser = new M3U8PlaylistParser();
-			parser.addEventListener(ParseEvent.PARSE_COMPLETE, onComplete);
-			parser.addEventListener(ParseEvent.PARSE_ERROR, onError);
-			
-			parser.parse(pl_str, rateItem.urlBase);
-			
-			// service functions
-			function onComplete(e:ParseEvent):void{
-				parser.removeEventListener(ParseEvent.PARSE_COMPLETE, onComplete);
-				parser.removeEventListener(ParseEvent.PARSE_ERROR, onError);
-				
-				var pl:M3U8Playlist = M3U8Playlist(e.data);
-				
-				CONFIG::LOGGING
-				{
-					logger.info("Playlist ({0}) size:", pl.url);
-					logger.info("chanks num = {0}", pl.streamItems.length);
-					logger.info("duration = {0}", pl.isLive ? 'live' : pl.duration);
+			var lines:Vector.<String> = Vector.<String>(String(data).split(/\r?\n/));
+			var rateItem:HTTPStreamingM3U8IndexRateItem = new HTTPStreamingM3U8IndexRateItem(_streamQualityRates[quality], _streamURLs[quality]);
+			var indexItem:HTTPStreamingM3U8IndexItem;
+			var len:int = lines.length;
+			var discontinuity:Boolean = false;
+			for(var i:int = 0; i < len; i++){
+				if(i == 0){
+					if(lines[i] != '#EXTM3U'){
+						dispatchEvent(new HTTPStreamingEvent(HTTPStreamingEvent.INDEX_ERROR));
+						return;
+					}
 				}
 				
-				updateRateItem(pl, rateItem);
-				
-				notifyRatesReady();
-				notifyIndexReady(_quality);
+				if(lines[i].indexOf("#EXTINF:") == 0){
+					var duration:Number = parseFloat(lines[i].match(/([\d\.]+)/)[1]);
+					var url:String = rateItem.url.substr(0, rateItem.url.lastIndexOf('/')+1) + lines[i+1];
+					indexItem = new HTTPStreamingM3U8IndexItem(duration, url, discontinuity);
+					rateItem.addIndexItem(indexItem);
+					discontinuity = false;
+				}else if(lines[i].indexOf("#EXT-X-ENDLIST") == 0){
+					rateItem.isLive = false;
+				}else if(lines[i].indexOf("#EXT-X-MEDIA-SEQUENCE:") == 0){
+					rateItem.sequenceNumber = parseInt(lines[i].match(/(\d+)/)[1]);
+				}else{
+					if(lines[i].indexOf("#EXT-X-TARGETDURATION:") == 0){
+						rateItem.targetDuration = parseFloat(lines[i].match(/([\d\.]+)/)[1]);
+					}
+					if(lines[i].indexOf("#EXT-X-DISCONTINUITY") == 0){
+						discontinuity = true;
+					}
+				}
 			}
 			
-			function onError(e:ParseEvent):void{
-				parser.removeEventListener(ParseEvent.PARSE_COMPLETE, onComplete);
-				parser.removeEventListener(ParseEvent.PARSE_ERROR, onError);
-				
-				// maybe add notification?... do it if you want =)
-				CONFIG::LOGGING
-				{
-					logger.warn("Parse error! Maybe incorrect playlist");
+			if(_DVR){
+				if(isNaN(_dvrStartTime))
+					_dvrStartTime = 0.0;
+				else{
+					var prevRateItem:HTTPStreamingM3U8IndexRateItem = _rateVec[quality];
+					if(prevRateItem){
+						len = rateItem.sequenceNumber-prevRateItem.sequenceNumber;
+						if(len > prevRateItem.manifest.length){
+							len = prevRateItem.manifest.length;
+						}
+						for(i = 0; i < len; i++){
+							_dvrStartTime += prevRateItem.manifest[i].duration;
+						}
+					}
 				}
+			}
+			
+			_rateVec[quality] = rateItem;
+			var initialOffset:Number;
+			if(rateItem.isLive){
+				initialOffset = rateItem.totalTime - ((rateItem.totalTime/rateItem.manifest.length) * 3);
+				if(initialOffset < rateItem.totalTime - 30)
+					initialOffset = rateItem.totalTime - 30;
+			}
+			notifyIndexReady(quality, initialOffset);
+			if(rateItem.isLive){
+				notifyTotalDuration(rateItem.totalTime, quality, rateItem.isLive);
+				_quality = quality;
 			}
 		}
 		
 		override public function getFileForTime(time:Number, quality:int):HTTPStreamRequest{
 			_fileHandler.resetCache();
 			
+			var request:HTTPStreamRequest = checkRateAvilable(quality);
+			if(request)
+				return request;
+			
+			if(_DVR && _dvrStartTime > 0){
+				_dvrStartTime = 0.0;
+				dispatchDVRStreamInfo(quality);
+			}
+			
 			time -= _fileHandler.initialOffset;
 			if(time < 0)
 				time = 0;
 			
-			_quality = quality;
 			var item:HTTPStreamingM3U8IndexRateItem = _rateVec[quality];
 			var manifest:Vector.<HTTPStreamingM3U8IndexItem> = item.manifest;
-			
+			if(!manifest.length)
+				return new HTTPStreamRequest(HTTPStreamRequestKind.DONE);
 			var len:int = manifest.length;
+			var tempItem:HTTPStreamingM3U8IndexItem = manifest[len-1];
+			if(time > tempItem.startTime+tempItem.duration)
+				return new HTTPStreamRequest(HTTPStreamRequestKind.DONE);
+			
 			var i:int;
 			for(i = 0; i < len; i++){
 				if(time < manifest[i].startTime)
@@ -224,17 +257,28 @@
 			_segment = i;
 			_absoluteSegment = item.sequenceNumber + _segment;
 			
+			if(!item.isLive && _quality != quality){
+				notifyTotalDuration(item.totalTime, quality, item.isLive);
+				_quality = quality;
+			}
+			
 			return getNextFile(quality);
 		}
 		
 		override public function getNextFile(quality:int):HTTPStreamRequest{
+			var request:HTTPStreamRequest = checkRateAvilable(quality);
+			if(request)
+				return request;
+			
 			var item:HTTPStreamingM3U8IndexRateItem = _rateVec[quality];
 			var manifest:Vector.<HTTPStreamingM3U8IndexItem> = item.manifest;
-			var request:HTTPStreamRequest;
 			
-			notifyTotalDuration(item.totalTime, quality, item.live);
+			if(!item.isLive && _quality != quality){
+				_quality = quality;
+				notifyTotalDuration(item.totalTime, quality, item.isLive);
+			}
 			
-			if(item.live){
+			if(item.isLive){
 				if(_absoluteSegment == 0 && _segment == 0){ // Initialize live playback
 					_absoluteSegment = item.sequenceNumber + _segment;
 				}
@@ -253,9 +297,9 @@
 					{
 						_reloadTime = getTimer();
 					}
-					dispatchEvent(new HTTPStreamingIndexHandlerEvent(HTTPStreamingIndexHandlerEvent.REQUEST_LOAD_INDEX, false, false, item.live, 0, _streamNames, _streamQualityRates, new URLRequest(_rateVec[quality].url), _rateVec[quality], false));						
+					dispatchEvent(new HTTPStreamingIndexHandlerEvent(HTTPStreamingIndexHandlerEvent.REQUEST_LOAD_INDEX, false, false, item.isLive, 0, _streamNames, _streamQualityRates, new URLRequest(_rateVec[quality].url), _rateVec[quality], false));						
 					return new HTTPStreamRequest(HTTPStreamRequestKind.LIVE_STALL, null, 1.0);
-				} 
+				}
 			}
 			
 			if(_segment >= manifest.length){ // if playlist ended, then end =)
@@ -264,6 +308,10 @@
 				request = new HTTPStreamRequest(HTTPStreamRequestKind.DOWNLOAD, manifest[_segment].url);
 				
 				dispatchEvent(new HTTPStreamingEvent(HTTPStreamingEvent.FRAGMENT_DURATION, false, false, manifest[_segment].duration));
+				
+				if(manifest[_segment].discontinuity){
+					dispatchEvent(new HTTPHLSStreamingEvent(HTTPHLSStreamingEvent.DISCONTINUITY));
+				}
 				
 				++_segment;
 				++_absoluteSegment;
@@ -275,6 +323,18 @@
 		/*
 			Private secton
 		*/
+		private function checkRateAvilable(quality:int):HTTPStreamRequest{
+			if(!_rateVec[quality]){
+				if(_streamQualityRates.length > quality){
+					dispatchEvent(new HTTPStreamingIndexHandlerEvent(HTTPStreamingIndexHandlerEvent.REQUEST_LOAD_INDEX, false, false, false, NaN, null, null, new URLRequest(_streamURLs[quality]), quality, true));
+					return new HTTPStreamRequest(HTTPStreamRequestKind.RETRY, null, 1);
+				}else{
+					return new HTTPStreamRequest(HTTPStreamRequestKind.DONE);
+				}
+			}
+			return null;
+		}
+		
 		private function notifyRatesReady():void{
 			dispatchEvent(
 				new HTTPStreamingIndexHandlerEvent(
@@ -289,36 +349,33 @@
 			);
 		}
 		
-		private function notifyIndexReady(quality:int):void{
-			var item:HTTPStreamingM3U8IndexRateItem = _rateVec[quality];
+		private function notifyIndexReady(quality:int, offset:Number):void{
 			
-			dispatchDVRStreamInfo(item);
-			
-			if(!_fromDVR){
-				var initialOffset:Number = NaN;
-				if(item.live && _indexInfo.dvrInfo == null){
-					initialOffset = item.totalTime - ((item.totalTime/item.manifest.length) * 3);
-					if(initialOffset < item.totalTime - 30)
-						initialOffset = item.totalTime - 30;
+			if(_DVR){
+				dispatchDVRStreamInfo(quality);
+				if(_fromDVR){
+					_fromDVR = false;
+					return;
 				}
-				
-				dispatchEvent(
-					new HTTPStreamingIndexHandlerEvent(
-						HTTPStreamingIndexHandlerEvent.INDEX_READY,
-						false,
-						false,
-						item.live,
-						initialOffset
-					)
-				);
 			}
-			_fromDVR = false;
+			
+			var initialOffset:Number = Math.max(offset, 0);
+				
+			dispatchEvent(
+				new HTTPStreamingIndexHandlerEvent(
+					HTTPStreamingIndexHandlerEvent.INDEX_READY,
+					false,
+					false,
+					_rateVec[quality].isLive,
+					initialOffset
+				)
+			);
 		}
 		
 		private function notifyTotalDuration(duration:Number, quality:int, live:Boolean):void{
 			var sdo:FLVTagScriptDataObject = new FLVTagScriptDataObject();
 			var metaInfo:Object = new Object();
-			if(!live || (live && _indexInfo.dvrInfo))
+			if(!live)
 				metaInfo.duration = duration;
 			else
 				metaInfo.duration = 0;
@@ -336,47 +393,29 @@
 			);
 		}
 		
-		private function dispatchDVRStreamInfo(item:HTTPStreamingM3U8IndexRateItem):void{
-			var dvrInfo:DVRInfo = _indexInfo.dvrInfo;
-			if(dvrInfo == null) // Nothing todo here!
-				return;
+		private function dispatchDVRStreamInfo(quality:int):void{
+			var item:HTTPStreamingM3U8IndexRateItem = _rateVec[quality];
+			if(!_dvrInfo)
+				_dvrInfo = new DVRInfo();
 			
-			dvrInfo.isRecording = item.live; // it's simple if not live then VOD =)
-			var currentDuration:Number = item.totalTime;
-			// make some cheating... 
-			var currentTime:Number = item.totalTime - ((item.totalTime/item.manifest.length) * 3);
+			_dvrInfo.id = _baseURL;
+			_dvrInfo.isRecording = item.isLive; // it's simple if not live then VOD =)
 			
-			if(isNaN(dvrInfo.startTime))
-				dvrInfo.startTime = 0.0;
+			if(isNaN(_dvrStartTime))
+				_dvrInfo.startTime = 0.0;
+			else
+				_dvrInfo.startTime = _dvrStartTime;
 			
-			// update current length of the DVR window 
-			dvrInfo.curLength = currentTime;// because dvrInfo.startTime is "0.0" =);	
-			
-			// adjust the start time if we have a DVR rooling window active
-			if ((dvrInfo.windowDuration != -1) && (dvrInfo.curLength > dvrInfo.windowDuration))
-			{
-				dvrInfo.startTime += dvrInfo.curLength - dvrInfo.windowDuration;
-				dvrInfo.curLength = dvrInfo.windowDuration;
-			}
+			_dvrInfo.curLength = item.totalTime;
+			_dvrInfo.windowDuration = item.totalTime;
 			
 			dispatchEvent(new DVRStreamInfoEvent(
 					DVRStreamInfoEvent.DVRSTREAMINFO,
 					false,
 					false,
-					dvrInfo
+					_dvrInfo
 				)
 			);
-		}
-		
-		private function updateRateItem(playlist:M3U8Playlist, item:HTTPStreamingM3U8IndexRateItem):void{
-			// refresh manifest items
-			for each(var m3u8Item:M3U8Item in playlist.streamItems){
-				var iItem:HTTPStreamingM3U8IndexItem = new HTTPStreamingM3U8IndexItem(m3u8Item.duration, m3u8Item.url);
-				item.addIndexItem(iItem);
-			}
-			
-			item.setSequenceNumber(playlist.sequenceNumber);
-			item.setLive(playlist.isLive);
 		}
 		
 		CONFIG::LOGGING

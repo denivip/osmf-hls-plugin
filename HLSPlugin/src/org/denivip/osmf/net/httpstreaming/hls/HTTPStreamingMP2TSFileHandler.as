@@ -28,6 +28,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 	import flash.utils.ByteArray;
 	import flash.utils.IDataInput;
 	
+	import org.denivip.osmf.logging.HLSLogger;
+	import org.osmf.logging.Log;
 	import org.osmf.net.httpstreaming.HTTPStreamingFileHandlerBase;
 	
 	[Event(name="notifySegmentDuration", type="org.osmf.events.HTTPStreamingFileHandlerEvent")]
@@ -263,7 +265,10 @@ package org.denivip.osmf.net.httpstreaming.hls
 			
 			if (tableID != 0x02)
 			{
-				trace("PAT pointed to PMT that isn't PMT");
+				CONFIG::LOGGING
+				{
+					logger.warn("PAT pointed to PMT that isn't PMT");
+				}
 				return; // don't try to parse it
 			}
 			var sectionLen:uint = packet.readUnsignedShort() & 0x03ff; // ignoring section syntax and reserved
@@ -299,7 +304,10 @@ package org.denivip.osmf.net.httpstreaming.hls
 				
 					// need to add MP3 Audio  (3 & 4)
 					default:
-						trace("unsupported type "+type.toString(16)+" in PMT");
+						CONFIG::LOGGING
+						{
+							logger.error("unsupported type "+type.toString(16)+" in PMT");
+						}
 						break;
 				}
 			}
@@ -325,6 +333,11 @@ package org.denivip.osmf.net.httpstreaming.hls
 				flvBytes.readBytes(flvBytesAudio);
 			
 			return flvBytes;
+		}
+		
+		CONFIG::LOGGING
+		{
+			private var logger:HLSLogger = Log.getLogger('org.denivip.osmf.net.httpstreaming.hls.HTTPStreamingMP2TSFileHandler') as HLSLogger;
 		}
 	}
 }
