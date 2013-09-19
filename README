@@ -13,6 +13,19 @@ Supported features:
 - Can play in iframes (Facebook/Twitter/etc)
 - JavaScript does not need for work
 
+Supported tags:
+Main tags:
+    #EXTM3U
+    #EXTINF
+    #EXT-X-ENDLIST
+Multi-bitrate streaming:
+    #EXT-X-STREAM-INF (with reqired BANDWIDTH parameter)
+Live:
+    #EXT-X-MEDIA-SEQUENCE
+Optional:
+    #EXT-X-TARGETDURATION
+    #EXT-X-DISCONTINUITY
+
 Basic usage:
 1) In SMP simple add line into flashvars part: 
     plugin_hls: "HLSDynamicPlugin.swf"
