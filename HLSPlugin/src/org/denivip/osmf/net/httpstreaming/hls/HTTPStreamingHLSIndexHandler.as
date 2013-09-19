@@ -110,7 +110,7 @@
 			for each(var hsi:HLSStreamInfo in _indexInfo.streams){
 				_streamNames.push(hsi.streamName);
 				_streamQualityRates.push(hsi.bitrate);
-				var url:String = _baseURL + hsi.streamName;
+				var url:String = (hsi.streamName.search(/(ftp|file|https?):\/\//) == 0) ? hsi.streamName : _baseURL + hsi.streamName;
 				_streamURLs.push(url);
 			}
 			
@@ -173,7 +173,7 @@
 				
 				if(lines[i].indexOf("#EXTINF:") == 0){
 					var duration:Number = parseFloat(lines[i].match(/([\d\.]+)/)[1]);
-					var url:String = rateItem.url.substr(0, rateItem.url.lastIndexOf('/')+1) + lines[i+1];
+					var url:String = (lines[i+1].search(/(ftp|file|https?):\/\//) == 0) ? lines[i+1] : rateItem.url.substr(0, rateItem.url.lastIndexOf('/')+1) + lines[i+1];
 					indexItem = new HTTPStreamingM3U8IndexItem(duration, url, discontinuity);
 					rateItem.addIndexItem(indexItem);
 					discontinuity = false;
