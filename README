@@ -5,13 +5,13 @@ It was developed for Together Video Camera ( http://2gzr.com ) service and is us
 You may find detailed description of the plug in in our blog => http://blog.denivip.ru/index.php/2013/05/osmf-hls-plugin/?lang=en
 
 Supported features:
-- HLS playback in OSMF2.0 players
+- HLS playback in OSMF 2.0 based video players
 - Multi-bitrate streaming
-- VOD/Live/DVR streaming
+- VOD/Live/DVR content streaming
 - Dynamic buffering control for optimized playback (beta)
 - Discontinuity (#EXT-X-DISCONTINUITY tag)
-- Can play in iframes (Facebook/Twitter/etc)
-- JavaScript does not need for work
+- iframes support (Facebook/Twitter/etc)
+- JavaScript isn't needed to work
 
 Supported tags:
 Main tags:
