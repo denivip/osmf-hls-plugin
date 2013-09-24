@@ -1,7 +1,7 @@
 package org.denivip.osmf.plugins
 {
 	import org.denivip.osmf.elements.M3U8Element;
-	import org.denivip.osmf.logging.GALogHandler;
+	//import org.denivip.osmf.logging.GALogHandler;
 	import org.denivip.osmf.logging.HLSLoggerFactory;
 	import org.denivip.osmf.logging.LogHandler;
 	import org.denivip.osmf.logging.TraceLogHandler;
