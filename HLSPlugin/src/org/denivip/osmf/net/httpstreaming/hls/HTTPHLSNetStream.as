@@ -21,6 +21,7 @@
  *****************************************************/
 package org.denivip.osmf.net.httpstreaming.hls
 {
+	import flash.events.Event;
 	import flash.events.NetStatusEvent;
 	import flash.events.TimerEvent;
 	import flash.net.NetConnection;
@@ -112,6 +113,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 		// reload/load playlist troubles
 		private static const MAX_RELOAD_RETRYES:int = 5;
 		private static const RELOAD_TIMEOUT:int = 5000;
+		
+		private var _reloadTryCount:int = 0;
 		
 		/**
 		 * Constructor.
@@ -1206,9 +1209,19 @@ package org.denivip.osmf.net.httpstreaming.hls
 			if(_source){
 				if(_source is HTTPHLSStreamSource){
 					if(event.url.match(/.m3u8/)){
-						
-					}
-					else{
+						if(_reloadTryCount >= MAX_RELOAD_RETRYES)
+							dispatchEvent( new NetStatusEvent( NetStatusEvent.NET_STATUS, false, false, {code:NetStreamCodes.NETSTREAM_PLAY_STREAMNOTFOUND, level:"error", details:event.url}) );
+						else{
+							_reloadTryCount++;
+							var t:Timer = new Timer(RELOAD_TIMEOUT);
+							t.addEventListener(
+								TimerEvent.TIMER_COMPLETE,
+								function(e:Event):void{
+									HTTPHLSStreamSource(_source).loadNextChunk();
+								}
+							);
+						}
+					}else{
 						HTTPHLSStreamSource(_source).loadNextChunk();
 					}
 				}
@@ -1247,6 +1260,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 				logger.debug("Download complete: " + event.url + " (" + event.bytesDownloaded + " bytes)"); 
 			}
 			_bytesLoaded += event.bytesDownloaded;
+			_reloadTryCount = 0; // reset error counter
 		}
 		
 		/**
