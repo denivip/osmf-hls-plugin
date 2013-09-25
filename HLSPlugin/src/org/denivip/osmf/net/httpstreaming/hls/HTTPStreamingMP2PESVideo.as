@@ -65,7 +65,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 				CONFIG::LOGGING
 				{
 					if(flags != 0x03) {
-						logger.warn("video PES packet without both PTS and DTS");
+						logger.warn("video PES packet without DTS");
 					}
 				}
 				
@@ -81,7 +81,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 					((packet.readUnsignedShort() & 0xfffe) >> 1);
 		
 				length -= 5;
-	
+
+				var timestamp:Number;
 				if(flags == 0x03)
 				{
 					var dts:Number = 
@@ -89,16 +90,23 @@ package org.denivip.osmf.net.httpstreaming.hls
 						((packet.readUnsignedShort() & 0xfffe) << 14) + 
 						((packet.readUnsignedShort() & 0xfffe) >> 1);
 						
-					_timestamp = Math.round(dts/90);
-					_compositionTime =  Math.round(pts/90) - _timestamp;
+					timestamp = Math.round(dts/90);
+					_compositionTime =  Math.round(pts/90) - timestamp;
 					length -= 5;
 				}
 				else
 				{
-					_timestamp = Math.round(pts/90);
+					timestamp = Math.round(pts/90);
 					_compositionTime = 0;
 				}
-
+				
+				if(!_timestampReseted){
+					_offset += timestamp - _prevTimestamp;
+				}
+				_timestamp = _initialTimestamp + _offset;
+				_prevTimestamp = timestamp;
+				_timestampReseted = false;
+				
 				// Skip other header data.
 				packet.position += length;
 			}

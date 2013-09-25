@@ -29,18 +29,24 @@
 	internal class HTTPStreamingMP2PESBase
 	{
 
+		protected var _offset:Number = 0.0;
+		protected var _initialTimestamp:Number = 0.0;
+		protected var _prevTimestamp:Number = 0.0;
 		protected var _timestamp:Number;
 		protected var _compositionTime:Number;
+		protected var _timestampReseted:Boolean = false;
 
+		public function set initialTimestamp(value:Number):void{
+			_initialTimestamp = value;
+			_offset = 0.0;
+			_prevTimestamp = 0.0;
+			_timestampReseted = true;
+		}
 	    
 	    public function processES(pusi:Boolean, packet:ByteArray, flush:Boolean = false):ByteArray
 	    {
 	    	return null;
 	    }
-		
-		public function get timestamp():Number{
-			return _timestamp;
-		}
 	}
 
 

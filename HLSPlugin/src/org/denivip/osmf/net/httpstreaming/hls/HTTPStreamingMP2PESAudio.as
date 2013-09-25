@@ -95,8 +95,15 @@
 					((packet.readUnsignedShort() & 0xfffe) << 14) + 
 					((packet.readUnsignedShort() & 0xfffe) >> 1);
 
-				_timestamp = Math.round(pts/90);
+				var timestamp:Number = Math.round(pts/90);
 				_haveNewTimestamp = true;
+				
+				if(!_timestampReseted){
+					_offset += timestamp - _prevTimestamp;
+				}
+				_timestamp = _initialTimestamp + _offset;
+				_prevTimestamp = timestamp;
+				_timestampReseted = false;
 				
 				length -= 5;
 				// no comp time for audio

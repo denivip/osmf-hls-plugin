@@ -45,8 +45,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 		private var _audioPES:HTTPStreamingMP2PESAudio;
 		private var _videoPES:HTTPStreamingMP2PESVideo;
 		
-		private var _initialOffset:Number = NaN;
-		
 		private var _cachedOutputBytes:ByteArray;
 		private var alternatingYieldCounter:int = 0;
 		
@@ -68,30 +66,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 		
 		override public function processFileSegment(input:IDataInput):ByteArray
 		{
-			/*while(true)
-			{
-				if(!_syncFound)
-				{
-					if(input.bytesAvailable < 1)
-						return null;
-					
-					if(input.readByte() == 0x47)
-						_syncFound = true;
-				}
-				else
-				{
-					if(input.bytesAvailable < 187)
-						return null;
-					
-					_syncFound = false;
-					var packet:ByteArray = new ByteArray();
-				
-					input.readBytes(packet, 0, 187);
-				
-					return processPacket(packet);	
-				}
-			}
-			return null;*/
 			var bytesAvailableStart:uint = input.bytesAvailable;
 			var output:ByteArray;
 			if (_cachedOutputBytes !== null) {
@@ -136,6 +110,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 					}
 				}
 			}
+			output.position = 0;
+			
 			return output.length === 0 ? null : output;
 		}
 			
@@ -149,11 +125,10 @@ package org.denivip.osmf.net.httpstreaming.hls
 			alternatingYieldCounter = 0;
 		}
 		
-		public function get initialOffset():Number{
-			if(!isNaN(_initialOffset))
-				return _initialOffset;
-			else
-				return 0;
+		public function set initialOffset(offset:Number):void{
+			offset *= 1000; // convert to ms
+			_videoPES.initialTimestamp = offset;
+			_audioPES.initialTimestamp = offset;
 		}
 		
 		private function processPacket(packet:ByteArray):ByteArray
@@ -220,16 +195,10 @@ package org.denivip.osmf.net.httpstreaming.hls
 			else if(pid == _audioPID)
 			{
 				output = _audioPES.processES(pusi, packet);
-				
-				if(isNaN(_initialOffset))
-					_initialOffset = _audioPES.timestamp/1000;
 			}
 			else if(pid == _videoPID)
 			{
 				output = _videoPES.processES(pusi, packet);
-				
-				if(isNaN(_initialOffset))
-					_initialOffset = _videoPES.timestamp/1000;
 			}
 			
 			return output;

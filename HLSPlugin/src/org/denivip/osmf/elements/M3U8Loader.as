@@ -83,7 +83,7 @@ package org.denivip.osmf.elements
 				playlistLoader.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, onError);
 				
 				updateLoadTrait(loadTrait, LoadState.LOAD_ERROR);
-				loadTrait.dispatchEvent(new MediaErrorEvent(MediaErrorEvent.MEDIA_ERROR, false, false, new MediaError(0, e.text)));
+				loadTrait.dispatchEvent(new MediaErrorEvent(MediaErrorEvent.MEDIA_ERROR, false, false, new MediaError(0, 'This video is not available.')));
 			}
 			
 			function onComplete(e:Event):void{

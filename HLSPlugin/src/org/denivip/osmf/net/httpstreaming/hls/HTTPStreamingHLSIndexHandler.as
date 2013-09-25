@@ -110,7 +110,7 @@
 			for each(var hsi:HLSStreamInfo in _indexInfo.streams){
 				_streamNames.push(hsi.streamName);
 				_streamQualityRates.push(hsi.bitrate);
-				var url:String = _baseURL + hsi.streamName;
+				var url:String = (hsi.streamName.search(/(ftp|file|https?):\/\//) == 0) ? hsi.streamName : _baseURL + hsi.streamName;
 				_streamURLs.push(url);
 			}
 			
@@ -132,9 +132,6 @@
 			_prevPlaylist = null;
 		}
 		
-		/*
-			used only in live streaming
-		*/
 		override public function processIndexData(data:*, indexContext:Object):void{
 			CONFIG::LOGGING
 			{
@@ -173,7 +170,15 @@
 				
 				if(lines[i].indexOf("#EXTINF:") == 0){
 					var duration:Number = parseFloat(lines[i].match(/([\d\.]+)/)[1]);
-					var url:String = rateItem.url.substr(0, rateItem.url.lastIndexOf('/')+1) + lines[i+1];
+					var url:String = (lines[i+1].search(/(ftp|file|https?):\/\//) == 0) ?  lines[i+1] : rateItem.url.substr(0, rateItem.url.lastIndexOf('/')+1) + lines[i+1];
+					// spike for hidden discontinuity
+					if(url.match(/SegNum(\d+)/)){
+						var chunkIndex:int = parseInt(url.match(/SegNum(\d+)/)[1]);
+						if(chunkIndex <= _prevChunkIndex)
+							discontinuity = true;
+						_prevChunkIndex = chunkIndex;
+					}
+					// _spike
 					indexItem = new HTTPStreamingM3U8IndexItem(duration, url, discontinuity);
 					rateItem.addIndexItem(indexItem);
 					discontinuity = false;
@@ -234,10 +239,6 @@
 				dispatchDVRStreamInfo(quality);
 			}
 			
-			time -= _fileHandler.initialOffset;
-			if(time < 0)
-				time = 0;
-			
 			var item:HTTPStreamingM3U8IndexRateItem = _rateVec[quality];
 			var manifest:Vector.<HTTPStreamingM3U8IndexItem> = item.manifest;
 			if(!manifest.length)
@@ -258,10 +259,11 @@
 			_absoluteSegment = item.sequenceNumber + _segment;
 			
 			if(!item.isLive && _quality != quality){
-				notifyTotalDuration(item.totalTime, quality, item.isLive);
 				_quality = quality;
+				notifyTotalDuration(item.totalTime, quality, item.isLive);
 			}
 			
+			_fileHandler.initialOffset = manifest[_segment].startTime;
 			return getNextFile(quality);
 		}
 		
@@ -297,7 +299,7 @@
 					{
 						_reloadTime = getTimer();
 					}
-					dispatchEvent(new HTTPStreamingIndexHandlerEvent(HTTPStreamingIndexHandlerEvent.REQUEST_LOAD_INDEX, false, false, item.isLive, 0, _streamNames, _streamQualityRates, new URLRequest(_rateVec[quality].url), _rateVec[quality], false));						
+					dispatchEvent(new HTTPStreamingIndexHandlerEvent(HTTPStreamingIndexHandlerEvent.REQUEST_LOAD_INDEX, false, false, item.isLive, 0, _streamNames, _streamQualityRates, new URLRequest(_rateVec[quality].url), quality, false));						
 					return new HTTPStreamRequest(HTTPStreamRequestKind.LIVE_STALL, null, 1.0);
 				}
 			}
@@ -307,10 +309,16 @@
 			}else{ // load new chunk
 				request = new HTTPStreamRequest(HTTPStreamRequestKind.DOWNLOAD, manifest[_segment].url);
 				
+				CONFIG::LOGGING
+				{
+					logger.info("Load next segment for stream {0}. Segment num {1} from {2}", manifest[_segment].url, _segment, manifest.length);
+				}
+				
 				dispatchEvent(new HTTPStreamingEvent(HTTPStreamingEvent.FRAGMENT_DURATION, false, false, manifest[_segment].duration));
 				
 				if(manifest[_segment].discontinuity){
-					dispatchEvent(new HTTPHLSStreamingEvent(HTTPHLSStreamingEvent.DISCONTINUITY));
+					_fileHandler.initialOffset = manifest[_segment].startTime;
+					//dispatchEvent(new HTTPHLSStreamingEvent(HTTPHLSStreamingEvent.DISCONTINUITY));
 				}
 				
 				++_segment;
@@ -418,6 +426,7 @@
 			);
 		}
 		
+		private var _prevChunkIndex:int;
 		CONFIG::LOGGING
 		{
 			protected var logger:HLSLogger = Log.getLogger("org.denivip.osmf.plugins.hls.HTTPStreamingM3U8IndexHandler") as HLSLogger;

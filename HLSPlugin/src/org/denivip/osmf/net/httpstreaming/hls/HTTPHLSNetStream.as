@@ -79,8 +79,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 		import flash.events.DRMStatusEvent;
 	}
 	
-	[ExcludeClass]
-
 	[Event(name="DVRStreamInfo", type="org.osmf.events.DVRStreamInfoEvent")]
 	
 	[Event(name="runAlgorithm", type="org.osmf.events.HTTPStreamingEvent")]
@@ -110,6 +108,10 @@ package org.denivip.osmf.net.httpstreaming.hls
 		private static const BUFFER_SIZE_PAUSE:Number = 32;
 		private static const BUFFER_SIZE_BIG:Number = 16;
 		private static const BUFFER_SIZE_DEF:Number = OSMFSettings.hdsMinimumBufferTime;
+		
+		// reload/load playlist troubles
+		private static const MAX_RELOAD_RETRYES:int = 5;
+		private static const RELOAD_TIMEOUT:int = 5000;
 		
 		/**
 		 * Constructor.
@@ -504,12 +506,13 @@ package org.denivip.osmf.net.httpstreaming.hls
 				{
 					logger.debug("Initiating change of audio stream to [" + _desiredAudioStreamName + "]");
 				}
-				
-				var audioResource:MediaResourceBase = HTTPStreamingUtils.createHTTPStreamingResource(_resource, _desiredAudioStreamName);
+				var audioResource:MediaResourceBase
+				if(_desiredAudioStreamName)
+					audioResource = new StreamingURLResource(_desiredAudioStreamName);
 				if (audioResource != null)
 				{
 					// audio handler is not dispatching events on the NetStream
-					_mixer.audio = new HTTPStreamSource(_factory, audioResource, _mixer);
+					_mixer.audio = new HTTPHLSStreamSource(_factory, audioResource, _mixer);
 					_mixer.audio.open(_desiredAudioStreamName);
 				}
 				else
@@ -1201,7 +1204,14 @@ package org.denivip.osmf.net.httpstreaming.hls
 				logger.error("Error load chunk: " + event.url + " skip to next");
 			}
 			if(_source){
-				HTTPHLSStreamSource(_source).loadNextChunk();
+				if(_source is HTTPHLSStreamSource){
+					if(event.url.match(/.m3u8/)){
+						
+					}
+					else{
+						HTTPHLSStreamSource(_source).loadNextChunk();
+					}
+				}
 			}
 		}
 		
@@ -1746,8 +1756,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 			}
 			else
 			{
-				_mixer = new HTTPStreamMixer(this);
-				_mixer.video = new HTTPStreamSource(_factory, _resource, _mixer);
+				_mixer = new HTTPHLSStreamMixer(this);
+				_mixer.video = new HTTPHLSStreamSource(_factory, _resource, _mixer);
 				
 				_source = _mixer;
 				_videoHandler = _mixer.video;
@@ -1767,7 +1777,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 		private var _resource:URLResource = null;
 		private var _factory:HTTPStreamingFactory = null;
 		
-		private var _mixer:HTTPStreamMixer = null;
+		private var _mixer:HTTPHLSStreamMixer = null;
 		private var _videoHandler:IHTTPStreamHandler = null;
 		private var _source:IHTTPStreamSource = null;
 		
