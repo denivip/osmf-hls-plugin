@@ -170,6 +170,7 @@
 				
 				if(lines[i].indexOf("#EXTINF:") == 0){
 					var duration:Number = parseFloat(lines[i].match(/([\d\.]+)/)[1]);
+<<<<<<< HEAD
 					var url:String = (lines[i+1].search(/(ftp|file|https?):\/\//) == 0) ?  lines[i+1] : rateItem.url.substr(0, rateItem.url.lastIndexOf('/')+1) + lines[i+1];
 					// spike for hidden discontinuity
 					if(url.match(/SegNum(\d+)/)){
@@ -179,6 +180,9 @@
 						_prevChunkIndex = chunkIndex;
 					}
 					// _spike
+=======
+					var url:String = (lines[i+1].search(/(ftp|file|https?):\/\//) == 0) ? lines[i+1] : rateItem.url.substr(0, rateItem.url.lastIndexOf('/')+1) + lines[i+1];
+>>>>>>> 05f5806ac6a8f60caaa0dff403554e36aeba728d
 					indexItem = new HTTPStreamingM3U8IndexItem(duration, url, discontinuity);
 					rateItem.addIndexItem(indexItem);
 					discontinuity = false;
