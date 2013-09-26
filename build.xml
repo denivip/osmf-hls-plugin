@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="OSMFHLSPlugin" default="build" basedir=".">
+
+	<property environment="env" />
+
+	<!-- load external values -->
+	<property file="${basedir}/build.properties" />
+    
+    <!-- main ant target -->
+    <target name="build">
+		<sequential>
+			<antcall target="compile.swc" />	
+			<antcall target="compile.swf" />
+			<antcall target="compile.player" />
+		</sequential>
+	</target>
+    
+    <target name="compile.swc">
+        <subant target="" inheritall="true" antfile="HLSPlugin/build.xml" buildpath="."/>
+    </target>
+    
+    <target name="compile.swf">
+        <subant target="" inheritall="true" antfile="HLSDynamicPlugin/build.xml" buildpath="."/>
+    </target>
+    
+    <target name="compile.player">
+        <subant target="" inheritall="true" antfile="HLSTestPlayer/build.xml" buildpath="."/>
+    </target>
+</project>
