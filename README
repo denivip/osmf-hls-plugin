@@ -27,6 +27,6 @@ Optional:
     #EXT-X-DISCONTINUITY
 
 Basic usage:
-1) In StroeMediaPlayback video player simply add this line into a flashvars part: 
+1) In StrobeMediaPlayback video player simply add this line into a flashvars part: 
     plugin_hls: "HLSDynamicPlugin.swf"
 2) In your custom OSMF based video player you can link HLSPlugin.swc lib into the project and load it with a factory.
