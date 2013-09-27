@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 
 <project name="HLSPlugin.swc" default="build.swc" basedir=".">
 
@@ -12,7 +12,7 @@
 	<!-- compile Plugin -->
 	<target name="build.swc">
         <compc
-            output="${basedir}/bin/HLSPlugin.swc"
+            output="${OUTPUT_DIR}/HLSPlugin.swc"
             keep-generated-actionscript="false"
             incremental="false"
             debug="${debug}"

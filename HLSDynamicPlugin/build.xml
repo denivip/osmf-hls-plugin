@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 
 <project name="HLSPlugin.swc" default="build.swf" basedir=".">
 
@@ -12,7 +12,7 @@
 	<!-- compile Plugin -->
 	<target name="build.swf">
         <compc
-            output="${basedir}/bin/HLSDynamicPlugin.swf"
+            output="${OUTPUT_DIR}/HLSDynamicPlugin.swf"
             keep-generated-actionscript="false"
             incremental="false"
             debug="${debug}"

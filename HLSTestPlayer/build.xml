@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 
 <project name="HLSPlugin.swc" default="build.player" basedir=".">
 
@@ -12,7 +12,7 @@
 	<!-- compile Plugin -->
 	<target name="build.player">
         <compc
-            output="${basedir}/bin/HLSTestPlayer.swf"
+            output="${OUTPUT_DIR}/HLSTestPlayer.swf"
             keep-generated-actionscript="false"
             incremental="false"
             debug="${debug}"
