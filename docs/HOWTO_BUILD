@@ -1,0 +1,19 @@
+﻿If you want to build your own version of the plugin, you have two options:
+    1) Ant-build.
+    2) Build by Flash Builder.
+    
+1. Ant-build:
+    - Download Adobe Flex 4.6 SDK and extract it into /buildtools/sdks/4.6.0 folder.
+    - Run the command-line tool, go to root project dir, and run 'ant'.
+    - You can find new binaries in /release folder.
+    
+2. Flash Builder way:
+    - In FB menu select: File - Import Flash Builder Project...
+    - Select 'Project Folder' option, press 'Browse', and find HLSPlugin project folder (inside root project directory)
+    - Press 'Finish'.
+    - Repeat this steps for HLSDynamicPlugin and HLSTestPlayer (optional).
+    - Build project.
+    - You can find the binaries in the following folders:
+        - /release, if you built release version
+        - /bin-debug sub-folder of the project (HLSDynamicPlugin/bin-debug as example), if you built debug version.
+    HLSPlugin.swc always resides in /release folder.
