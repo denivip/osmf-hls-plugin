@@ -1,2 +1,3 @@
 /HLSTestPlayer/bin-debug
-bin-debug
+bin-debug/release
+/release
