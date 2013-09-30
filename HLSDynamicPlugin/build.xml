@@ -26,7 +26,7 @@
                 <include name="OSMF.swc" />
             </compiler.library-path>
             
-            <compiler.library-path dir="../HLSPlugin/bin" append="true">
+            <compiler.library-path dir="${OUTPUT_DIR}" append="true">
                 <include name="HLSPlugin.swc" />
             </compiler.library-path>
             
