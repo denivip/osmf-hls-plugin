@@ -31,8 +31,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 	import flash.utils.ByteArray;
 	import flash.utils.Timer;
 	
-	import mx.core.mx_internal;
-	
 	import org.denivip.osmf.events.HTTPHLSStreamingEvent;
 	import org.osmf.events.DVRStreamInfoEvent;
 	import org.osmf.events.HTTPStreamingEvent;
@@ -44,12 +42,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 	import org.osmf.net.NetStreamCodes;
 	import org.osmf.net.NetStreamPlaybackDetailsRecorder;
 	import org.osmf.net.StreamingURLResource;
-	import org.osmf.net.httpstreaming.HTTPNetStream;
 	import org.osmf.net.httpstreaming.HTTPStreamHandlerQoSInfo;
-	import org.osmf.net.httpstreaming.HTTPStreamMixer;
-	import org.osmf.net.httpstreaming.HTTPStreamSource;
 	import org.osmf.net.httpstreaming.HTTPStreamingFactory;
-	import org.osmf.net.httpstreaming.HTTPStreamingUtils;
 	import org.osmf.net.httpstreaming.IHTTPStreamHandler;
 	import org.osmf.net.httpstreaming.IHTTPStreamSource;
 	import org.osmf.net.httpstreaming.dvr.DVRInfo;
