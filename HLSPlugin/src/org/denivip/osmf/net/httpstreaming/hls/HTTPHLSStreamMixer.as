@@ -23,10 +23,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 {
 	import flash.events.EventDispatcher;
 	import flash.events.IEventDispatcher;
-	import flash.events.NetStatusEvent;
 	import flash.utils.ByteArray;
 	import flash.utils.IDataInput;
-	import flash.utils.IDataOutput;
 	
 	import org.osmf.events.DVRStreamInfoEvent;
 	import org.osmf.events.HTTPStreamingEvent;

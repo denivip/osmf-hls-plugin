@@ -9,7 +9,6 @@ package org.denivip.osmf.elements.m3u8Classes
 	import flash.utils.Dictionary;
 	
 	import org.denivip.osmf.metadata.HLSMetadata;
-	import org.denivip.osmf.net.HLSDynamicStreamingItem;
 	import org.denivip.osmf.net.HLSDynamicStreamingResource;
 	import org.osmf.events.ParseEvent;
 	import org.osmf.logging.Log;
@@ -107,7 +106,7 @@ package org.denivip.osmf.elements.m3u8Classes
 					}
 					
 					var name:String = lines[i+1];
-					streamItems.push(new HLSDynamicStreamingItem(name, bw, width, height));
+					streamItems.push(new DynamicStreamingItem(name, bw, width, height));
 					
 					DynamicStreamingResource(result).streamItems = streamItems;
 				}
