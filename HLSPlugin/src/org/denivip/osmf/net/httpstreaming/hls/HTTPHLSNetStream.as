@@ -34,7 +34,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 	import mx.core.mx_internal;
 	
 	import org.denivip.osmf.events.HTTPHLSStreamingEvent;
-	import org.denivip.osmf.logging.HLSLogger;
 	import org.osmf.events.DVRStreamInfoEvent;
 	import org.osmf.events.HTTPStreamingEvent;
 	import org.osmf.events.QoSInfoEvent;
@@ -1857,7 +1856,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 		
 		CONFIG::LOGGING
 		{
-			private static const logger:HLSLogger = Log.getLogger("org.denivip.osmf.net.httpstreaming.hls.HTTPHLSNetStream") as HLSLogger;
+			private static const logger:Logger = Log.getLogger("org.denivip.osmf.net.httpstreaming.hls.HTTPHLSNetStream") as Logger;
 			private var previouslyLoggedState:String = null;
 		}
 	}

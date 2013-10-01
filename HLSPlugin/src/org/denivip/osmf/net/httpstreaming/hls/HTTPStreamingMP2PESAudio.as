@@ -28,8 +28,8 @@
 	
 	import flash.utils.ByteArray;
 	
-	import org.denivip.osmf.logging.HLSLogger;
 	import org.osmf.logging.Log;
+	import org.osmf.logging.Logger;
 	import org.osmf.net.httpstreaming.flv.FLVTagAudio;
 
 	internal class HTTPStreamingMP2PESAudio extends HTTPStreamingMP2PESBase
@@ -286,7 +286,7 @@
 		
 		CONFIG::LOGGING
 		{
-			private var logger:HLSLogger = Log.getLogger('org.denivip.osmf.net.httpstreaming.hls.HTTPStreamingMP2PESAudio') as HLSLogger;
+			private var logger:Logger = Log.getLogger('org.denivip.osmf.net.httpstreaming.hls.HTTPStreamingMP2PESAudio') as Logger;
 		}
 	}
 }
