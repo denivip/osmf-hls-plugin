@@ -26,12 +26,8 @@
 {
 	import flash.net.NetConnection;
 	import flash.net.NetStream;
-	import flash.sampler.NewObjectSample;
-	
-	import mx.states.OverrideBase;
 	
 	import org.denivip.osmf.metadata.HLSMetadata;
-	import org.denivip.osmf.net.HLSDynamicStreamingResource;
 	import org.denivip.osmf.net.httpstreaming.dvr.HTTPHLSStreamingDVRCastDVRTrait;
 	import org.denivip.osmf.net.httpstreaming.dvr.HTTPHLSStreamingDVRCastTimeTrait;
 	import org.osmf.events.DVRStreamInfoEvent;
@@ -44,7 +40,6 @@
 	import org.osmf.net.NetStreamSwitchManagerBase;
 	import org.osmf.net.NetStreamSwitcher;
 	import org.osmf.net.httpstreaming.DefaultHTTPStreamingSwitchManager;
-	import org.osmf.net.httpstreaming.HTTPNetStream;
 	import org.osmf.net.httpstreaming.HTTPStreamingNetLoader;
 	import org.osmf.net.httpstreaming.dvr.DVRInfo;
 	import org.osmf.net.metrics.MetricFactory;
