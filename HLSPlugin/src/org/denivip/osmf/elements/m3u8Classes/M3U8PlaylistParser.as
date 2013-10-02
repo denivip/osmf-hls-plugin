@@ -87,7 +87,7 @@ package org.denivip.osmf.elements.m3u8Classes
 						tempDynamicRes = result as DynamicStreamingResource;
 						tempStreamingRes = baseResource as StreamingURLResource;
 						if(tempStreamingRes){
-							tempDynamicRes.streamType = StreamType.LIVE;//tempStreamingRes.streamType;
+							tempDynamicRes.streamType = tempStreamingRes.streamType;
 							tempDynamicRes.clipStartTime = tempStreamingRes.clipStartTime;
 							tempDynamicRes.clipEndTime = tempStreamingRes.clipEndTime;
 						}
