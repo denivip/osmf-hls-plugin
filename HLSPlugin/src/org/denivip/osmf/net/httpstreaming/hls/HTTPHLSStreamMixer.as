@@ -290,11 +290,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 			var bytes:ByteArray = null;
 			
 			switch(_state)
-			{
-				case HTTPStreamingState.INIT:
-					// do nothing.
-					break;
-				
+			{	
 				case HTTPStreamingState.SEEK:
 					// we just wait a little bit more until we go to decide
 					// what should we consume
@@ -315,10 +311,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 					
 					// check to see if the mixer needs to update any handler
 					// this is better to be done at tag boundry
-					if (
-							(_mediaNeedsInitialization && _mediaTag == null)
-						|| 	(_alternateNeedsInitialization && _alternateTag == null)
-					)
+					if ((_mediaNeedsInitialization && _mediaTag == null) || (_alternateNeedsInitialization && _alternateTag == null))
 					{
 						updateHandlers();
 						updateFilters();
@@ -388,6 +381,11 @@ package org.denivip.osmf.net.httpstreaming.hls
 						}
 					}
 
+					break;
+				
+				case HTTPStreamingState.INIT:
+				default:
+					// do nothing.
 					break;
 			}
 			
