@@ -15,7 +15,7 @@
           </libraryPathEntry>
         </excludedEntries>
       </libraryPathEntry>
-      <libraryPathEntry kind="3" linkType="1" path="C:/Users/Евгений/Documents/osmf-hls-plugin/buildtools/lib/OSMF.swc" sourcepath="C:/Users/Евгений/Adobe Flash Builder 4.6/OSMF" useDefaultLinkType="false"/>
+      <libraryPathEntry kind="1" linkType="1" path="C:/Users/Евгений/Documents/osmf-hls-plugin/buildtools/lib"/>
     </libraryPath>
     <sourceAttachmentPath>
       <sourceAttachmentPathEntry kind="3" linkType="1" path="C:/Users/Евгений/Documents/osmf-hls-plugin/buildtools/lib/OSMF.swc" sourcepath="C:/Users/Евгений/Adobe Flash Builder 4.6/OSMF" useDefaultLinkType="false"/>
