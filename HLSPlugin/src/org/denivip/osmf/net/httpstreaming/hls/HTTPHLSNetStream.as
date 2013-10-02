@@ -1213,9 +1213,9 @@ package org.denivip.osmf.net.httpstreaming.hls
 					if(event.url.match(/.m3u8/))
 					{
 						var httpCode:int = parseInt(event.reason);
-						if( httpCode >= 400 )
+						if( !isNaN(httpCode) && httpCode >= 400 )
 						{
-							// There's no point in retrying.
+							// There's no point in retrying--some 400 level error, which is something bunk client-side.
 							dispatchEvent( new NetStatusEvent( NetStatusEvent.NET_STATUS, false, false, {code:event.reason, level:"error", details:event.url}));
 						}
 						else
