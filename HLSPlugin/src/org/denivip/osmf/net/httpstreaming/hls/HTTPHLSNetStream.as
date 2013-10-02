@@ -1210,30 +1210,27 @@ package org.denivip.osmf.net.httpstreaming.hls
 			{
 				if(_source is HTTPHLSStreamSource)
 				{	
-					if(event.url.match(/.m3u8/))
+					var httpCode:int = parseInt(event.reason);
+					if( !isNaN(httpCode) && httpCode >= 400 )
 					{
-						var httpCode:int = parseInt(event.reason);
-						if( !isNaN(httpCode) && httpCode >= 400 )
-						{
-							// There's no point in retrying--some 400 level error, which is something bunk client-side.
-							dispatchEvent( new NetStatusEvent( NetStatusEvent.NET_STATUS, false, false, {code:event.reason, level:"error", details:event.url}));
+						// There's no point in retrying--some 400 level error, which is something bunk client-side.
+						dispatchEvent( new NetStatusEvent( NetStatusEvent.NET_STATUS, false, false, {code:event.reason, level:"error", details:event.url}));
+					}
+					else if(event.url.match(/.m3u8/))
+					{
+						if(_reloadTryCount >= MAX_RELOAD_RETRYES)
+						{	
+							dispatchEvent( new NetStatusEvent( NetStatusEvent.NET_STATUS, false, false, {code:NetStreamCodes.NETSTREAM_PLAY_STREAMNOTFOUND, level:"error", details:event.url}) );
 						}
 						else
 						{
-							if(_reloadTryCount >= MAX_RELOAD_RETRYES)
-							{	
-								dispatchEvent( new NetStatusEvent( NetStatusEvent.NET_STATUS, false, false, {code:NetStreamCodes.NETSTREAM_PLAY_STREAMNOTFOUND, level:"error", details:event.url}) );
-							}
-							else
-							{
-								_reloadTryCount++;
-								var t:Timer = new Timer(RELOAD_TIMEOUT);
-								t.addEventListener( TimerEvent.TIMER_COMPLETE,
-													function(e:Event):void{
-														HTTPHLSStreamSource(_source).loadNextChunk();
-													}
-												  );
-							}
+							_reloadTryCount++;
+							var t:Timer = new Timer(RELOAD_TIMEOUT);
+							t.addEventListener( TimerEvent.TIMER_COMPLETE,
+												function(e:Event):void{
+													HTTPHLSStreamSource(_source).loadNextChunk();
+												}
+											  );
 						}
 					}
 					else
