@@ -616,6 +616,13 @@ package org.denivip.osmf.net.httpstreaming.hls
 					}
 					bufferTime = BUFFER_SIZE_DEF;
 					break;
+				
+				default:
+					// Some http based error?  If yes, shut'er down.
+					var httpCode:int = parseInt(event.info.code);
+					if( !isNaN(httpCode) && httpCode >= 400 )
+						close();
+					break;
 			}
 			
 			CONFIG::FLASH_10_1
@@ -1199,22 +1206,38 @@ package org.denivip.osmf.net.httpstreaming.hls
 			{
 				logger.error("Error load chunk: " + event.url + " skip to next");
 			}
-			if(_source){
-				if(_source is HTTPHLSStreamSource){
-					if(event.url.match(/.m3u8/)){
-						if(_reloadTryCount >= MAX_RELOAD_RETRYES)
-							dispatchEvent( new NetStatusEvent( NetStatusEvent.NET_STATUS, false, false, {code:NetStreamCodes.NETSTREAM_PLAY_STREAMNOTFOUND, level:"error", details:event.url}) );
-						else{
-							_reloadTryCount++;
-							var t:Timer = new Timer(RELOAD_TIMEOUT);
-							t.addEventListener(
-								TimerEvent.TIMER_COMPLETE,
-								function(e:Event):void{
-									HTTPHLSStreamSource(_source).loadNextChunk();
-								}
-							);
+			if(_source)
+			{
+				if(_source is HTTPHLSStreamSource)
+				{	
+					if(event.url.match(/.m3u8/))
+					{
+						var httpCode:int = parseInt(event.reason);
+						if( httpCode >= 400 )
+						{
+							// There's no point in retrying.
+							dispatchEvent( new NetStatusEvent( NetStatusEvent.NET_STATUS, false, false, {code:event.reason, level:"error", details:event.url}));
 						}
-					}else{
+						else
+						{
+							if(_reloadTryCount >= MAX_RELOAD_RETRYES)
+							{	
+								dispatchEvent( new NetStatusEvent( NetStatusEvent.NET_STATUS, false, false, {code:NetStreamCodes.NETSTREAM_PLAY_STREAMNOTFOUND, level:"error", details:event.url}) );
+							}
+							else
+							{
+								_reloadTryCount++;
+								var t:Timer = new Timer(RELOAD_TIMEOUT);
+								t.addEventListener( TimerEvent.TIMER_COMPLETE,
+													function(e:Event):void{
+														HTTPHLSStreamSource(_source).loadNextChunk();
+													}
+												  );
+							}
+						}
+					}
+					else
+					{
 						HTTPHLSStreamSource(_source).loadNextChunk();
 					}
 				}
