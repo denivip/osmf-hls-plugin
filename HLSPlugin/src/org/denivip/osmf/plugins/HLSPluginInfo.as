@@ -1,11 +1,6 @@
 package org.denivip.osmf.plugins
 {
 	import org.denivip.osmf.elements.M3U8Element;
-	//import org.denivip.osmf.logging.GALogHandler;
-	import org.denivip.osmf.logging.HLSLoggerFactory;
-	import org.denivip.osmf.logging.LogHandler;
-	import org.denivip.osmf.logging.TraceLogHandler;
-	import org.osmf.logging.Log;
 	import org.osmf.media.MediaElement;
 	import org.osmf.media.MediaFactoryItem;
 	import org.osmf.media.MediaFactoryItemType;
@@ -28,16 +23,6 @@ package org.denivip.osmf.plugins
 			);
 			
 			super(items, elementCreationNotifFunc);
-			
-			CONFIG::LOGGING
-			{
-				var handlers:Vector.<LogHandler> = new Vector.<LogHandler>();
-				// add handlers
-				handlers.push(new TraceLogHandler());
-				//handlers.push(new GALogHandler());
-				
-				Log.loggerFactory = new HLSLoggerFactory(handlers);
-			}
 		}
 		
 		private function canHandleResource(resource:MediaResourceBase):Boolean{
