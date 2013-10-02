@@ -2,7 +2,6 @@ package org.denivip.osmf.elements.m3u8Classes
 {
 	import flash.events.EventDispatcher;
 	
-	import org.denivip.osmf.metadata.HLSMetadata;
 	import org.denivip.osmf.net.HLSDynamicStreamingResource;
 	import org.osmf.events.ParseEvent;
 	import org.osmf.logging.Log;
@@ -151,8 +150,7 @@ package org.denivip.osmf.elements.m3u8Classes
 				}
 			}
 			
-			var hlsMetadata:HLSMetadata = new HLSMetadata();
-			result.addMetadataValue(HLSMetadata.HLS_METADATA, hlsMetadata);
+			result.addMetadataValue("HLS_METADATA", new Metadata());
 			
 			var httpMetadata:Metadata = new Metadata();
 			result.addMetadataValue(MetadataNamespaces.HTTP_STREAMING_METADATA, httpMetadata);

@@ -26,8 +26,6 @@
 {
 	import flash.net.NetConnection;
 	import flash.net.NetStream;
-	
-	import org.denivip.osmf.metadata.HLSMetadata;
 	import org.denivip.osmf.net.httpstreaming.dvr.HTTPHLSStreamingDVRCastDVRTrait;
 	import org.denivip.osmf.net.httpstreaming.dvr.HTTPHLSStreamingDVRCastTimeTrait;
 	import org.osmf.events.DVRStreamInfoEvent;
@@ -53,7 +51,7 @@
 	{
 		override public function canHandleResource(resource:MediaResourceBase):Boolean
 		{
-			return resource.getMetadataValue(HLSMetadata.HLS_METADATA) != null;
+			return resource.getMetadataValue("HLS_METADATA") != null;
 		}
 		
 		override protected function createNetStream(connection:NetConnection, resource:URLResource):NetStream
