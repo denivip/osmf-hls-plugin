@@ -1,12 +1,6 @@
 package org.denivip.osmf.elements.m3u8Classes
 {
-	import flash.events.Event;
 	import flash.events.EventDispatcher;
-	import flash.events.IOErrorEvent;
-	import flash.events.SecurityErrorEvent;
-	import flash.net.URLLoader;
-	import flash.net.URLRequest;
-	import flash.utils.Dictionary;
 	
 	import org.denivip.osmf.metadata.HLSMetadata;
 	import org.denivip.osmf.net.HLSDynamicStreamingResource;
@@ -23,8 +17,6 @@ package org.denivip.osmf.elements.m3u8Classes
 	import org.osmf.net.StreamType;
 	import org.osmf.net.StreamingItem;
 	import org.osmf.net.StreamingURLResource;
-	import org.osmf.net.httpstreaming.dvr.DVRInfo;
-	import org.osmf.utils.URL;
 	
 	
 	[Event(name="parseComplete", type="org.osmf.events.ParseEvent")]
