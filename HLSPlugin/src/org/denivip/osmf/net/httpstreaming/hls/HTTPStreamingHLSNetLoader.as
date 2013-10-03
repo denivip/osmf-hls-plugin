@@ -56,9 +56,7 @@
 		
 		override protected function createNetStream(connection:NetConnection, resource:URLResource):NetStream
 		{
-			var httpNetStream:HTTPHLSNetStream = new HTTPHLSNetStream(connection, new HTTPStreamingHLSFactory(), resource);
-			return httpNetStream;
-			//return new HTTPNetStream(connection, new HTTPStreamingHLSFactory(), resource);
+			return new HTTPHLSNetStream(connection, new HTTPStreamingHLSFactory(), resource);
 		}
 		
 		override protected function processFinishLoading(loadTrait:NetStreamLoadTrait):void

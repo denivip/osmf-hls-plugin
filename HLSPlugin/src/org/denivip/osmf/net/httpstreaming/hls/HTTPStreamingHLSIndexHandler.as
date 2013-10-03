@@ -83,11 +83,14 @@
 		override public function dvrGetStreamInfo(indexInfo:Object):void{
 			_DVR = true;
 			_fromDVR = true;
-			initialize(indexInfo);
+			var args:Object = new Object();
+			args.indexInfo = indexInfo;
+			args.streamName = "";
+			initialize(args);
 		}
 		
-		override public function initialize(indexInfo:Object):void{
-			_indexInfo = indexInfo as HTTPStreamingHLSIndexInfo;
+		override public function initialize(args:Object):void{
+			_indexInfo = args.indexInfo as HTTPStreamingHLSIndexInfo;
 			if( !_indexInfo ||
 				!_indexInfo.streams ||
 				_indexInfo.streams.length <= 0 ){
@@ -95,7 +98,7 @@
 				return;
 			}
 			
-			_baseURL = _indexInfo.baseURL.substr(0, indexInfo.baseURL.lastIndexOf('/')+1);
+			_baseURL = _indexInfo.baseURL.substr(0, args.indexInfo.baseURL.lastIndexOf('/')+1);
 			_streamNames = [];
 			_streamQualityRates = [];
 			_streamURLs = [];
@@ -111,7 +114,18 @@
 			
 			notifyRatesReady();
 			
-			dispatchEvent(new HTTPStreamingIndexHandlerEvent(HTTPStreamingIndexHandlerEvent.REQUEST_LOAD_INDEX, false, false, false, NaN, null, null, new URLRequest(_streamURLs[0]), 0, true));
+			// This code is....rather tedious.  TODO figure out why we're doing this, refactor.  Must be an easier way.
+			var index:uint = 0;
+			for (var x:uint = 0; x < _streamNames.length; x++)
+			{
+				if( _streamURLs[x] == _baseURL + args.streamName )
+				{
+					index = x;
+					break;
+				}
+			}
+			
+			dispatchEvent(new HTTPStreamingIndexHandlerEvent(HTTPStreamingIndexHandlerEvent.REQUEST_LOAD_INDEX, false, false, false, NaN, null, null, new URLRequest(_streamURLs[index]), index, true));
 		}
 		
 		override public function dispose():void{
