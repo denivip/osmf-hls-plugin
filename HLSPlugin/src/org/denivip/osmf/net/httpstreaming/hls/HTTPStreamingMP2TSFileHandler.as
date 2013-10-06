@@ -102,7 +102,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 					
 					if (bytesAvailableStart - input.bytesAvailable > 10000) {
 						alternatingYieldCounter = (alternatingYieldCounter + 1) & 0x03;
-						if (alternatingYieldCounter & 0x01 === 1) {
+						if (alternatingYieldCounter /*& 0x01 === 1*/) {
 							_cachedOutputBytes = output;
 							return null;
 						}
