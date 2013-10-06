@@ -1,15 +1,8 @@
 package org.denivip.osmf.elements.m3u8Classes
 {
-	import flash.events.Event;
 	import flash.events.EventDispatcher;
-	import flash.events.IOErrorEvent;
-	import flash.events.SecurityErrorEvent;
-	import flash.net.URLLoader;
-	import flash.net.URLRequest;
-	import flash.utils.Dictionary;
 	
 	import org.denivip.osmf.metadata.HLSMetadata;
-	import org.denivip.osmf.net.HLSDynamicStreamingItem;
 	import org.denivip.osmf.net.HLSDynamicStreamingResource;
 	import org.osmf.events.ParseEvent;
 	import org.osmf.logging.Log;
@@ -24,8 +17,6 @@ package org.denivip.osmf.elements.m3u8Classes
 	import org.osmf.net.StreamType;
 	import org.osmf.net.StreamingItem;
 	import org.osmf.net.StreamingURLResource;
-	import org.osmf.net.httpstreaming.dvr.DVRInfo;
-	import org.osmf.utils.URL;
 	
 	
 	[Event(name="parseComplete", type="org.osmf.events.ParseEvent")]
@@ -88,7 +79,7 @@ package org.denivip.osmf.elements.m3u8Classes
 						tempDynamicRes = result as DynamicStreamingResource;
 						tempStreamingRes = baseResource as StreamingURLResource;
 						if(tempStreamingRes){
-							tempDynamicRes.streamType = StreamType.LIVE;//tempStreamingRes.streamType;
+							tempDynamicRes.streamType = tempStreamingRes.streamType;
 							tempDynamicRes.clipStartTime = tempStreamingRes.clipStartTime;
 							tempDynamicRes.clipEndTime = tempStreamingRes.clipEndTime;
 						}
@@ -107,7 +98,7 @@ package org.denivip.osmf.elements.m3u8Classes
 					}
 					
 					var name:String = lines[i+1];
-					streamItems.push(new HLSDynamicStreamingItem(name, bw, width, height));
+					streamItems.push(new DynamicStreamingItem(name, bw, width, height));
 					
 					DynamicStreamingResource(result).streamItems = streamItems;
 				}

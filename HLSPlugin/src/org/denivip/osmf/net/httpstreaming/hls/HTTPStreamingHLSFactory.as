@@ -24,7 +24,6 @@
 
 package org.denivip.osmf.net.httpstreaming.hls
 {
-	import org.denivip.osmf.net.HLSDynamicStreamingResource;
 	import org.osmf.media.MediaResourceBase;
 	import org.osmf.media.URLResource;
 	import org.osmf.net.DynamicStreamingItem;

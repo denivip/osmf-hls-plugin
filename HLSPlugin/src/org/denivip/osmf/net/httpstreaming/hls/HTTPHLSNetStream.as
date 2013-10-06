@@ -31,10 +31,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 	import flash.utils.ByteArray;
 	import flash.utils.Timer;
 	
-	import mx.core.mx_internal;
-	
 	import org.denivip.osmf.events.HTTPHLSStreamingEvent;
-	import org.denivip.osmf.logging.HLSLogger;
 	import org.osmf.events.DVRStreamInfoEvent;
 	import org.osmf.events.HTTPStreamingEvent;
 	import org.osmf.events.QoSInfoEvent;
@@ -45,12 +42,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 	import org.osmf.net.NetStreamCodes;
 	import org.osmf.net.NetStreamPlaybackDetailsRecorder;
 	import org.osmf.net.StreamingURLResource;
-	import org.osmf.net.httpstreaming.HTTPNetStream;
 	import org.osmf.net.httpstreaming.HTTPStreamHandlerQoSInfo;
-	import org.osmf.net.httpstreaming.HTTPStreamMixer;
-	import org.osmf.net.httpstreaming.HTTPStreamSource;
 	import org.osmf.net.httpstreaming.HTTPStreamingFactory;
-	import org.osmf.net.httpstreaming.HTTPStreamingUtils;
 	import org.osmf.net.httpstreaming.IHTTPStreamHandler;
 	import org.osmf.net.httpstreaming.IHTTPStreamSource;
 	import org.osmf.net.httpstreaming.dvr.DVRInfo;
@@ -622,6 +615,13 @@ package org.denivip.osmf.net.httpstreaming.hls
 						}
 					}
 					bufferTime = BUFFER_SIZE_DEF;
+					break;
+				
+				default:
+					// Some http based error?  If yes, shut'er down.
+					var httpCode:int = parseInt(event.info.code);
+					if( !isNaN(httpCode) && httpCode >= 400 )
+						close();
 					break;
 			}
 			
@@ -1206,22 +1206,35 @@ package org.denivip.osmf.net.httpstreaming.hls
 			{
 				logger.error("Error load chunk: " + event.url + " skip to next");
 			}
-			if(_source){
-				if(_source is HTTPHLSStreamSource){
-					if(event.url.match(/.m3u8/)){
+			if(_source)
+			{
+				if(_source is HTTPHLSStreamSource)
+				{	
+					var httpCode:int = parseInt(event.reason);
+					if( !isNaN(httpCode) && httpCode >= 400 )
+					{
+						// There's no point in retrying--some 400 level error, which is something bunk client-side.
+						dispatchEvent( new NetStatusEvent( NetStatusEvent.NET_STATUS, false, false, {code:event.reason, level:"error", details:event.url}));
+					}
+					else if(event.url.match(/.m3u8/))
+					{
 						if(_reloadTryCount >= MAX_RELOAD_RETRYES)
+						{	
 							dispatchEvent( new NetStatusEvent( NetStatusEvent.NET_STATUS, false, false, {code:NetStreamCodes.NETSTREAM_PLAY_STREAMNOTFOUND, level:"error", details:event.url}) );
-						else{
+						}
+						else
+						{
 							_reloadTryCount++;
 							var t:Timer = new Timer(RELOAD_TIMEOUT);
-							t.addEventListener(
-								TimerEvent.TIMER_COMPLETE,
-								function(e:Event):void{
-									HTTPHLSStreamSource(_source).loadNextChunk();
-								}
-							);
+							t.addEventListener( TimerEvent.TIMER_COMPLETE,
+												function(e:Event):void{
+													HTTPHLSStreamSource(_source).loadNextChunk();
+												}
+											  );
 						}
-					}else{
+					}
+					else
+					{
 						HTTPHLSStreamSource(_source).loadNextChunk();
 					}
 				}
@@ -1857,7 +1870,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 		
 		CONFIG::LOGGING
 		{
-			private static const logger:HLSLogger = Log.getLogger("org.denivip.osmf.net.httpstreaming.hls.HTTPHLSNetStream") as HLSLogger;
+			private static const logger:Logger = Log.getLogger("org.denivip.osmf.net.httpstreaming.hls.HTTPHLSNetStream") as Logger;
 			private var previouslyLoggedState:String = null;
 		}
 	}

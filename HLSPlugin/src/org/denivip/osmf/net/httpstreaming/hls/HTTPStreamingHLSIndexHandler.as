@@ -25,18 +25,11 @@
  package org.denivip.osmf.net.httpstreaming.hls
 {
 	import flash.net.URLRequest;
-	import flash.utils.ByteArray;
 	import flash.utils.getTimer;
 	
-	import org.denivip.osmf.elements.m3u8Classes.M3U8Item;
-	import org.denivip.osmf.elements.m3u8Classes.M3U8Playlist;
-	import org.denivip.osmf.elements.m3u8Classes.M3U8PlaylistParser;
-	import org.denivip.osmf.events.HTTPHLSStreamingEvent;
-	import org.denivip.osmf.logging.HLSLogger;
 	import org.osmf.events.DVRStreamInfoEvent;
 	import org.osmf.events.HTTPStreamingEvent;
 	import org.osmf.events.HTTPStreamingIndexHandlerEvent;
-	import org.osmf.events.ParseEvent;
 	import org.osmf.logging.Log;
 	import org.osmf.logging.Logger;
 	import org.osmf.net.httpstreaming.HTTPStreamRequest;
@@ -429,7 +422,7 @@
 		private var _prevChunkIndex:int;
 		CONFIG::LOGGING
 		{
-			protected var logger:HLSLogger = Log.getLogger("org.denivip.osmf.plugins.hls.HTTPStreamingM3U8IndexHandler") as HLSLogger;
+			protected var logger:Logger = Log.getLogger("org.denivip.osmf.plugins.hls.HTTPStreamingM3U8IndexHandler") as Logger;
 			private var _reloadTime:int;
 		}
 	}

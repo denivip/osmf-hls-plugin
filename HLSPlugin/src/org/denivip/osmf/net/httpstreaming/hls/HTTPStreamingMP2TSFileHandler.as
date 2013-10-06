@@ -28,7 +28,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 	import flash.utils.ByteArray;
 	import flash.utils.IDataInput;
 	
-	import org.denivip.osmf.logging.HLSLogger;
+	import org.osmf.logging.Logger
 	import org.osmf.logging.Log;
 	import org.osmf.net.httpstreaming.HTTPStreamingFileHandlerBase;
 	
@@ -306,7 +306,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 		
 		CONFIG::LOGGING
 		{
-			private var logger:HLSLogger = Log.getLogger('org.denivip.osmf.net.httpstreaming.hls.HTTPStreamingMP2TSFileHandler') as HLSLogger;
+			private var logger:Logger = Log.getLogger('org.denivip.osmf.net.httpstreaming.hls.HTTPStreamingMP2TSFileHandler') as Logger;
 		}
 	}
 }
