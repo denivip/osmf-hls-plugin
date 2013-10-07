@@ -239,7 +239,7 @@
 			
 			var request:HTTPStreamRequest = checkRateAvilable(quality);
 			if(request)
-				return request;
+				return request;	// We don't have the manifest for this quality setting yet.
 			
 			if(_DVR && _dvrStartTime > 0){
 				_dvrStartTime = 0.0;
@@ -249,11 +249,11 @@
 			var item:HTTPStreamingM3U8IndexRateItem = _rateVec[quality];
 			var manifest:Vector.<HTTPStreamingM3U8IndexItem> = item.manifest;
 			if(!manifest.length)
-				return new HTTPStreamRequest(HTTPStreamRequestKind.DONE);
+				return new HTTPStreamRequest(HTTPStreamRequestKind.DONE);	// nothing in the manifest...
 			var len:int = manifest.length;
 			var tempItem:HTTPStreamingM3U8IndexItem = manifest[len-1];
-			if(time > tempItem.startTime+tempItem.duration)
-				return new HTTPStreamRequest(HTTPStreamRequestKind.DONE);
+			if(time > tempItem.startTime+tempItem.duration)	// is requested time past the last item in the manifest?
+				return new HTTPStreamRequest(HTTPStreamRequestKind.DONE);	
 			
 			var i:int;
 			for(i = 0; i < len; i++){

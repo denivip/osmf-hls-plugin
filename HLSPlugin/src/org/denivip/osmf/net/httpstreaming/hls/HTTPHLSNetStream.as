@@ -681,10 +681,10 @@ package org.denivip.osmf.net.httpstreaming.hls
 		 */  
 		private function onMainTimer(timerEvent:TimerEvent):void
 		{
-			if (seeking && time != timeBeforeSeek)
+			if (_seeking && time != _timeBeforeSeek)
 			{
-				seeking = false;
-				timeBeforeSeek = Number.NaN;
+				_seeking = false;
+				_timeBeforeSeek = Number.NaN;
 				
 				CONFIG::LOGGING
 				{
@@ -734,10 +734,10 @@ package org.denivip.osmf.net.httpstreaming.hls
 					// we may call seek before our stream provider is
 					// able to fulfill our request - so we'll stay in seek
 					// mode until the provider is ready.
-					if (_source.isReady)
+					if (_source.isReady )
 					{
-						timeBeforeSeek = time;
-						seeking = true;
+						_timeBeforeSeek = time;
+						_seeking = true;
 						
 						// cleaning up the previous seek info
 						_flvParser = null;
@@ -1860,8 +1860,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 		private var lastTransitionStreamURL:String = null;
 		
 		private var lastTime:Number = Number.NaN;
-		private var timeBeforeSeek:Number = Number.NaN;
-		private var seeking:Boolean = false;
+		private var _timeBeforeSeek:Number = Number.NaN;
+		private var _seeking:Boolean = false;
 		private var emptyBufferInterruptionSinceLastQoSUpdate:Boolean = false;
 		
 		private var _bytesLoaded:uint = 0;
