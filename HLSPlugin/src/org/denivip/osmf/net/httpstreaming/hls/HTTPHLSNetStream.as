@@ -1521,7 +1521,13 @@ package org.denivip.osmf.net.httpstreaming.hls
 			}		
 			else // doing enhanced seek
 			{
-				if (currentTime < _enhancedSeekTarget)
+				// If we're seeking backwards, and this timestamp is still greater than the time before seek...drop it 
+				// on the floor.
+				if( _enhancedSeekTarget < this._timeBeforeSeek && currentTime >= this._timeBeforeSeek )
+				{
+					// bzzt.
+				}
+				else if (currentTime < _enhancedSeekTarget)
 				{
 					if (_enhancedSeekTags == null)
 					{
