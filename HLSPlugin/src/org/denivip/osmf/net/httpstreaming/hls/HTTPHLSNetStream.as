@@ -681,10 +681,10 @@ package org.denivip.osmf.net.httpstreaming.hls
 		 */  
 		private function onMainTimer(timerEvent:TimerEvent):void
 		{
-			if (seeking && time != timeBeforeSeek)
+			if (_seeking && time != _timeBeforeSeek)
 			{
-				seeking = false;
-				timeBeforeSeek = Number.NaN;
+				_seeking = false;
+				_timeBeforeSeek = Number.NaN;
 				
 				CONFIG::LOGGING
 				{
@@ -734,10 +734,10 @@ package org.denivip.osmf.net.httpstreaming.hls
 					// we may call seek before our stream provider is
 					// able to fulfill our request - so we'll stay in seek
 					// mode until the provider is ready.
-					if (_source.isReady)
+					if (_source.isReady )
 					{
-						timeBeforeSeek = time;
-						seeking = true;
+						_timeBeforeSeek = time;
+						_seeking = true;
 						
 						// cleaning up the previous seek info
 						_flvParser = null;
@@ -1211,14 +1211,14 @@ package org.denivip.osmf.net.httpstreaming.hls
 				if(_source is HTTPHLSStreamSource)
 				{	
 					var httpCode:int = parseInt(event.reason);
-					if( !isNaN(httpCode) && httpCode >= 400 )
+					if(event.url.match(/.m3u8/))
 					{
-						// There's no point in retrying--some 400 level error, which is something bunk client-side.
-						dispatchEvent( new NetStatusEvent( NetStatusEvent.NET_STATUS, false, false, {code:event.reason, level:"error", details:event.url}));
-					}
-					else if(event.url.match(/.m3u8/))
-					{
-						if(_reloadTryCount >= MAX_RELOAD_RETRYES)
+						if( !isNaN(httpCode) && httpCode >= 400 )
+						{
+							// There's no point in retrying--some 400 level error, which is something bunk client-side
+							dispatchEvent( new NetStatusEvent( NetStatusEvent.NET_STATUS, false, false, {code:event.reason, level:"error", details:event.url}));
+						}
+						else if(_reloadTryCount >= MAX_RELOAD_RETRYES)
 						{	
 							dispatchEvent( new NetStatusEvent( NetStatusEvent.NET_STATUS, false, false, {code:NetStreamCodes.NETSTREAM_PLAY_STREAMNOTFOUND, level:"error", details:event.url}) );
 						}
@@ -1235,7 +1235,18 @@ package org.denivip.osmf.net.httpstreaming.hls
 					}
 					else
 					{
-						HTTPHLSStreamSource(_source).loadNextChunk();
+						// A .ts segment.  If this is a 404, then let's try loading the next chunk...
+						// jnoring: not sure if this is wise, but it completely fixes streams with missing .ts segments, like:
+						// http://qthttp.apple.com.edgesuite.net/1010qwoeiuryfg/sl.m3u8
+						if( !isNaN(httpCode) && httpCode >= 400 && httpCode != 404 )
+						{
+							// There's no point in retrying--some 400 level error, which is something bunk client-side.
+							dispatchEvent( new NetStatusEvent( NetStatusEvent.NET_STATUS, false, false, {code:event.reason, level:"error", details:event.url}));
+						}
+						else
+						{
+							HTTPHLSStreamSource(_source).loadNextChunk();
+						}
 					}
 				}
 			}
@@ -1501,7 +1512,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 			{
 				if (_initialTime < 0)
 				{
-					_initialTime = _dvrInfo != null ? _dvrInfo.startTime : currentTime;
+					_initialTime = _dvrInfo != null ? _dvrInfo.startTime : (_seekTime > 0 ? _playStart : currentTime);
 				}
 				if (_seekTime < 0)
 				{
@@ -1510,7 +1521,13 @@ package org.denivip.osmf.net.httpstreaming.hls
 			}		
 			else // doing enhanced seek
 			{
-				if (currentTime < _enhancedSeekTarget)
+				// If we're seeking backwards, and this timestamp is still greater than the time before seek...drop it 
+				// on the floor.
+				if( _enhancedSeekTarget < this._timeBeforeSeek && currentTime >= this._timeBeforeSeek )
+				{
+					// bzzt.
+				}
+				else if (currentTime < _enhancedSeekTarget)
 				{
 					if (_enhancedSeekTags == null)
 					{
@@ -1556,7 +1573,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 					}
 					if(_initialTime < 0)
 					{
-						_initialTime = currentTime;
+						_initialTime = _seekTime > 0 ? _playStart : currentTime;
 					}
 					
 					if (_enhancedSeekTags != null && _enhancedSeekTags.length > 0)
@@ -1849,8 +1866,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 		private var lastTransitionStreamURL:String = null;
 		
 		private var lastTime:Number = Number.NaN;
-		private var timeBeforeSeek:Number = Number.NaN;
-		private var seeking:Boolean = false;
+		private var _timeBeforeSeek:Number = Number.NaN;
+		private var _seeking:Boolean = false;
 		private var emptyBufferInterruptionSinceLastQoSUpdate:Boolean = false;
 		
 		private var _bytesLoaded:uint = 0;

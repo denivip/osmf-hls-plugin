@@ -230,7 +230,13 @@ package org.denivip.osmf.net.httpstreaming.hls
 				}
 				logger.debug("Opening stream [ " + loggedStreamName + " ]. ");
 			}
-			_indexHandler.initialize(_indexInfo != null? _indexInfo : streamName);
+			
+			// Hack alert: the API in OSMF here is....dumb.  There's a single argument to a base class, when really we need two.  We'll hack around this by 
+			// bundling stuff into an object.
+			var args:Object = new Object();
+			args.indexInfo = _indexInfo;
+			args.streamName = _streamName
+			_indexHandler.initialize(args);
 		}
 		
 		/**
@@ -247,6 +253,9 @@ package org.denivip.osmf.net.httpstreaming.hls
 			{
 				_downloader.close();
 			}
+			
+			_indexDownloaderMonitor.removeEventListener(HTTPStreamingEvent.DOWNLOAD_COMPLETE, onIndexComplete);
+			_indexDownloaderMonitor.removeEventListener(HTTPStreamingEvent.DOWNLOAD_ERROR, onIndexError);
 			
 			_indexHandler.dispose();
 			
