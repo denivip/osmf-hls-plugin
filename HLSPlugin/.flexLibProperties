@@ -3,7 +3,6 @@
   <includeClasses>
     <classEntry path="org.denivip.osmf.plugins.HLSPluginInfo"/>
     <classEntry path="org.denivip.osmf.elements.M3U8Loader"/>
-    <classEntry path="org.denivip.osmf.elements.M3U8Element"/>
     <classEntry path="org.denivip.osmf.elements.m3u8Classes.M3U8PlaylistParser"/>
     <classEntry path="org.denivip.osmf.elements.m3u8Classes.M3U8Playlist"/>
     <classEntry path="org.denivip.osmf.elements.m3u8Classes.M3U8Item"/>
@@ -14,6 +13,7 @@
     <classEntry path="org.denivip.osmf.logging.LogMessage"/>
     <classEntry path="org.denivip.osmf.logging.TraceLogHandler"/>
     <classEntry path="org.denivip.osmf.metadata.HLSMetadata"/>
+    <classEntry path="org.denivip.osmf.plugins.HLSSettings"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>
