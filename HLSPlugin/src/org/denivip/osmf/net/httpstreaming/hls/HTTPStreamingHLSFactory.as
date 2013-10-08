@@ -67,20 +67,12 @@ package org.denivip.osmf.net.httpstreaming.hls
 				dynamicRes = res as DynamicStreamingResource;
 				
 				for each(var dsi:DynamicStreamingItem in dynamicRes.streamItems){
-					var params:Object = {};
-					
-					if(dsi.width > 0)
-						params.width = dsi.width;
-					
-					if(dsi.height > 0)
-						params.height = dsi.height;
-					
-					streamInfos.push(new HLSStreamInfo(dsi.streamName, dsi.bitrate, params));
+					streamInfos.push(new HLSStreamInfo(dsi.streamName, dsi.bitrate));
 				}
 				
 				baseURL = dynamicRes.host;
 			}else{
-				streamInfos.push(new HLSStreamInfo(res.url, 0, {}));
+				streamInfos.push(new HLSStreamInfo(res.url, 0));
 			}
 			
 			return new HTTPStreamingHLSIndexInfo(baseURL, streamInfos);

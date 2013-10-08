@@ -360,15 +360,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 			}
 		}
 		
-		/**
-		 * @return true if BestEffortFetch is enabled.
-		 */
-		public function get isBestEffortFetchEnabled():Boolean
-		{
-			return _source != null &&
-				_source.isBestEffortFetchEnabled;
-		}
-		
 		///////////////////////////////////////////////////////////////////////
 		/// Internals
 		///////////////////////////////////////////////////////////////////////
@@ -494,7 +485,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 				{
 					logger.debug("Initiating change of audio stream to [" + _desiredAudioStreamName + "]");
 				}
-				var audioResource:MediaResourceBase
+				var audioResource:MediaResourceBase;
 				if(_desiredAudioStreamName)
 					audioResource = new StreamingURLResource(_desiredAudioStreamName);
 				if (audioResource != null)
@@ -1011,15 +1002,12 @@ package org.denivip.osmf.net.httpstreaming.hls
 			var liveStallTolerance:Number =
 				(this.bufferLength + Math.max(OSMFSettings.hdsLiveStallTolerance, 0) + 1)*1000;
 			var now:Date = new Date();
-			if(now.valueOf() < _liveStallStartTime.valueOf() + liveStallTolerance)
-			{
-				// once we hit the live head, don't signal live stall event for at least a few seconds
-				// in order to reduce the number of false positives. this accounts for the case
-				// where we've caught up with live.
-				return false;
-			}
+            // once we hit the live head, don't signal live stall event for at least a few seconds
+            // in order to reduce the number of false positives. this accounts for the case
+            // where we've caught up with live.
+			return now.valueOf() >= _liveStallStartTime.valueOf() + liveStallTolerance;
 			
-			return true;
+
 		}
 
 		/**
@@ -1366,11 +1354,10 @@ package org.denivip.osmf.net.httpstreaming.hls
 		private function consumeAllScriptDataTags(timestamp:Number):int
 		{
 			var processed:int = 0;
-			var index:int = 0;
 			var bytes:ByteArray = null;
 			var tag:FLVTagScriptDataObject = null;
 			
-			for (index = 0; index < _insertScriptDataTags.length; index++)
+			for (var index:int = 0; index < _insertScriptDataTags.length; index++)
 			{
 				bytes = new ByteArray();
 				tag = _insertScriptDataTags[index];
@@ -1780,7 +1767,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 		 */
 		protected function createSource(resource:URLResource):void
 		{
-			var source:IHTTPStreamSource = null;
 			var streamingResource:StreamingURLResource = resource as StreamingURLResource;
 			if (streamingResource == null || streamingResource.alternativeAudioStreamItems == null || streamingResource.alternativeAudioStreamItems.length == 0)
 			{
@@ -1843,8 +1829,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 		
 		private var _fileTimeAdjustment:Number = 0;	// this is what must be added (IN SECONDS) to the timestamps that come in FLVTags from the file handler to get to the index handler timescale
 		// XXX an event to set the _fileTimestampAdjustment is needed
-
-		private var _mediaFragmentDuration:Number = 0;
 		
 		private var _dvrInfo:DVRInfo = null;
 		
@@ -1856,8 +1840,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 		
 		private var lastTransitionIndex:int = -1;
 		private var lastTransitionStreamURL:String = null;
-		
-		private var lastTime:Number = Number.NaN;
 		private var _timeBeforeSeek:Number = Number.NaN;
 		private var _seeking:Boolean = false;
 		private var emptyBufferInterruptionSinceLastQoSUpdate:Boolean = false;
