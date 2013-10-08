@@ -32,6 +32,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 	import flash.utils.Timer;
 	
 	import org.denivip.osmf.events.HTTPHLSStreamingEvent;
+	import org.denivip.osmf.plugins.HLSSettings;
 	import org.osmf.events.DVRStreamInfoEvent;
 	import org.osmf.events.HTTPStreamingEvent;
 	import org.osmf.events.QoSInfoEvent;
@@ -98,15 +99,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 	 */	
 	public class HTTPHLSNetStream extends NetStream
 	{
-		// Buffer control
-		private static const BUFFER_SIZE_PAUSE:Number = 32;
-		private static const BUFFER_SIZE_BIG:Number = 16;
-		private static const BUFFER_SIZE_DEF:Number = OSMFSettings.hdsMinimumBufferTime;
-		
-		// reload/load playlist troubles
-		private static const MAX_RELOAD_RETRYES:int = 5;
-		private static const RELOAD_TIMEOUT:int = 5000;
-		
 		private var _reloadTryCount:int = 0;
 		
 		/**
@@ -539,7 +531,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 			{
 				case NetStreamCodes.NETSTREAM_PLAY_START:
 					if(!_started){
-						bufferTime = BUFFER_SIZE_DEF;
+						bufferTime = HLSSettings.hlsBufferSizeDef;
 						_started = true;
 						CONFIG::LOGGING
 						{
@@ -548,7 +540,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 					}
 					break;
 				case NetStreamCodes.NETSTREAM_PAUSE_NOTIFY:
-					bufferTime = BUFFER_SIZE_PAUSE;
+					bufferTime = HLSSettings.hlsBufferSizePause;
 					CONFIG::LOGGING
 					{
 						logger.debug("Playback paused. Buffer size ="+bufferTime);
@@ -577,7 +569,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 							_notifyPlayUnpublishPending = false; 
 						}
 					}
-					bufferTime = BUFFER_SIZE_DEF;
+					bufferTime = HLSSettings.hlsBufferSizeDef;
 					break;
 				
 				case NetStreamCodes.NETSTREAM_BUFFER_FULL:
@@ -586,7 +578,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 					{
 						logger.debug("Received NETSTREAM_BUFFER_FULL. _wasBufferEmptied = "+_wasBufferEmptied+" bufferLength "+this.bufferLength);
 					}
-					bufferTime = BUFFER_SIZE_BIG;
+					bufferTime = HLSSettings.hlsBufferSizeBig;
 					break;
 				
 				case NetStreamCodes.NETSTREAM_BUFFER_FLUSH:
@@ -614,7 +606,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 							logger.debug("Seek notify caught and stopped");
 						}
 					}
-					bufferTime = BUFFER_SIZE_DEF;
+					bufferTime = HLSSettings.hlsBufferSizeDef;
 					break;
 				
 				default:
@@ -1218,14 +1210,14 @@ package org.denivip.osmf.net.httpstreaming.hls
 							// There's no point in retrying--some 400 level error, which is something bunk client-side
 							dispatchEvent( new NetStatusEvent( NetStatusEvent.NET_STATUS, false, false, {code:event.reason, level:"error", details:event.url}));
 						}
-						else if(_reloadTryCount >= MAX_RELOAD_RETRYES)
+						else if(_reloadTryCount >= HLSSettings.hlsMaxReloadRetryes)
 						{	
 							dispatchEvent( new NetStatusEvent( NetStatusEvent.NET_STATUS, false, false, {code:NetStreamCodes.NETSTREAM_PLAY_STREAMNOTFOUND, level:"error", details:event.url}) );
 						}
 						else
 						{
 							_reloadTryCount++;
-							var t:Timer = new Timer(RELOAD_TIMEOUT);
+							var t:Timer = new Timer(HLSSettings.hlsReloadTimeout);
 							t.addEventListener( TimerEvent.TIMER_COMPLETE,
 												function(e:Event):void{
 													HTTPHLSStreamSource(_source).loadNextChunk();

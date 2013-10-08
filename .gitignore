@@ -1,3 +1,5 @@
 /HLSTestPlayer/bin-debug
 bin-debug
-/buildtools/sdks/4.6.0
+/buildtools/sdks/4.6.0/release
+/release
+/buildtools/sdks

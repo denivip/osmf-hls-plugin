@@ -27,6 +27,7 @@
 	import flash.net.URLRequest;
 	import flash.utils.getTimer;
 	
+	import org.denivip.osmf.plugins.HLSSettings;
 	import org.osmf.events.DVRStreamInfoEvent;
 	import org.osmf.events.HTTPStreamingEvent;
 	import org.osmf.events.HTTPStreamingIndexHandlerEvent;
@@ -51,8 +52,6 @@
 	 */
 	public class HTTPStreamingHLSIndexHandler extends HTTPStreamingIndexHandlerBase
 	{
-		private static const MAX_ERRORS:int = 10;
-		
 		private var _fileHandler:HTTPStreamingMP2TSFileHandler;
 		private var _indexInfo:HTTPStreamingHLSIndexInfo;
 		private var _baseURL:String;
@@ -152,7 +151,7 @@
 			if(String(data).localeCompare(_prevPlaylist) == 0)
 				++_matchCounter;
 			
-			if(_matchCounter == MAX_ERRORS){ // if delivered playlist again not changed then error_event (or all what you want)
+			if(_matchCounter == HLSSettings.hlsMaxErrors){ // if delivered playlist again not changed then error_event (or all what you want)
 				CONFIG::LOGGING
 				{
 					logger.error("Stream is stuck. Playlist on server don't updated!");

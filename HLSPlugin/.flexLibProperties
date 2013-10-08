@@ -12,7 +12,6 @@
     <classEntry path="org.denivip.osmf.logging.HLSLoggerFactory"/>
     <classEntry path="org.denivip.osmf.logging.LogMessage"/>
     <classEntry path="org.denivip.osmf.logging.TraceLogHandler"/>
-    <classEntry path="org.denivip.osmf.metadata.HLSMetadata"/>
     <classEntry path="org.denivip.osmf.plugins.HLSSettings"/>
   </includeClasses>
   <includeResources/>

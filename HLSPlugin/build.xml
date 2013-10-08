@@ -16,6 +16,8 @@
             keep-generated-actionscript="false"
             incremental="false"
             debug="${debug}"
+            optimize="true"
+            strict="true"
             target-player="${flash.target.player}"
         >
             <define name="CONFIG::useFlexClasses" value="true" />

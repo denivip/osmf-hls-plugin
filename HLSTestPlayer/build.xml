@@ -16,6 +16,8 @@
             keep-generated-actionscript="false"
             incremental="false"
             debug="${debug}"
+            optimize="true"
+            strict="true"
             target-player="${flash.target.player}"
         >
             <load-config filename="${FLEX_HOME}/frameworks/flex-config.xml"/>

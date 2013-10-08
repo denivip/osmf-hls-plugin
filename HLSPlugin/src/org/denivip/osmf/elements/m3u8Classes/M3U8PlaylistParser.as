@@ -150,6 +150,7 @@ package org.denivip.osmf.elements.m3u8Classes
 				}
 			}
 			
+			baseResource.addMetadataValue("HLS_METADATA", new Metadata()); // fix for multistreaming resources
 			result.addMetadataValue("HLS_METADATA", new Metadata());
 			
 			var httpMetadata:Metadata = new Metadata();
