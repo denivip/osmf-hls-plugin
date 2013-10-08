@@ -1,4 +1,5 @@
-﻿You can use the plugin with any OSMF2.0-based player.
+﻿DEFAULT USING:
+You can use the plugin with any OSMF2.0-based player.
 Two most common use cases are described below:
 
 1. StrobeMediaPlayback (must be OSMF2.0 based!):
@@ -34,3 +35,16 @@ Two most common use cases are described below:
 2. Your own OSMF2.0-based player:
     That's simple :). Just install the plugin like any other OSMF-based plugin. You can use either HLSPlugin.swc or dynamic HLSDynamicPlugin.swf static library.
     To learn how to embed the plugin into the OSMF player You can look into the OSMF documentation ( http://osmf.org/developers.html ).
+    
+
+SETTINGS:
+Plugin used some buffer control settings (all in HLSSettings.as file) you can change it as you want (but remember about rebuild plugin after changes!)
+hlsBufferSizePause = 32 - buffer size when player paused
+hlsBufferSizeBig = 16 - buffer size when all good with bandwidth
+hlsBufferSizeDef = 4 - default OSMF buffer time
+
+and some error catching settings:
+hlsMaxReloadRetryes = 5 - for HTTPHLSNetStream, when live-stream playing. Number of reload playlist tries.
+hlsReloadTimeout = 5000 - timeout between playlist reloads
+
+hlsMaxErrors = 10 - for HTTPStreamingHLSIndexHandler (for live-streaming, again). Used when playlist "stuck" on server, and request returns not updated playlist.
