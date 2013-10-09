@@ -75,9 +75,9 @@ package org.denivip.osmf.net.httpstreaming.hls
 				}
 				// Check PES header length
 				var length:uint = packet.readUnsignedByte();
-				var pts:Number = 
-					((packet.readUnsignedByte() & 0x0e) << 29) + 
-					((packet.readUnsignedShort() & 0xfffe) << 14) + 
+				var pts:Number =
+					((packet.readUnsignedByte() & 0x0e) << 29) +
+					((packet.readUnsignedShort() & 0xfffe) << 14) +
 					((packet.readUnsignedShort() & 0xfffe) >> 1);
 		
 				length -= 5;
@@ -306,7 +306,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 						_vTag.frameType = FLVTagVideo.FRAME_TYPE_INTER; // adjust to keyframe later
 						_vTag.avcPacketType = FLVTagVideo.AVC_PACKET_TYPE_NALU;
 						_vTag.timestamp = _timestamp;
-						_vTag.avcCompositionTimeOffset = _compositionTime;	
+						_vTag.avcCompositionTimeOffset = _compositionTime;
 					}
 					
 					

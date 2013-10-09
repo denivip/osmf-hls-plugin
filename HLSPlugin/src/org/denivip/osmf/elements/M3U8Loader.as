@@ -40,27 +40,32 @@ package org.denivip.osmf.elements
 		public function M3U8Loader(){
 			super();
 		}
+
+        public static function canHandle(resource:MediaResourceBase):Boolean
+        {
+            if (resource !== null && resource is URLResource) {
+                var urlResource:URLResource = URLResource(resource);
+                if (urlResource.url.search(/(https?|file)\:\/\/.*?\.m3u8(\?.*)?/i) !== -1) {
+                    return true;
+                }
+
+                var contentType:Object = urlResource.getMetadataValue("content-type");
+                if (contentType && contentType is String) {
+                    // If the filename doesn't include a .m3u8 extension, but
+                    // explicit content-type metadata is found on the
+                    // URLResource, we can handle it.  Must be either of:
+                    // - "application/x-mpegURL"
+                    // - "vnd.apple.mpegURL"
+                    if ((contentType as String).search(/(application\/x-mpegURL|vnd.apple.mpegURL)/i) !== -1) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
 		
 		override public function canHandleResource(resource:MediaResourceBase):Boolean{
-			if (resource !== null && resource is URLResource) {
-				var urlResource:URLResource = URLResource(resource);
-				if (urlResource.url.search(/(https?|file)\:\/\/.*?\.m3u8(\?.*)?/i) !== -1) {
-					return true;
-				}
-				
-				var contentType:Object = urlResource.getMetadataValue("content-type");
-				if (contentType && contentType is String) {
-					// If the filename doesn't include a .m3u8 extension, but
-					// explicit content-type metadata is found on the
-					// URLResource, we can handle it.  Must be either of:
-					// - "application/x-mpegURL"
-					// - "vnd.apple.mpegURL"
-					if ((contentType as String).search(/(application\/x-mpegURL|vnd.apple.mpegURL)/i) !== -1) {
-						return true;
-					}
-				}
-			}
-			return false;
+            return canHandle(resource);
 		}
 		
 		private function onError(e:ErrorEvent):void

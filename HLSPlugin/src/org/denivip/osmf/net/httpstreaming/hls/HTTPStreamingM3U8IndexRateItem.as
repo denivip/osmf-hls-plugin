@@ -56,12 +56,6 @@
 		
 		public function get url():String{ return _url; }
 		
-		public function get urlBase():String{ 
-			var offset:int;
-			offset = _url.lastIndexOf("/");
-			return _url.substr(0, offset+1);
-		}
-		
 		public function get totalTime():Number{ return _totalTime; }
 		
 		public function addIndexItem(item:HTTPStreamingM3U8IndexItem):void{

@@ -228,7 +228,7 @@
 			}
 			notifyIndexReady(quality, initialOffset);
 			if(rateItem.isLive){
-				notifyTotalDuration(rateItem.totalTime, quality, rateItem.isLive);
+				notifyTotalDuration(rateItem.totalTime, rateItem.isLive);
 				_quality = quality;
 			}
 		}
@@ -266,7 +266,7 @@
 			
 			if(!item.isLive && _quality != quality){
 				_quality = quality;
-				notifyTotalDuration(item.totalTime, quality, item.isLive);
+				notifyTotalDuration(item.totalTime, item.isLive);
 			}
 			
 			_fileHandler.initialOffset = manifest[_segment].startTime;
@@ -283,7 +283,7 @@
 			
 			if(!item.isLive && _quality != quality){
 				_quality = quality;
-				notifyTotalDuration(item.totalTime, quality, item.isLive);
+				notifyTotalDuration(item.totalTime, item.isLive);
 			}
 			
 			if(item.isLive){
@@ -386,13 +386,10 @@
 			);
 		}
 		
-		private function notifyTotalDuration(duration:Number, quality:int, live:Boolean):void{
+		private function notifyTotalDuration(duration:Number, live:Boolean):void{
 			var sdo:FLVTagScriptDataObject = new FLVTagScriptDataObject();
 			var metaInfo:Object = new Object();
-			if(!live)
-				metaInfo.duration = duration;
-			else
-				metaInfo.duration = 0;
+            metaInfo.duration = live ? 0 : duration;
 			
 			sdo.objects = ["onMetaData", metaInfo];
 			dispatchEvent(

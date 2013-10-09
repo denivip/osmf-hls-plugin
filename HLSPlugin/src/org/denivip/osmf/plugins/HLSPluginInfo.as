@@ -27,22 +27,7 @@ package org.denivip.osmf.plugins
 		}
 		
 		private function canHandleResource(resource:MediaResourceBase):Boolean{
-			if(resource == null || !(resource is URLResource))
-				return false;
-			
-			var urlResource:URLResource = resource as URLResource;
-			if (urlResource.url.search(/(https?|file)\:\/\/.*?\.m3u8(\?.*)?/i) !== -1) {
-				return true;
-			}
-			
-			var contentType:Object = urlResource.getMetadataValue("content-type");
-			if (contentType && contentType is String) {
-				if ((contentType as String).search(/(application\/x-mpegURL|vnd.apple.mpegURL)/i) !== -1) {
-					return true;
-				}
-			}
-			
-			return false;
+            return M3U8Loader.canHandle(resource);
 		}
 		
 		private function createMediaElement():MediaElement{
