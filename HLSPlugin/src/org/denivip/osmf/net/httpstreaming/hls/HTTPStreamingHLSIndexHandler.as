@@ -432,7 +432,7 @@
 			);
 		}
 		
-		private var _prevChunkIndex:int;
+		private var _prevChunkIndex:int = -1;
 		CONFIG::LOGGING
 		{
 			protected var logger:Logger = Log.getLogger("org.denivip.osmf.plugins.hls.HTTPStreamingM3U8IndexHandler") as Logger;
