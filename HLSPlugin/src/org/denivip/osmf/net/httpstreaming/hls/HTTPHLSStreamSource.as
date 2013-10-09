@@ -235,7 +235,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 			// bundling stuff into an object.
 			var args:Object = new Object();
 			args.indexInfo = _indexInfo;
-			args.streamName = _streamName
+			args.streamName = _streamName;
 			_indexHandler.initialize(args);
 		}
 		
@@ -475,7 +475,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 								// indexHandler will intercept download events, then
 								// fire DOWNLOAD_ERROR, DOWNLOAD_SKIP, or DOWNLOAD_CONTINUE to indicate
 								// that we should proceed
-								downloaderMonitor =  _request.bestEffortDownloaderMonitor
+								downloaderMonitor = _request.bestEffortDownloaderMonitor;
 								_bestEffortDownloadResult = null;
 							}
 							
@@ -640,7 +640,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 					
 					var lastFragmentDetails:FragmentDetails = new FragmentDetails(_downloader.downloadBytesCount, _fragmentDuration, _downloader.downloadDuration, _qualityLevel, fragmentIdentifier);
 					
-					_qosInfo = new HTTPStreamHandlerQoSInfo(availableQualityLevels, _qualityLevel, lastFragmentDetails)
+					_qosInfo = new HTTPStreamHandlerQoSInfo(availableQualityLevels, _qualityLevel, lastFragmentDetails);
 					
 					
 					_dispatcher.dispatchEvent( 

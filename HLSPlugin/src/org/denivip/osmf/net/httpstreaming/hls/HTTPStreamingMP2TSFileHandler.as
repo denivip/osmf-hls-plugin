@@ -138,9 +138,9 @@ package org.denivip.osmf.net.httpstreaming.hls
 			// top of second byte
 			var value:uint = packet.readUnsignedByte();
 			
-			var tei:Boolean = Boolean(value & 0x80);	// error indicator
+			//var tei:Boolean = Boolean(value & 0x80);	// error indicator
 			var pusi:Boolean = Boolean(value & 0x40);	// payload unit start indication
-			var tpri:Boolean = Boolean(value & 0x20);	// transport priority indication
+			//var tpri:Boolean = Boolean(value & 0x20);	// transport priority indication
 			
 			// bottom of second byte and all of third
 			value <<= 8;
@@ -150,33 +150,22 @@ package org.denivip.osmf.net.httpstreaming.hls
 			
 			// fourth byte
 			value = packet.readUnsignedByte();
-			var scramblingControl:uint = (value >> 6) & 0x03;	// scrambling control bits
+			//var scramblingControl:uint = (value >> 6) & 0x03;	// scrambling control bits
 			var hasAF:Boolean = Boolean(value & 0x20);	// has adaptation field
 			var hasPD:Boolean = Boolean(value & 0x10);	// has payload data
-			var ccount:uint = value & 0x0f;		// continuty count
+			//var ccount:uint = value & 0x0f;		// continuty count
 			
 			// technically hasPD without hasAF is an error, see spec
 			
 			if(hasAF)
 			{
 				// process adaptation field
-
-				var afLen:uint = packet.readUnsignedByte();
-				
 				// don't care about flags
 				// don't care about clocks here
-				
-				packet.position += afLen;	// skip to end
+				packet.position += packet.readUnsignedByte();	// skip to end
 			}
-			
-			if(hasPD)
-			{
-				return processES(pid, pusi, packet);
-			}
-			else
-			{
-				return null;
-			}
+
+            return hasPD ? processES(pid, pusi, packet) : null;
 		}
 		
 		private function processES(pid:uint, pusi:Boolean, packet:ByteArray):ByteArray
@@ -206,11 +195,9 @@ package org.denivip.osmf.net.httpstreaming.hls
 		
 		private function processPAT(packet:ByteArray):void
 		{
-			var pointer:uint = packet.readUnsignedByte();
-			var tableID:uint = packet.readUnsignedByte();
-			
-			var sectionLen:uint = packet.readUnsignedShort() & 0x03ff; // ignoring misc and reserved bits
-			var remaining:uint = sectionLen;
+			packet.readUnsignedByte();   // pointer:uint
+			packet.readUnsignedByte();   // tableID:uint
+			var remaining:uint = packet.readUnsignedShort() & 0x03ff; // ignoring misc and reserved bits
 			
 			packet.position += 5; // skip tsid + version/cni + sec# + last sec#
 			remaining -= 5;
@@ -229,7 +216,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 		
 		private function processPMT(packet:ByteArray):void
 		{
-			var pointer:uint = packet.readUnsignedByte();
+			packet.readUnsignedByte();  // pointer:uint
 			var tableID:uint = packet.readUnsignedByte();
 			
 			if (tableID != 0x02)
@@ -240,8 +227,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 				}
 				return; // don't try to parse it
 			}
-			var sectionLen:uint = packet.readUnsignedShort() & 0x03ff; // ignoring section syntax and reserved
-			var remaining:uint = sectionLen;
+
+			var remaining:uint = packet.readUnsignedShort() & 0x03ff; // ignoring section syntax and reserved
 			
 			packet.position += 7; // skip program num, rserved, version, cni, section num, last section num, reserved, PCR PID
 			remaining -= 7;
@@ -287,15 +274,9 @@ package org.denivip.osmf.net.httpstreaming.hls
 		override public function flushFileSegment(input:IDataInput):ByteArray
 		{
 			var flvBytes:ByteArray = new ByteArray();
-			var flvBytesVideo:ByteArray = null;
-			var flvBytesAudio:ByteArray = null;
-			
-
-			flvBytesVideo = _videoPES.processES(false, null, true);
-
-			flvBytesAudio = _audioPES.processES(false, null, true);
+			var flvBytesVideo:ByteArray = _videoPES.processES(false, null, true);
+			var flvBytesAudio:ByteArray = _audioPES.processES(false, null, true);
 		
-			
 			if(flvBytesVideo)
 				flvBytes.readBytes(flvBytesVideo);
 			if(flvBytesAudio)

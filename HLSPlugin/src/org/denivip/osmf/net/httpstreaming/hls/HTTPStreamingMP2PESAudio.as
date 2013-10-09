@@ -90,9 +90,9 @@
 
 				var length:uint = packet.readUnsignedByte();
 
-				var pts:Number = 
-					((packet.readUnsignedByte() & 0x0e) << 29) + 
-					((packet.readUnsignedShort() & 0xfffe) << 14) + 
+				var pts:Number =
+					((packet.readUnsignedByte() & 0x0e) << 29) +
+					((packet.readUnsignedShort() & 0xfffe) << 14) +
 					((packet.readUnsignedShort() & 0xfffe) >> 1);
 
 				var timestamp:Number = Math.round(pts/90);
@@ -222,10 +222,8 @@
 							tag.soundRate = FLVTagAudio.SOUND_RATE_44K; // rather than what is reported
 							tag.soundSize = FLVTagAudio.SOUND_SIZE_16BITS;
 							tag.isAACSequenceHeader = true;
-							
-							var acHeader:ByteArray = new ByteArray();
-						
 							/*
+							var acHeader:ByteArray = new ByteArray();
 							acHeader[0] = (_profile + 1)<<3;
 							acHeader[0] |= _sampleRateIndex >> 1;
 							acHeader[1] = (_sampleRateIndex & 0x01) << 7;
