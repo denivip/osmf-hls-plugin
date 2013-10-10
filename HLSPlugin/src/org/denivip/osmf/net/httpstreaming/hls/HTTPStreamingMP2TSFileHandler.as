@@ -162,7 +162,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 				// process adaptation field
 				// don't care about flags
 				// don't care about clocks here
-				packet.position += packet.readUnsignedByte();	// skip to end
+                var af:uint = packet.readUnsignedByte();
+				packet.position += af;	// skip to end
 			}
 
             return hasPD ? processES(pid, pusi, packet) : null;
