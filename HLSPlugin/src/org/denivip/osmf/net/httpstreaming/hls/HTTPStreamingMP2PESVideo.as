@@ -54,7 +54,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 			{
 				// start of a new PES packet
 				
-				if(packet.readUnsignedInt() != 0x1e0)
+				var startCode:uint =  packet.readUnsignedInt();
+				if(startCode < 0x1E0 || startCode > 0x1EF)
 				{
 						throw new Error("PES start code not found or not AAC/AVC");
 				}
