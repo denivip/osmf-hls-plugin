@@ -75,7 +75,9 @@
 				
 				value = packet.readUnsignedInt();
 				packet.position -= 4;
-				if(packet.readUnsignedInt() != 0x1c0)
+				
+				var startCode:uint =  packet.readUnsignedInt();
+				if(startCode < 0x1C0 || startCode > 0x1DF)
 				{
 						throw new Error("PES start code not found or not AAC/AVC");
 				}
