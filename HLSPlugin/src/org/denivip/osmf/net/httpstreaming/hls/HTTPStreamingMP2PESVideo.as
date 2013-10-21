@@ -70,7 +70,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 					}
 				}
 				
-				if(flags != 0x03 && flags != 0x02)
+				if(flags != 0x03 && flags != 0x02 && flags != 0x00)
 				{
 					throw new Error("video PES packet without PTS cannot be decoded");
 				}

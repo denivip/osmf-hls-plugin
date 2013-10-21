@@ -42,8 +42,10 @@ package org.denivip.osmf.net.httpstreaming.hls
 		private var _pmtPID:uint;
 		private var _audioPID:uint;
 		private var _videoPID:uint;
+		private var _mp3AudioPID:uint;
 		private var _audioPES:HTTPStreamingMP2PESAudio;
 		private var _videoPES:HTTPStreamingMP2PESVideo;
+		private var _mp3audioPES:HTTPStreamingMp3Audio2ToPESAudio;
 		
 		private var _cachedOutputBytes:ByteArray;
 		private var alternatingYieldCounter:int = 0;
@@ -52,6 +54,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 		{
 			_audioPES = new HTTPStreamingMP2PESAudio;
 			_videoPES = new HTTPStreamingMP2PESVideo;
+			_mp3audioPES = new HTTPStreamingMp3Audio2ToPESAudio;
 		}
 		
 		override public function beginProcessFile(seek:Boolean, seekTime:Number):void
@@ -129,6 +132,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 			offset *= 1000; // convert to ms
 			_videoPES.initialTimestamp = offset;
 			_audioPES.initialTimestamp = offset;
+			_mp3audioPES.initialTimestamp = offset;
 		}
 		
 		private function processPacket(packet:ByteArray):ByteArray
@@ -189,6 +193,10 @@ package org.denivip.osmf.net.httpstreaming.hls
 			else if(pid == _videoPID)
 			{
 				output = _videoPES.processES(pusi, packet);
+			}
+			else if(pid == _mp3AudioPID)
+			{
+				output = _mp3audioPES.processES(pusi, packet);
 			}
 			
 			return output;
@@ -258,8 +266,12 @@ package org.denivip.osmf.net.httpstreaming.hls
 					case 0x0f: // AAC Audio / ADTS
 						_audioPID = pid;
 						break;
-				
-					// need to add MP3 Audio  (3 & 4)
+					
+					case 0x03: // MP3 Audio  (3 & 4)
+					case 0x04:
+						_mp3AudioPID = pid;
+						break;
+					
 					default:
 						CONFIG::LOGGING
 						{
