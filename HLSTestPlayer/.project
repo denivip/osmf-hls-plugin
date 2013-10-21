@@ -12,13 +12,7 @@
 		</buildCommand>
 	</buildSpec>
 	<natures>
+		<nature>com.adobe.flexbuilder.project.flexnature</nature>
 		<nature>com.adobe.flexbuilder.project.actionscriptnature</nature>
 	</natures>
-	<linkedResources>
-		<link>
-			<name>bin-release1</name>
-			<type>2</type>
-			<location>C:/Users/Евгений/Documents/osmf-hls-plugin/release</location>
-		</link>
-	</linkedResources>
 </projectDescription>

@@ -112,7 +112,7 @@
 				
 				factory.addEventListener(MediaFactoryEvent.PLUGIN_LOAD, onPluginLoaded);
 				factory.addEventListener(MediaFactoryEvent.PLUGIN_LOAD_ERROR, onPluginLoadError);
-				factory.loadPlugin(new URLResource("file:///F:/Streaming/osmf-hls-plugin/release/HLSDynamicPlugin.swf"));
+				factory.loadPlugin(new URLResource("file:///C:/Users/Евгений/Documents/osmf-hls-plugin/release/HLSDynamicPlugin.swf"));
 				//factory.loadPlugin(new URLResource("file:///F:/Streaming/example_osmf_player/bin/AkamaiAdvancedStreamingPlugin.swf"));
 				//factory.loadPlugin(new URLResource("file:///F:/Streaming/example_osmf_player/bin/HLSDynamicPlugin.swf"));
 				//factory.loadPlugin(new PluginInfoResource(new HLSPluginInfo()));
