@@ -1,6 +1,6 @@
 /*
  * Copyright
- * Watchtower stream.jw.org Team
+ * hangulee@gmail.com
  * 
  */
  
@@ -263,14 +263,6 @@
 						break;
 				} // switch
 			} // while
-			
-			/*
-			var text:String = new String();
-			for(var i:int = 0; i<tagData.length; i++)
-				text += uint(tagData[i]).toString(16)+" ";
-				
-			trace(text);
-			//*/
 			
 			tagData.position = 0;
 			
