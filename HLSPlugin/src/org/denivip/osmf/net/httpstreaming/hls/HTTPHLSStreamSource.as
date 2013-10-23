@@ -436,6 +436,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 					// Ask the index handler to provide the url for 
 					// the next chunk of data we need to load.
 					var wasSeek:Boolean = false;
+					var hlsHandler:HTTPStreamingHLSIndexHandler = _indexHandler as HTTPStreamingHLSIndexHandler;
 					if(!_didBeginSeek) // we are in seeking mode
 					{
 						_request = _indexHandler.getFileForTime(_seekTarget, _qualityLevel);
@@ -478,7 +479,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 								downloaderMonitor = _request.bestEffortDownloaderMonitor;
 								_bestEffortDownloadResult = null;
 							}
-							
 							CONFIG::LOGGING
 							{			
 								logger.debug("downloader.open "+_request.url);
@@ -581,7 +581,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 				case HTTPStreamingState.READ:
 					if (_downloader != null)
 					{
-						input =  _downloader.getBytes(_fileHandler.inputBytesNeeded);
+						input = _downloader.getBytes(_fileHandler.inputBytesNeeded);
+						
 						if (input != null)
 						{
 							if(_discontinuityOnNextSegment){

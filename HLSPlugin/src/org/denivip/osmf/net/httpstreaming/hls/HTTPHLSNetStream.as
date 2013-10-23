@@ -797,7 +797,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 						issueLivenessEventsIfNeeded();
 						if (bytes != null)
 						{
-							processed += processAndAppend(bytes);	
+							processed += processAndAppend(bytes);
 						}
 						
 						if (
