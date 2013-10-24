@@ -95,7 +95,9 @@ package org.denivip.osmf.net.httpstreaming.hls
 									break;
 								}
 							} else {
-								decryptToBuffer(input, 16);
+								if (!decryptToBuffer(input, 16)) {
+									break;
+								}
 							}
 							if (_decryptBuffer.readByte() == 0x47) {
 								_syncFound = true;
@@ -123,9 +125,13 @@ package org.denivip.osmf.net.httpstreaming.hls
 							} else {
 								var bytesLeft:uint = input.bytesAvailable - 176;
 								if (bytesLeft > 0 && bytesLeft < 15) {
-									decryptToBuffer(input, input.bytesAvailable);
+									if (!decryptToBuffer(input, input.bytesAvailable)) {
+										break;
+									}
 								} else {
-									decryptToBuffer(input, 176);
+									if (!decryptToBuffer(input, 176)) {
+										break;
+									}
 								}
 							}
 							_decryptBuffer.readBytes(packet, 0, 187);
@@ -157,13 +163,14 @@ package org.denivip.osmf.net.httpstreaming.hls
 			return output.length === 0 ? null : output;
 		}
 		
-		private function decryptToBuffer(input:IDataInput, blockSize:int):void{
+		private function decryptToBuffer(input:IDataInput, blockSize:int):Boolean{
 			if (_key) {
 				// Clear buffer
 				if (_decryptBuffer.bytesAvailable == 0) {
 					_decryptBuffer.clear();
 				}
-				if (_key.type == "AES-128" && blockSize % 16 == 0) {
+				
+				if (_key.type == "AES-128" && blockSize % 16 == 0 && _key.key) {
 					// Save buffer position
 					var currentPosition:uint = _decryptBuffer.position;
 					_decryptBuffer.position += _decryptBuffer.bytesAvailable;
@@ -188,8 +195,12 @@ package org.denivip.osmf.net.httpstreaming.hls
 					_decryptBuffer.position = currentPosition;
 					// Update iv
 					_iv = newIv;
+					
+					return true;
 				}
 			}
+			
+			return false;
 		}
 		
 		override public function endProcessFile(input:IDataInput):ByteArray
