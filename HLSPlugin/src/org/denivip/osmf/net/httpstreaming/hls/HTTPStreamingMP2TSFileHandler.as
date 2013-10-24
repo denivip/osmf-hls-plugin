@@ -24,11 +24,12 @@
  
  
 package org.denivip.osmf.net.httpstreaming.hls
-{
+{	
 	import flash.utils.ByteArray;
 	import flash.utils.IDataInput;
 	
-	import org.denivip.osmf.utility.Decrypt;
+	import com.hurlant.util.Hex;
+	import org.denivip.osmf.utility.decrypt.AES;
 	import org.osmf.logging.Log;
 	import org.osmf.logging.Logger;
 	import org.osmf.net.httpstreaming.HTTPStreamingFileHandlerBase;
@@ -54,6 +55,9 @@ package org.denivip.osmf.net.httpstreaming.hls
 		private var _key:HTTPStreamingM3U8IndexKey = null;
 		private var _iv:ByteArray = null;
 		private var _decryptBuffer:ByteArray = new ByteArray;
+		
+		// AES-128 specific variables
+		private var _decryptAES:AES = null;
 		
 		public function HTTPStreamingMP2TSFileHandler()
 		{
@@ -171,6 +175,13 @@ package org.denivip.osmf.net.httpstreaming.hls
 				}
 				
 				if (_key.type == "AES-128" && blockSize % 16 == 0 && _key.key) {
+					if (!_decryptAES) {
+						trace("Creating a new AES object");
+						_decryptAES = new AES(_key.key);
+						_decryptAES.pad = "none";
+						_decryptAES.iv = _iv;
+					}
+					
 					// Save buffer position
 					var currentPosition:uint = _decryptBuffer.position;
 					_decryptBuffer.position += _decryptBuffer.bytesAvailable;
@@ -185,16 +196,15 @@ package org.denivip.osmf.net.httpstreaming.hls
 					decrypt.position = 0;
 					// Decrypt
 					if (input.bytesAvailable == 0) {
-						Decrypt.decryptAES128(decrypt, _key.key, _iv, "pkcs7");
-					} else {
-						Decrypt.decryptAES128(decrypt, _key.key, _iv);
+						_decryptAES.pad = "pkcs7";
 					}
+					_decryptAES.decrypt(decrypt);
 					decrypt.position = 0;
 					// Write into buffer
 					_decryptBuffer.writeBytes(decrypt);
 					_decryptBuffer.position = currentPosition;
-					// Update iv
-					_iv = newIv;
+					// Update AES IV
+					_decryptAES.iv = newIv;
 					
 					return true;
 				}
@@ -206,6 +216,10 @@ package org.denivip.osmf.net.httpstreaming.hls
 		override public function endProcessFile(input:IDataInput):ByteArray
 		{
 			_decryptBuffer.clear();
+			if (_decryptAES) {
+				_decryptAES.destroy();
+			}
+			_decryptAES = null;
 			return null;	
 		}
 		
@@ -213,6 +227,10 @@ package org.denivip.osmf.net.httpstreaming.hls
 			_cachedOutputBytes = null;
 			alternatingYieldCounter = 0;
 			_decryptBuffer.clear();
+			if (_decryptAES) {
+				_decryptAES.destroy();
+			}
+			_decryptAES = null;
 		}
 		
 		public function set initialOffset(offset:Number):void{
@@ -224,11 +242,15 @@ package org.denivip.osmf.net.httpstreaming.hls
 		
 		public function set key(key:HTTPStreamingM3U8IndexKey):void {
 			_key = key;
+			if (_decryptAES) {
+				_decryptAES.destroy();
+			}
+			_decryptAES = null;
 		}
 		
 		public function set iv(iv:String):void {
 			if (iv) {
-				_iv = Decrypt.hexToByteArray(iv);
+				_iv = Hex.toArray(iv);
 			}
 		}
 		

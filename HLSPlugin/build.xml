@@ -30,7 +30,6 @@
             <source-path path-element="${basedir}/src" />
             <include-sources dir="${basedir}/src" includes="*" />
             <compiler.library-path dir="${buildtools.dir}/lib" append="true">
-                <include name="as3crypto.swc" />
                 <include name="OSMF.swc" />
             </compiler.library-path>
             
