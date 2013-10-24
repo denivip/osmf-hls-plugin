@@ -771,8 +771,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 			// FM-1003 (http://bugs.adobe.com/jira/browse/FM-1003) 
 			// Re-dispatch this event on the _dispatcher
 			_dispatcher.dispatchEvent(event);
-			
-			var input:IDataInput = _indexDownloader.getBytes(_indexDownloader.downloadBytesCount);
+			var input:IDataInput = _indexDownloader.getBytes();
 			var bytes:ByteArray = new ByteArray();
 			input.readBytes(bytes, 0, input.bytesAvailable);
 			bytes.position = 0;
