@@ -176,7 +176,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 				
 				if (_key.type == "AES-128" && blockSize % 16 == 0 && _key.key) {
 					if (!_decryptAES) {
-						trace("Creating a new AES object");
 						_decryptAES = new AES(_key.key);
 						_decryptAES.pad = "none";
 						_decryptAES.iv = _iv;
