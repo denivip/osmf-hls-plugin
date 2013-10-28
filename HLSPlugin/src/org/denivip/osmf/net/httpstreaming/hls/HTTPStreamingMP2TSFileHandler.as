@@ -24,12 +24,14 @@
  
  
 package org.denivip.osmf.net.httpstreaming.hls
-{
+{	
 	import flash.utils.ByteArray;
 	import flash.utils.IDataInput;
 	
-	import org.osmf.logging.Logger
+	import com.hurlant.util.Hex;
+	import org.denivip.osmf.utility.decrypt.AES;
 	import org.osmf.logging.Log;
+	import org.osmf.logging.Logger;
 	import org.osmf.net.httpstreaming.HTTPStreamingFileHandlerBase;
 	
 	[Event(name="notifySegmentDuration", type="org.osmf.events.HTTPStreamingFileHandlerEvent")]
@@ -49,6 +51,13 @@ package org.denivip.osmf.net.httpstreaming.hls
 		
 		private var _cachedOutputBytes:ByteArray;
 		private var alternatingYieldCounter:int = 0;
+		
+		private var _key:HTTPStreamingM3U8IndexKey = null;
+		private var _iv:ByteArray = null;
+		private var _decryptBuffer:ByteArray = new ByteArray;
+		
+		// AES-128 specific variables
+		private var _decryptAES:AES = null;
 		
 		public function HTTPStreamingMP2TSFileHandler()
 		{
@@ -71,6 +80,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 		{
 			var bytesAvailableStart:uint = input.bytesAvailable;
 			var output:ByteArray;
+			
 			if (_cachedOutputBytes !== null) {
 				output = _cachedOutputBytes;
 				_cachedOutputBytes = null;
@@ -82,21 +92,60 @@ package org.denivip.osmf.net.httpstreaming.hls
 			while (true) {
 				if(!_syncFound)
 				{
-					if(input.bytesAvailable < 1)
-						break;
-					
-					if(input.readByte() == 0x47)
-						_syncFound = true;
+					if (_key) {
+						if (_key.type == "AES-128") {
+							if (input.bytesAvailable < 16) {
+								if (_decryptBuffer.bytesAvailable < 1) {
+									break;
+								}
+							} else {
+								if (!decryptToBuffer(input, 16)) {
+									break;
+								}
+							}
+							if (_decryptBuffer.readByte() == 0x47) {
+								_syncFound = true;
+							}
+						}
+					} else {
+						if(input.bytesAvailable < 1)
+							break;
+						
+						if(input.readByte() == 0x47)
+							_syncFound = true;
+					}
 				}
 				else
 				{
-					if(input.bytesAvailable < 187)
-						break;
-					
 					_syncFound = false;
 					var packet:ByteArray = new ByteArray();
 					
-					input.readBytes(packet, 0, 187);
+					if (_key) {
+						if (_key.type == "AES-128") {
+							if (input.bytesAvailable < 176) {
+								if (_decryptBuffer.bytesAvailable < 187) {
+									break;
+								}
+							} else {
+								var bytesLeft:uint = input.bytesAvailable - 176;
+								if (bytesLeft > 0 && bytesLeft < 15) {
+									if (!decryptToBuffer(input, input.bytesAvailable)) {
+										break;
+									}
+								} else {
+									if (!decryptToBuffer(input, 176)) {
+										break;
+									}
+								}
+							}
+							_decryptBuffer.readBytes(packet, 0, 187);
+						}
+					} else {
+						if(input.bytesAvailable < 187)
+							break;
+						
+						input.readBytes(packet, 0, 187);
+					}
 					
 					var result:ByteArray = processPacket(packet);
 					if (result !== null) {
@@ -117,15 +166,70 @@ package org.denivip.osmf.net.httpstreaming.hls
 			
 			return output.length === 0 ? null : output;
 		}
+		
+		private function decryptToBuffer(input:IDataInput, blockSize:int):Boolean{
+			if (_key) {
+				// Clear buffer
+				if (_decryptBuffer.bytesAvailable == 0) {
+					_decryptBuffer.clear();
+				}
+				
+				if (_key.type == "AES-128" && blockSize % 16 == 0 && _key.key) {
+					if (!_decryptAES) {
+						_decryptAES = new AES(_key.key);
+						_decryptAES.pad = "none";
+						_decryptAES.iv = _iv;
+					}
+					
+					// Save buffer position
+					var currentPosition:uint = _decryptBuffer.position;
+					_decryptBuffer.position += _decryptBuffer.bytesAvailable;
+					
+					// Save block to decrypt
+					var decrypt:ByteArray = new ByteArray;
+					input.readBytes(decrypt, 0, blockSize);
+					// Save new IV from ciphertext
+					var newIv:ByteArray = new ByteArray;
+					decrypt.position += (decrypt.bytesAvailable-16);
+					decrypt.readBytes(newIv, 0, 16);
+					decrypt.position = 0;
+					// Decrypt
+					if (input.bytesAvailable == 0) {
+						_decryptAES.pad = "pkcs7";
+					}
+					_decryptAES.decrypt(decrypt);
+					decrypt.position = 0;
+					// Write into buffer
+					_decryptBuffer.writeBytes(decrypt);
+					_decryptBuffer.position = currentPosition;
+					// Update AES IV
+					_decryptAES.iv = newIv;
+					
+					return true;
+				}
+			}
 			
+			return false;
+		}
+		
 		override public function endProcessFile(input:IDataInput):ByteArray
 		{
+			_decryptBuffer.clear();
+			if (_decryptAES) {
+				_decryptAES.destroy();
+			}
+			_decryptAES = null;
 			return null;	
 		}
 		
 		public function resetCache():void{
 			_cachedOutputBytes = null;
 			alternatingYieldCounter = 0;
+			_decryptBuffer.clear();
+			if (_decryptAES) {
+				_decryptAES.destroy();
+			}
+			_decryptAES = null;
 		}
 		
 		public function set initialOffset(offset:Number):void{
@@ -133,6 +237,20 @@ package org.denivip.osmf.net.httpstreaming.hls
 			_videoPES.initialTimestamp = offset;
 			_audioPES.initialTimestamp = offset;
 			_mp3audioPES.initialTimestamp = offset;
+		}
+		
+		public function set key(key:HTTPStreamingM3U8IndexKey):void {
+			_key = key;
+			if (_decryptAES) {
+				_decryptAES.destroy();
+			}
+			_decryptAES = null;
+		}
+		
+		public function set iv(iv:String):void {
+			if (iv) {
+				_iv = Hex.toArray(iv);
+			}
 		}
 		
 		private function processPacket(packet:ByteArray):ByteArray
