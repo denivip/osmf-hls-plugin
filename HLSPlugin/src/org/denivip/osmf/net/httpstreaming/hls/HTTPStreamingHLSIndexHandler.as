@@ -147,19 +147,19 @@
 				_reloadTime = getTimer() - _reloadTime;
 				logger.info("Playlist reload time {0} sec", (_reloadTime/1000));
 			}
-			
+			var quality:int;
 			if(getQualifiedClassName(indexContext) == "Array") {
 				// TODO: Update this to use an appropriate Object context
 				data = ByteArray(data);
 				var keyRequest:Array = indexContext as Array;
 				var keyItem:HTTPStreamingM3U8IndexKey = keyRequest[0];
-				var quality:int = keyRequest[1];
+				quality = keyRequest[1];
 				
 				// Set key
 				keyItem.key = data;
 				generateIndexReadyForQuality(quality);
 			} else {
-				var quality:int = indexContext as int;
+				quality = indexContext as int;
 				data = String(data).replace(/\\\s*[\r?\n]\s*/g, "");
 				
 				if(String(data).localeCompare(_prevPlaylist) == 0)

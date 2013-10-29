@@ -10,9 +10,8 @@
     <classEntry path="org.denivip.osmf.net.HLSDynamicStreamingItem"/>
     <classEntry path="org.denivip.osmf.logging.HLSLogger"/>
     <classEntry path="org.denivip.osmf.logging.HLSLoggerFactory"/>
-    <classEntry path="org.denivip.osmf.logging.LogMessage"/>
-    <classEntry path="org.denivip.osmf.logging.TraceLogHandler"/>
     <classEntry path="org.denivip.osmf.plugins.HLSSettings"/>
+    <classEntry path="org.denivip.osmf.logging.LogGrabber"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>
