@@ -250,7 +250,7 @@
 								var strip:RegExp = /"/g;
 								keyUrl = keyValue.replace(strip,"");
 							}else if(keyComponent == "IV") {
-								keyIv = keyValue;
+								keyIv = keyValue.substr(2);
 							}
 						}
 						
