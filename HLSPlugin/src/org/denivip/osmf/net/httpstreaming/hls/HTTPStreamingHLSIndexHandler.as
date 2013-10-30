@@ -249,6 +249,7 @@
 							}else if(keyComponent == "URI") {
 								var strip:RegExp = /"/g;
 								keyUrl = keyValue.replace(strip,"");
+								if (keyUrl.search(/(ftp|file|https?):\/\//) != 0) keyUrl = rateItem.url.substr(0, rateItem.url.lastIndexOf('/') + 1) + keyUrl;
 							}else if(keyComponent == "IV") {
 								keyIv = keyValue.substr(2);
 							}
