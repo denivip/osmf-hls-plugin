@@ -32,11 +32,15 @@
 		private var _url:String;
 		private var _discontinuity:Boolean;
 		
+		private var _iv:String;
+		private var _key:int;
+		
 		public function HTTPStreamingM3U8IndexItem(duration:Number, url:String, discontinuity:Boolean = false)
 		{
 			_duration = duration;
 			_url = url;
 			_discontinuity = discontinuity;
+			_key = -1;
 		}
 		
 		public function get duration():Number{ return _duration; }
@@ -44,5 +48,13 @@
 		public function get url():String{ return _url; }
 		
 		public function get discontinuity():Boolean{ return _discontinuity; }
+		
+		public function get iv():String { return _iv; }
+		
+		public function get key():int { return _key; }
+		
+		public function set iv(iv:String):void { _iv = iv; }
+		
+		public function set key(key:int):void { _key = key; }
 	}
 }

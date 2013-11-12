@@ -84,7 +84,8 @@ package org.denivip.osmf.elements
 				CONFIG::LOGGING
 				{
 					_loadTime = getTimer() - _loadTime;
-					logger.info("Playlist {0} loaded", URLResource(_loadTrait.resource).url);
+					var url:String = _loadTrait.resource['url'];
+					logger.info("Playlist {0} loaded", url);
 					logger.info("size = {0}Kb", (_playlistLoader.bytesLoaded/1024).toFixed(3));
 					logger.info("load time = {0} sec", (_loadTime/1000));
 				}

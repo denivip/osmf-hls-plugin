@@ -85,7 +85,7 @@
 				packet.position += 3;
 				// need PTS only
 				var flags:uint = (packet.readUnsignedByte() & 0xc0) >> 6;
-				if(flags != 0x02 )
+				if(flags != 0x02 && flags != 0x03)
 				{ 
 					throw new Error("No PTS in this audio PES packet");
 				}
