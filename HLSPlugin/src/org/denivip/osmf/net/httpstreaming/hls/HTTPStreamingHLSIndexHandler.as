@@ -166,6 +166,7 @@
 			var indexItem:HTTPStreamingM3U8IndexItem;
 			var len:int = lines.length;
 			var discontinuity:Boolean = false;
+			var duration:Number = 0;
 			for(var i:int = 0; i < len; i++){
 				if(i == 0){
 					if(lines[i] != '#EXTM3U'){
@@ -174,9 +175,8 @@
 					}
 				}
 				
-				if(lines[i].indexOf("#EXTINF:") == 0){
-					var duration:Number = parseFloat(lines[i].match(/([\d\.]+)/)[1]);
-					var url:String = (lines[i+1].search(/(ftp|file|https?):\/\//) == 0) ?  lines[i+1] : rateItem.url.substr(0, rateItem.url.lastIndexOf('/')+1) + lines[i+1];
+				if (lines[i].indexOf("#") != 0 && lines[i].length > 0) { //non-empty line not starting with # => segment URI					
+					var url:String = (lines[i].search(/(ftp|file|https?):\/\//) == 0) ?  lines[i] : rateItem.url.substr(0, rateItem.url.lastIndexOf('/')+1) + lines[i];
 					// spike for hidden discontinuity
 					if(url.match(/SegNum(\d+)/)){
 						var chunkIndex:int = parseInt(url.match(/SegNum(\d+)/)[1]);
@@ -187,7 +187,12 @@
 					// _spike
 					indexItem = new HTTPStreamingM3U8IndexItem(duration, url, discontinuity);
 					rateItem.addIndexItem(indexItem);
+					//reset
 					discontinuity = false;
+					duration = 0;
+				}
+				else if(lines[i].indexOf("#EXTINF:") == 0){
+					duration = parseFloat(lines[i].match(/([\d\.]+)/)[1]);										
 				}else if(lines[i].indexOf("#EXT-X-ENDLIST") == 0){
 					rateItem.isLive = false;
 				}else if(lines[i].indexOf("#EXT-X-MEDIA-SEQUENCE:") == 0){
