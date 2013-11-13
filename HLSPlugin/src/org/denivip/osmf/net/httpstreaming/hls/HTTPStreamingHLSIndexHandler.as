@@ -31,6 +31,7 @@
 	
 	import org.denivip.osmf.plugins.HLSSettings;
 	import org.denivip.osmf.utility.Padding;
+	import org.denivip.osmf.utils.Utils;
 	import org.osmf.events.DVRStreamInfoEvent;
 	import org.osmf.events.HTTPStreamingEvent;
 	import org.osmf.events.HTTPStreamingIndexHandlerEvent;
@@ -108,7 +109,7 @@
 			for each(var hsi:HLSStreamInfo in _indexInfo.streams){
 				_streamNames.push(hsi.streamName);
 				_streamQualityRates.push(hsi.bitrate);
-				var url:String = (hsi.streamName.search(/(ftp|file|https?):\/\//) == 0) ? hsi.streamName : _baseURL + hsi.streamName;
+				var url:String = Utils.createFullUrl(_baseURL, hsi.streamName);
 				_streamURLs.push(url);
 			}
 			
@@ -148,11 +149,13 @@
 				logger.info("Playlist reload time {0} sec", (_reloadTime/1000));
 			}
 			var quality:int;
+			var keyRequest:Array;
+			var keyItem:HTTPStreamingM3U8IndexKey;
 			if(getQualifiedClassName(indexContext) == "Array") {
 				// TODO: Update this to use an appropriate Object context
 				data = ByteArray(data);
-				var keyRequest:Array = indexContext as Array;
-				var keyItem:HTTPStreamingM3U8IndexKey = keyRequest[0];
+				keyRequest = indexContext as Array;
+				keyItem = keyRequest[0];
 				quality = keyRequest[1];
 				
 				// Set key
@@ -197,7 +200,7 @@
 					}
 					
 					if (lines[i].indexOf("#") != 0 && lines[i].length > 0) { //non-empty line not starting with # => segment URI
-						var url:String = (lines[i].search(/(ftp|file|https?):\/\//) == 0) ?  lines[i] : rateItem.url.substr(0, rateItem.url.lastIndexOf('/')+1) + lines[i];
+						var url:String = Utils.createFullUrl(rateItem.url, lines[i]);
 						// spike for hidden discontinuity
 						if(url.match(/SegNum(\d+)/)){
 							var chunkIndex:int = parseInt(url.match(/SegNum(\d+)/)[1]);
@@ -222,7 +225,7 @@
 						discontinuity = false;
 					}
 					else if(lines[i].indexOf("#EXTINF:") == 0){
-						var duration:Number = parseFloat(lines[i].match(/([\d\.]+)/)[1]);						
+						duration = parseFloat(lines[i].match(/([\d\.]+)/)[1]);						
 					}else if(lines[i].indexOf("#EXT-X-KEY:") == 0){
 						// Flag that encryption key exists in whole playlist
 						keyExistsInIndex = true;
@@ -260,13 +263,13 @@
 						
 						// TODO - Support SAMPLE-AES
 						if(keyType == "AES-128") {
-							var keyItem:HTTPStreamingM3U8IndexKey = new HTTPStreamingM3U8IndexKey(keyType, keyUrl);
+							keyItem = new HTTPStreamingM3U8IndexKey(keyType, keyUrl);
 							if(keyIv) {
 								keyIvGiven = true;
 							}
 							rateItem.addIndexKey(keyItem);
 							keyIndex++;
-							var keyRequest:Array = new Array(keyItem, quality);
+							keyRequest = new Array(keyItem, quality);
 							dispatchEvent(new HTTPStreamingIndexHandlerEvent(HTTPStreamingIndexHandlerEvent.REQUEST_LOAD_INDEX, false, false, false, NaN, null, null, new URLRequest(keyUrl), keyRequest, true));
 						}
 					}else if(lines[i].indexOf("#EXT-X-ENDLIST") == 0){

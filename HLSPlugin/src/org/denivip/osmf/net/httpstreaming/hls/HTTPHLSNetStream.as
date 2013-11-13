@@ -150,7 +150,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 			createSource(resource);
 			
 			_mainTimer = new Timer(OSMFSettings.hdsMainTimerInterval); 
-			_mainTimer.addEventListener(TimerEvent.TIMER, onMainTimer);	
+			_mainTimer.addEventListener(TimerEvent.TIMER, onMainTimer);
 		}
 		
 		///////////////////////////////////////////////////////////////////////
@@ -522,7 +522,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 			{
 				case NetStreamCodes.NETSTREAM_PLAY_START:
 					if(!_started){
-						bufferTime = HLSSettings.hlsBufferSizeDef;
+						bufferTime = OSMFSettings.hdsMinimumBufferTime;//HLSSettings.hlsBufferSizeDef;
 						_started = true;
 						CONFIG::LOGGING
 						{
@@ -560,7 +560,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 							_notifyPlayUnpublishPending = false; 
 						}
 					}
-					bufferTime = HLSSettings.hlsBufferSizeDef;
+					bufferTime = OSMFSettings.hdsMinimumBufferTime;//HLSSettings.hlsBufferSizeDef;
+					trace("NETSTREAM_BUFFER_EMPTY. bufferTime =",bufferTime);
 					break;
 				
 				case NetStreamCodes.NETSTREAM_BUFFER_FULL:
@@ -569,7 +570,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 					{
 						logger.debug("Received NETSTREAM_BUFFER_FULL. _wasBufferEmptied = "+_wasBufferEmptied+" bufferLength "+this.bufferLength);
 					}
-					bufferTime = HLSSettings.hlsBufferSizeBig;
+					bufferTime = (bufferTime >= HLSSettings.hlsBufferSizeDef) ? HLSSettings.hlsBufferSizeBig : HLSSettings.hlsBufferSizeDef;
+					trace("NETSTREAM_BUFFER_FULL. bufferTime =",bufferTime);
 					break;
 				
 				case NetStreamCodes.NETSTREAM_BUFFER_FLUSH:
@@ -597,7 +599,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 							logger.debug("Seek notify caught and stopped");
 						}
 					}
-					bufferTime = HLSSettings.hlsBufferSizeDef;
+					bufferTime = OSMFSettings.hdsMinimumBufferTime;//HLSSettings.hlsBufferSizeDef;
 					break;
 				
 				default:

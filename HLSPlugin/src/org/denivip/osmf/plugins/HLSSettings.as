@@ -9,9 +9,9 @@ package org.denivip.osmf.plugins
 		}
 		
 		// Buffer control
-		public static var hlsBufferSizePause	:Number = 32;
-		public static var hlsBufferSizeBig		:Number = 16;
-		public static var hlsBufferSizeDef		:Number = OSMFSettings.hdsMinimumBufferTime;
+		public static var hlsBufferSizePause	:Number = 512;
+		public static var hlsBufferSizeBig		:Number = 128;
+		public static var hlsBufferSizeDef		:Number = 32;//OSMFSettings.hdsMinimumBufferTime;
 		
 		// reload/load playlist troubles
 		public static var hlsMaxReloadRetryes	:int = 5;

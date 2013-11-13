@@ -40,6 +40,9 @@ package org.denivip.osmf.net.httpstreaming.hls
 		private var _vTagData:ByteArray;
 		private var _scState:int;
 		
+		private var spsNAL:HTTPStreamingH264NALU = null;
+		private var ppsNAL:HTTPStreamingH264NALU = null;
+		
 		public function HTTPStreamingMP2PESVideo()
 		{
 			_scState = 0;
@@ -53,11 +56,10 @@ package org.denivip.osmf.net.httpstreaming.hls
 			if(pusi)
 			{
 				// start of a new PES packet
-				
 				var startCode:uint =  packet.readUnsignedInt();
-				if(startCode < 0x1E0 || startCode > 0x1EF)
+				if(startCode != 0x1e0 && startCode != 0x1ea && startCode != 0x1bd)
 				{
-						throw new Error("PES start code not found or not AAC/AVC");
+					throw new Error("PES start code not found or not AAC/AVC");
 				}
 				// Ignore packet length and marker bits.
 				packet.position += 3;
@@ -198,9 +200,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 			
 			if(!flush && packet.position-dStart > 0)
 				_nalData.writeBytes(packet, dStart, packet.position-dStart);
-					
-			var spsNAL:HTTPStreamingH264NALU = null;
-			var ppsNAL:HTTPStreamingH264NALU = null;
 			
 			// find  SPS + PPS if we can
 			for each(nal in nals)
@@ -221,7 +220,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 			var tags:Vector.<FLVTagVideo> = new Vector.<FLVTagVideo>;
 			var tag:FLVTagVideo;
 			var avccTag:FLVTagVideo = null;
-						
+			var avcc:ByteArray = new ByteArray();
+			
 			// note that this breaks if the sps and pps are in different segments that we process
 			
 			if(spsNAL && ppsNAL)
@@ -234,8 +234,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 				tag.codecID = FLVTagVideo.CODEC_ID_AVC;
 				tag.frameType = FLVTagVideo.FRAME_TYPE_KEYFRAME;
 				tag.avcPacketType = FLVTagVideo.AVC_PACKET_TYPE_SEQUENCE_HEADER;
-				
-				var avcc:ByteArray = new ByteArray();
 				
 				avcc.writeByte(0x01); // avcC version 1
 				// profile, compatibility, level
@@ -254,6 +252,9 @@ package org.denivip.osmf.net.httpstreaming.hls
 				
 				tags.push(tag);
 				avccTag = tag;
+				
+				spsNAL = null;
+				ppsNAL = null;
 			}
 			
 			for each(nal in nals)
@@ -284,8 +285,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 					_vTag = new FLVTagVideo();
 					_vTagData = new ByteArray(); // we assemble the nalus outside, set at end
 					
-					 _vTagData.writeUnsignedInt(nal.length);
-					 _vTagData.writeBytes(nal.NALdata); // start with this very NAL, an AUD (XXX not sure this is needed)
+					_vTagData.writeUnsignedInt(nal.length);
+					_vTagData.writeBytes(nal.NALdata); // start with this very NAL, an AUD (XXX not sure this is needed)
 					
 					_vTag.codecID = FLVTagVideo.CODEC_ID_AVC;
 					_vTag.frameType = FLVTagVideo.FRAME_TYPE_INTER; // adjust to keyframe later
@@ -311,7 +312,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 					}
 					
 					
-					if(nal.NALtype == 5) // is this correct code?
+					if(nal.NALtype == 5) // if keyframe
 					{
 						_vTag.frameType = FLVTagVideo.FRAME_TYPE_KEYFRAME;
 					}
