@@ -186,6 +186,7 @@
 				var keyIv:String;
 				var keyIvGiven:Boolean = false;
 				var keyIvIndex:int = 0;
+				var duration:Number = 0;
 				
 				for(var i:int = 0; i < len; i++){
 					if(i == 0){
@@ -195,9 +196,8 @@
 						}
 					}
 					
-					if(lines[i].indexOf("#EXTINF:") == 0){
-						var duration:Number = parseFloat(lines[i].match(/([\d\.]+)/)[1]);
-						var url:String = (lines[i+1].search(/(ftp|file|https?):\/\//) == 0) ?  lines[i+1] : rateItem.url.substr(0, rateItem.url.lastIndexOf('/')+1) + lines[i+1];
+					if (lines[i].indexOf("#") != 0 && lines[i].length > 0) { //non-empty line not starting with # => segment URI
+						var url:String = (lines[i].search(/(ftp|file|https?):\/\//) == 0) ?  lines[i] : rateItem.url.substr(0, rateItem.url.lastIndexOf('/')+1) + lines[i];
 						// spike for hidden discontinuity
 						if(url.match(/SegNum(\d+)/)){
 							var chunkIndex:int = parseInt(url.match(/SegNum(\d+)/)[1]);
@@ -220,6 +220,9 @@
 						}
 						rateItem.addIndexItem(indexItem);
 						discontinuity = false;
+					}
+					else if(lines[i].indexOf("#EXTINF:") == 0){
+						var duration:Number = parseFloat(lines[i].match(/([\d\.]+)/)[1]);						
 					}else if(lines[i].indexOf("#EXT-X-KEY:") == 0){
 						// Flag that encryption key exists in whole playlist
 						keyExistsInIndex = true;
