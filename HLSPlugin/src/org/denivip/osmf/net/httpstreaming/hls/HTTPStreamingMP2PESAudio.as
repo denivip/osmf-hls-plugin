@@ -38,9 +38,10 @@
 		private var _haveNewTimestamp:Boolean = false;
 		private var _audioTime:Number;
 		private var _audioTimeIncr:Number;
-		private var _profile:int;
-		private var _sampleRateIndex:int;	
-		private var _channelConfig:int;
+		private var _profile:int = -1;
+		private var _sampleRateIndex:int = -1;
+		private var _channelConfig:int = -1;
+        private var _channelConfigTemp:int = -1;
 		private var _frameLength:int;
 		private var _remaining:int;	
 		private var _adtsHeader:ByteArray;
@@ -182,16 +183,30 @@
 					case 2:
 
 						_state = 3;
-						_profile = (value >> 6) & 0x03;
-						_sampleRateIndex = (value >> 2) & 0x0f;
+                        var profile:int = (value >> 6) & 0x03;
+                        if( profile != _profile) {
+                            _profile = profile;
+                            _needACHeader = true;
+                        }
+
+						var sampleRateIndex:int = (value >> 2) & 0x0f;
+                        if( sampleRateIndex != _sampleRateIndex) {
+                            // Change in sample rate.  We need an AC header.
+                            _sampleRateIndex = sampleRateIndex;
+                            _needACHeader = true;
+                        }
 						_audioTimeIncr = getIncrForSRI(_sampleRateIndex);
 						// one private bit
-						_channelConfig = (value & 0x01) << 2; // first bit thereof
+						_channelConfigTemp = (value & 0x01) << 2; // first bit thereof
 						break;
 					case 3:
 
 						_state = 4;
-						_channelConfig += (value >> 6) & 0x03; // rest of channel config
+						_channelConfigTemp += (value >> 6) & 0x03; // rest of channel config
+                        if( _channelConfigTemp != _channelConfig) {
+                            _channelConfig = _channelConfigTemp;
+                            _needACHeader = true;
+                        }
 						// orig/copy bit
 						// home bit
 						// copyright id bit

@@ -169,7 +169,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 			clearBuffers();
 			
 			_currentTime = 0;
-			_alternateIgnored = (_alternateHandler == null);;
+			_alternateIgnored = (_alternateHandler == null);
 			updateFilters();
 			
 			if (_mediaHandler != null)
