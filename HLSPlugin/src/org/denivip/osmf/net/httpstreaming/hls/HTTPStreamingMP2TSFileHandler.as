@@ -117,7 +117,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 				}
 				else
 				{
-					_syncFound = false;
 					var packet:ByteArray = new ByteArray();
 					
 					if (_key) {
@@ -147,6 +146,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 						input.readBytes(packet, 0, 187);
 					}
 					
+					_syncFound = false;
 					var result:ByteArray = processPacket(packet);
 					if (result !== null) {
 						output.writeBytes(result);
