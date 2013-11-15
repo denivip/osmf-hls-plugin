@@ -216,7 +216,7 @@
 						
 						_frameLength = int((144 * _bitRate * 1000 / _sampleRate ) + _padding);
 						
-						packet.position -= 4
+						packet.position -= 4;
 						
 						dStart = packet.position;
 						_audioData = new ByteArray();
