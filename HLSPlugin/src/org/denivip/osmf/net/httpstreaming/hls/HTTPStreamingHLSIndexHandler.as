@@ -200,7 +200,8 @@
 					}
 					
 					if (lines[i].indexOf("#") != 0 && lines[i].length > 0) { //non-empty line not starting with # => segment URI
-						var url:String = Utils.createFullUrl(rateItem.url, lines[i]);
+						var url:String = (lines[i].search(/(ftp|file|https?):\/\//) == 0) ?  lines[i] : rateItem.url.substr(0, rateItem.url.lastIndexOf('/')+1) + lines[i];
+
 						// spike for hidden discontinuity
 						if(url.match(/SegNum(\d+)/)){
 							var chunkIndex:int = parseInt(url.match(/SegNum(\d+)/)[1]);

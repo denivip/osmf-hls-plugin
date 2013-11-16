@@ -4,8 +4,7 @@ package org.denivip.osmf.utils
 	
 	public class Utils
 	{
-		public static function createFullUrl(rootUrl:String, url:String):String{
-			
+		public static function createFullUrl(rootUrl:String, url:String):String {
 			if(url.search(/(ftp|file|https?):\/\/\/?/) == 0)
 				return url;
 			
@@ -14,7 +13,7 @@ package org.denivip.osmf.utils
 				return URL.getRootUrl(rootUrl) + url;
 			}
 			
-			if(rootUrl.lastIndexOf('/') != rootUrl.length)
+			if(rootUrl.lastIndexOf('/') != rootUrl.length - 1)
 				rootUrl += '/';
 			
 			return rootUrl + url;
