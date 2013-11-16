@@ -52,6 +52,7 @@ package org.denivip.osmf.elements.m3u8Classes
 			var tempStreamingRes:StreamingURLResource = null;
 			var tempDynamicRes:DynamicStreamingResource = null;
 			var alternateStreams:Vector.<StreamingItem> = null;
+			var initialStreamName:String = '';
 			for(var i:int = 1; i < lines.length; i++){
 				var line:String = String(lines[i]).replace(/^([\s|\t|\n]+)?(.*)([\s|\t|\n]+)?$/gm, "$2");
 				
@@ -98,7 +99,10 @@ package org.denivip.osmf.elements.m3u8Classes
 					
 					var name:String = lines[i+1];
 					streamItems.push(new DynamicStreamingItem(name, bw, width, height));
-					
+					// store stream name of first stream encountered
+					if(initialStreamName == ''){
+						initialStreamName = name;
+					}
 					DynamicStreamingResource(result).streamItems = streamItems;
 				}
 				
@@ -144,9 +148,14 @@ package org.denivip.osmf.elements.m3u8Classes
 							tempStreamingRes.drmContentData
 						);
 					}
-				}else if(baseResource.getMetadataValue(MetadataNamespaces.RESOURCE_INITIAL_INDEX) != null){
-					var initialIndex:int = baseResource.getMetadataValue(MetadataNamespaces.RESOURCE_INITIAL_INDEX) as int;
-					tempDynamicRes.initialIndex = initialIndex < 0 ? 0 : (initialIndex >= tempDynamicRes.streamItems.length) ? (tempDynamicRes.streamItems.length-1) : initialIndex;
+				}else{
+					if(baseResource.getMetadataValue(MetadataNamespaces.RESOURCE_INITIAL_INDEX) != null){
+						var initialIndex:int = baseResource.getMetadataValue(MetadataNamespaces.RESOURCE_INITIAL_INDEX) as int;
+						tempDynamicRes.initialIndex = initialIndex < 0 ? 0 : (initialIndex >= tempDynamicRes.streamItems.length) ? (tempDynamicRes.streamItems.length-1) : initialIndex;
+					}else{
+						// set initialIndex to index of first stream name encountered
+						tempDynamicRes.initialIndex = tempDynamicRes.indexFromName(initialStreamName);
+					}
 				}
 			}
 			
