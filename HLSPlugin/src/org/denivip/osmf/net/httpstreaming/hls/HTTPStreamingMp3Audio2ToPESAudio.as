@@ -178,7 +178,7 @@
 							
 							_version = ((value >> 3) & 0x03);
 							_layer = ((value >> 1) & 0x03);
-							var crc:int = (value & 0x01);
+							// var crc:int = (value & 0x01);
 							
 							_state = 2;
 						} else {
@@ -189,7 +189,7 @@
 						var bitrateIndex:int = ((value >> 4) & 0x0f);
 						var sampleRate:int = ((value >> 2) & 0x03);
 						_padding = ((value >> 1) & 0x01);
-						var bit:int = ((value & 0x01));
+						//var bit:int = ((value & 0x01));
 						
 						_state = 3;
 						
@@ -209,10 +209,10 @@
 						break;
 					case 3:
 						_channel = ((value >>6) & 0x03);
-						var modeExt:int = ((value >> 4) & 0x03);
-						var copyright:int = ((value >> 3) & 0x01);
-						var original:int = ((value >> 2) & 0x01);
-						var emphasis:int = (value & 0x03);
+						//var modeExt:int = ((value >> 4) & 0x03);
+						//var copyright:int = ((value >> 3) & 0x01);
+						//var original:int = ((value >> 2) & 0x01);
+						//var emphasis:int = (value & 0x03);
 						
 						_frameLength = int((144 * _bitRate * 1000 / _sampleRate ) + _padding);
 						
