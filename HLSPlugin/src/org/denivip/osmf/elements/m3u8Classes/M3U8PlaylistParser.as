@@ -137,7 +137,10 @@ package org.denivip.osmf.elements.m3u8Classes
 				if(tempDynamicRes.streamItems.length == 1){
 					tempStreamingRes = baseResource as StreamingURLResource;
 					if(tempStreamingRes){
-						var url:String = tempDynamicRes.host.substr(0, tempDynamicRes.host.lastIndexOf('/')+1) + tempDynamicRes.streamItems[0].streamName;
+						// var url:String = (lines[i].search(/(ftp|file|https?):\/\//) == 0) ?  lines[i] : rateItem.url.substr(0, rateItem.url.lastIndexOf('/')+1) + lines[i];
+						var url:String = (tempDynamicRes.streamItems[0].streamName.search(/(ftp|file|https?):\/\//) == 0) 
+							? tempDynamicRes.streamItems[0].streamName 
+							: tempDynamicRes.host.substr(0, tempDynamicRes.host.lastIndexOf('/')+1) + tempDynamicRes.streamItems[0].streamName;
 						result = new StreamingURLResource(
 							url,
 							tempStreamingRes.streamType,
