@@ -18,17 +18,14 @@ package com.hurlant.crypto.symmetric
 	{
 		public function unpad(a:ByteArray):void
 		{
-			return;
 		}
 		
 		public function pad(a:ByteArray):void
 		{
-			return;
 		}
 
-		public function setBlockSize(bs:uint):void {
-			return;
+		public function setBlockSize(bs:uint):void
+        {
 		}
-		
 	}
 }
