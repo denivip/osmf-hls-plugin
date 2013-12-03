@@ -83,20 +83,6 @@
 			}
 		}
 		
-		override protected function createNetStreamSwitchManager(connection:NetConnection, netStream:NetStream, dsResource:DynamicStreamingResource):NetStreamSwitchManagerBase{
-			var qInfoHist:QoSInfoHistory = createNetStreamQoSInfoHistory(netStream);
-			var mFactory:MetricFactory = createMetricFactory(qInfoHist);
-			var mRepository:MetricRepository = new MetricRepository(mFactory);
-			var rules:Vector.<RuleBase> = new Vector.<RuleBase>();
-			var ruleWeights:Vector.<Number> = new Vector.<Number>();
-			rules.push(
-				new BufferBandwidthRule(mRepository, BANDWIDTH_BUFFER_RULE_WEIGHTS, BANDWIDTH_BUFFER_RULE_BUFFER_FRAGMENTS_THRESHOLD)
-			);
-			ruleWeights.push(1.0);
-			var netStreamSw:NetStreamSwitcher = new NetStreamSwitcher(netStream, dsResource);
-			return new DefaultHTTPStreamingSwitchManager(netStream, netStreamSw, mRepository, null, true, rules, ruleWeights);
-		}
-		
 		// Internals
 		private function dvrMetadataPresent(resource:URLResource):Boolean
 		{

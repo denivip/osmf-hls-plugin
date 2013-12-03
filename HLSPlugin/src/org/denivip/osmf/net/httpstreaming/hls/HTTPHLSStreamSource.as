@@ -436,7 +436,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 					// Ask the index handler to provide the url for 
 					// the next chunk of data we need to load.
 					var wasSeek:Boolean = false;
-					var hlsHandler:HTTPStreamingHLSIndexHandler = _indexHandler as HTTPStreamingHLSIndexHandler;
 					if(!_didBeginSeek) // we are in seeking mode
 					{
 						_request = _indexHandler.getFileForTime(_seekTarget, _qualityLevel);
