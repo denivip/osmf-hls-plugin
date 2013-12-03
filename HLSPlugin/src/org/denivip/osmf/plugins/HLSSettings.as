@@ -1,13 +1,7 @@
 package org.denivip.osmf.plugins
 {
-	import org.osmf.utils.OSMFSettings;
-
 	public class HLSSettings
 	{
-		public static function applyParams(parameters:Object):void{
-			
-		}
-		
 		// Buffer control
 		public static var hlsBufferSizePause	:Number = 512;
 		public static var hlsBufferSizeBig		:Number = 128;
