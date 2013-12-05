@@ -24,8 +24,6 @@
  
 package org.denivip.osmf.net.httpstreaming.hls
 {
-	import __AS3__.vec.Vector;
-	
 	import flash.utils.ByteArray;
 	
 	import org.osmf.logging.Logger;

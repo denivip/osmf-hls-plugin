@@ -2,7 +2,7 @@ package org.denivip.osmf.utility
 {
 	/*
 	 * Contains Utility functions for relative / absolute url.
-	 * Main differnce is if relative url is starting with slash "/" or without "/"
+	 * Main difference is if relative url is starting with slash "/" or without "/"
 	 * 
 	 * Example:
 	 * m3u8:
@@ -31,13 +31,13 @@ package org.denivip.osmf.utility
 				: urlParts[0] + '///' + urlParts[3];
 				//*		'//' = http || https || ftp,	 '///' = file
 				return rootUrl + url;
-			};
+			}
 		
 			if (rootUrl.lastIndexOf('/') != rootUrl.length - 1) {
 				rootUrl = rootUrl.substr(rootUrl.lastIndexOf('/')).indexOf('.') > -1
 				? rootUrl.substr(0, rootUrl.lastIndexOf('/') + 1)
 				: rootUrl + '/';
-			};
+			}
 			return rootUrl + url;
 		}
 	}

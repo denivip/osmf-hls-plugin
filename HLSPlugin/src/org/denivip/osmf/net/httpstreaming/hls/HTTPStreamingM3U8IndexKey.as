@@ -50,10 +50,8 @@
 		public function set key(key:ByteArray):void { _key = key; }
 		
 		public function isReady():Boolean {
-			if (_key) {
-				return true;
-			}
-			return false;
+			return (_key != null);
+
 		}
 	}
 }
