@@ -86,7 +86,7 @@
 		override public function dvrGetStreamInfo(indexInfo:Object):void{
 			_DVR = true;
 			_fromDVR = true;
-			var args:Object = new Object();
+			var args:Object = {};
 			args.indexInfo = indexInfo;
 			args.streamName = "";
 			initialize(args);
@@ -544,7 +544,7 @@
 		
 		private function notifyTotalDuration(duration:Number, live:Boolean):void{
 			var sdo:FLVTagScriptDataObject = new FLVTagScriptDataObject();
-			var metaInfo:Object = new Object();
+			var metaInfo:Object = {};
             metaInfo.duration = live ? 0 : duration;
 			
 			sdo.objects = ["onMetaData", metaInfo];

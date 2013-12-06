@@ -284,6 +284,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 				// process adaptation field
 				// don't care about flags
 				// don't care about clocks here
+                //noinspection UnnecessaryLocalVariableJS - code inspection is wrong, this cannot be simplified because packet.position changes
                 var af:uint = packet.readUnsignedByte();
 				packet.position += af;	// skip to end
 			}
