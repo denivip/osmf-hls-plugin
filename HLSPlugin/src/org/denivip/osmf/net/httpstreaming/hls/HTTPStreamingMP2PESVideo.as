@@ -101,9 +101,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 					_compositionTime = 0;
 				}
 				
-				if(!_timestampReseted){
-					_offset += timestamp - _prevTimestamp;
-				}
+				_offset += timestamp - _prevTimestamp;
+
 				_timestamp = _initialTimestamp + _offset;
 				_prevTimestamp = timestamp;
 				_timestampReseted = false;
