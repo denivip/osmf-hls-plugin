@@ -184,6 +184,7 @@ package org.denivip.osmf.elements
 			try{
 				var loadedElem:MediaElement = new VideoElement(null, new HTTPStreamingHLSNetLoader());
 				loadedElem.resource = resource;
+				VideoElement(loadedElem).smoothing = true;
 				
 				LoadFromDocumentLoadTrait(_loadTrait).mediaElement = loadedElem;
 				

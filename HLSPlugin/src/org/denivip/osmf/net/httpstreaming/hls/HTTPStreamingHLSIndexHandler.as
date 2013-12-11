@@ -31,7 +31,7 @@
 	
 	import org.denivip.osmf.plugins.HLSSettings;
 	import org.denivip.osmf.utility.Padding;
-	import org.denivip.osmf.utils.Utils;
+	import org.denivip.osmf.utility.Url;
 	import org.osmf.events.DVRStreamInfoEvent;
 	import org.osmf.events.HTTPStreamingEvent;
 	import org.osmf.events.HTTPStreamingIndexHandlerEvent;
@@ -109,7 +109,7 @@
 			for each(var hsi:HLSStreamInfo in _indexInfo.streams){
 				_streamNames.push(hsi.streamName);
 				_streamQualityRates.push(hsi.bitrate);
-				var url:String = Utils.createFullUrl(_baseURL, hsi.streamName);
+				var url:String = Url.absolute(_baseURL, hsi.streamName);
 				_streamURLs.push(url);
 			}
 			
@@ -200,8 +200,8 @@
 					}
 					
 					if (lines[i].indexOf("#") != 0 && lines[i].length > 0) { //non-empty line not starting with # => segment URI
-						var url:String = (lines[i].search(/(ftp|file|https?):\/\//) == 0) ?  lines[i] : rateItem.url.substr(0, rateItem.url.lastIndexOf('/')+1) + lines[i];
-
+						//var url:String = (lines[i].search(/(ftp|file|https?):\/\//) == 0) ?  lines[i] : rateItem.url.substr(0, rateItem.url.lastIndexOf('/')+1) + lines[i];
+						var url:String = Url.absolute(rateItem.url, lines[i]);
 						// spike for hidden discontinuity
 						if(url.match(/SegNum(\d+)/)){
 							var chunkIndex:int = parseInt(url.match(/SegNum(\d+)/)[1]);
@@ -256,7 +256,8 @@
 							}else if(keyComponent == "URI") {
 								var strip:RegExp = /"/g;
 								keyUrl = keyValue.replace(strip,"");
-								if (keyUrl.search(/(ftp|file|https?):\/\//) != 0) keyUrl = rateItem.url.substr(0, rateItem.url.lastIndexOf('/') + 1) + keyUrl;
+								//if (keyUrl.search(/(ftp|file|https?):\/\//) != 0) keyUrl = rateItem.url.substr(0, rateItem.url.lastIndexOf('/') + 1) + keyUrl;
+								keyUrl = Url.absolute(rateItem.url, keyUrl);
 							}else if(keyComponent == "IV") {
 								keyIv = keyValue.substr(2);
 							}

@@ -80,13 +80,5 @@
 		{
 			return _manifestKeys;
 		}
-		
-		public function getKeyByIndex(index:int):HTTPStreamingM3U8IndexKey
-		{
-			if (index >= 0 && index < _manifestKeys.length) {
-				return _manifestKeys[index];				
-			}
-			return null;
-		}
 	}
 }
