@@ -125,9 +125,8 @@
 				var timestamp:Number = Math.round(pts/90);
 				_haveNewTimestamp = true;
 				
-				if(!_timestampReseted){
-					_offset += timestamp - _prevTimestamp;
-				}
+				_offset += timestamp - _prevTimestamp;
+
 				_timestamp = _initialTimestamp + _offset;
 				_prevTimestamp = timestamp;
 				_timestampReseted = false;
