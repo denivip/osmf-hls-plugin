@@ -232,6 +232,12 @@ package org.denivip.osmf.net.httpstreaming.hls
 			_decryptAES = null;
 		}
 		
+		public function set isDiscontunity(isDiscontunity:Boolean):void{
+			_videoPES.isDiscontunity = isDiscontunity;
+			_audioPES.isDiscontunity = isDiscontunity;
+			_mp3audioPES.isDiscontunity = isDiscontunity;
+		}
+		
 		public function set initialOffset(offset:Number):void{
 			offset *= 1000; // convert to ms
 			_videoPES.initialTimestamp = offset;

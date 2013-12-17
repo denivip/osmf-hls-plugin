@@ -125,11 +125,21 @@
 				var timestamp:Number = Math.round(pts/90);
 				_haveNewTimestamp = true;
 				
-				_offset += timestamp - _prevTimestamp;
+				if(!_timestampReseted) {
+					_offset += timestamp - _prevTimestamp;
+				}
+				
+				if (_isDiscontunity || (!_streamOffsetSet && _prevTimestamp == 0)) {
+					if(timestamp > 0) {
+						_offset += timestamp;
+					}
+					_streamOffsetSet = true;
+				}
 
 				_timestamp = _initialTimestamp + _offset;
 				_prevTimestamp = timestamp;
 				_timestampReseted = false;
+				_isDiscontunity = false;
 				
 				length -= 5;
 				// no comp time for audio
