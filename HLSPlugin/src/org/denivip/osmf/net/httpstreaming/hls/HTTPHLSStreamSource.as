@@ -73,17 +73,9 @@ package org.denivip.osmf.net.httpstreaming.hls
 		 */
 		public function HTTPHLSStreamSource(factory:HTTPStreamingFactory, resource:MediaResourceBase, dispatcher:IEventDispatcher)
 		{
-			if (dispatcher == null)
+			if (dispatcher == null || factory == null || resource == null)
 			{
-				throw new ArgumentError(OSMFStrings.getString(OSMFStrings.INVALID_PARAM));
-			}
-			if (factory == null)
-			{
-				throw new ArgumentError(OSMFStrings.getString(OSMFStrings.INVALID_PARAM));
-			}
-			if (resource == null)
-			{
-				throw new ArgumentError(OSMFStrings.getString(OSMFStrings.INVALID_PARAM));
+				throw new ArgumentError(OSMFStrings.getString(OSMFStrings.INVALID_PARAM) + " - HTTPHLSStreamSource");
 			}
 			
 			_dispatcher = dispatcher;
