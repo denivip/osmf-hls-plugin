@@ -411,6 +411,8 @@
 				dispatchEvent(new HTTPStreamingEvent(HTTPStreamingEvent.FRAGMENT_DURATION, false, false, manifest[_segment].duration));
 				
 				if(manifest[_segment].discontinuity){
+					// mark as discontinuity so stream offset should be set again
+					_fileHandler.isDiscontunity = true;
 					_fileHandler.initialOffset = manifest[_segment].startTime;
 					//dispatchEvent(new HTTPHLSStreamingEvent(HTTPHLSStreamingEvent.DISCONTINUITY));
 				}
