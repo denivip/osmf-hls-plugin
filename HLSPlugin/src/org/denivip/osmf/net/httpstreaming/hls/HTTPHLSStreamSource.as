@@ -73,17 +73,9 @@ package org.denivip.osmf.net.httpstreaming.hls
 		 */
 		public function HTTPHLSStreamSource(factory:HTTPStreamingFactory, resource:MediaResourceBase, dispatcher:IEventDispatcher)
 		{
-			if (dispatcher == null)
+			if (dispatcher == null || factory == null || resource == null)
 			{
-				throw new ArgumentError(OSMFStrings.getString(OSMFStrings.INVALID_PARAM));
-			}
-			if (factory == null)
-			{
-				throw new ArgumentError(OSMFStrings.getString(OSMFStrings.INVALID_PARAM));
-			}
-			if (resource == null)
-			{
-				throw new ArgumentError(OSMFStrings.getString(OSMFStrings.INVALID_PARAM));
+				throw new ArgumentError(OSMFStrings.getString(OSMFStrings.INVALID_PARAM) + " - HTTPHLSStreamSource");
 			}
 			
 			_dispatcher = dispatcher;
@@ -233,7 +225,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 			
 			// Hack alert: the API in OSMF here is....dumb.  There's a single argument to a base class, when really we need two.  We'll hack around this by 
 			// bundling stuff into an object.
-			var args:Object = new Object();
+			var args:Object = {};
 			args.indexInfo = _indexInfo;
 			args.streamName = _streamName;
 			_indexHandler.initialize(args);

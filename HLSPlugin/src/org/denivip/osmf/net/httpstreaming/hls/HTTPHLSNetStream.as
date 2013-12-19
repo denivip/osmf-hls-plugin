@@ -105,9 +105,9 @@ package org.denivip.osmf.net.httpstreaming.hls
 		 * Constructor.
 		 * 
 		 * @param connection The NetConnection to use.
-		 * @param indexHandler Object which exposes the index, which maps
+		 * @param factory Object which exposes the index, which maps
 		 * playback times to media file fragments.
-		 * @param fileHandler Object which canunmarshal the data from a
+		 * @param resource Object which canunmarshal the data from a
 		 * media file fragment so that it can be fed to the NetStream as
 		 * TCMessages.
 		 *  
@@ -561,7 +561,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 						}
 					}
 					bufferTime = OSMFSettings.hdsMinimumBufferTime;//HLSSettings.hlsBufferSizeDef;
-					trace("NETSTREAM_BUFFER_EMPTY. bufferTime =",bufferTime);
 					break;
 				
 				case NetStreamCodes.NETSTREAM_BUFFER_FULL:
@@ -571,7 +570,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 						logger.debug("Received NETSTREAM_BUFFER_FULL. _wasBufferEmptied = "+_wasBufferEmptied+" bufferLength "+this.bufferLength);
 					}
 					bufferTime = (bufferTime >= HLSSettings.hlsBufferSizeDef) ? HLSSettings.hlsBufferSizeBig : HLSSettings.hlsBufferSizeDef;
-					trace("NETSTREAM_BUFFER_FULL. bufferTime =",bufferTime);
 					break;
 				
 				case NetStreamCodes.NETSTREAM_BUFFER_FLUSH:
@@ -757,7 +755,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 									logger.debug("Seeking before the last transition completed. Inserting TRANSITION_COMPLETE message in stream.");
 								}
 								
-								var info:Object = new Object();
+								var info:Object = {};
 								info.code = NetStreamCodes.NETSTREAM_PLAY_TRANSITION_COMPLETE;
 								info.level = "status";
 								info.details = lastTransitionStreamURL;
@@ -862,7 +860,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 						appendBytesAction(NetStreamAppendBytesAction.RESET_SEEK);
 					}
 					
-					var playCompleteInfo:Object = new Object();
+					var playCompleteInfo:Object = {};
 					playCompleteInfo.code = NetStreamCodes.NETSTREAM_PLAY_COMPLETE;
 					playCompleteInfo.level = "status";
 					
@@ -1165,7 +1163,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 		{
 			onActionNeeded(event);
 			
-			var info:Object = new Object();
+			var info:Object = {};
 			info.code = NetStreamCodes.NETSTREAM_PLAY_TRANSITION_COMPLETE;
 			info.level = "status";
 			info.details = event.url;

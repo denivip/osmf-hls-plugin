@@ -36,6 +36,7 @@ package org.denivip.osmf.elements
 		private var _parser:M3U8PlaylistParser = null;
 		private var _loadTime:int = 0;
 		private var _playlistLoader:URLLoader = null;
+        private var _errorHit:Boolean = false;  // So we only handle HTTP errors once; handling stuff twice dorks things.
 		
 		public function M3U8Loader(){
 			super();
@@ -70,17 +71,19 @@ package org.denivip.osmf.elements
 		
 		private function onError(e:ErrorEvent):void
 		{
-			removeListeners();
-			
-			updateLoadTrait(_loadTrait, LoadState.LOAD_ERROR);
-			_loadTrait.dispatchEvent(new MediaErrorEvent(MediaErrorEvent.MEDIA_ERROR, false, false, new MediaError(0, 'This video is not available.')));
+            if( !_errorHit) {
+                _errorHit = true;
+                updateLoadTrait(_loadTrait, LoadState.LOAD_ERROR);
+                _loadTrait.dispatchEvent(new MediaErrorEvent(MediaErrorEvent.MEDIA_ERROR, false, false, new MediaError(0, 'This video is not available.')));
+            }
 		}
 		
 		private function onComplete(e:Event):void
 		{
 			removeListeners();
 			
-			try{
+			try
+            {
 				CONFIG::LOGGING
 				{
 					_loadTime = getTimer() - _loadTime;
@@ -102,14 +105,14 @@ package org.denivip.osmf.elements
 				updateLoadTrait(_loadTrait, LoadState.LOAD_ERROR);
 				dispatchEvent(new MediaErrorEvent(MediaErrorEvent.MEDIA_ERROR, false, false, new MediaError(err.errorID, err.message)));
 			}
-		}       
+		}
 		
 		private function onHTTPStatus(event:flash.events.HTTPStatusEvent):void 
-		{   
-			if( event.status >= 400 )
+		{
+			if( event.status >= 400 && !_errorHit )
 			{
 				// some 400-level fail, let's forward this out to jscript land
-				removeListeners();
+				_errorHit = true;
 				updateLoadTrait(_loadTrait, LoadState.LOAD_ERROR);
 				_loadTrait.dispatchEvent(new MediaErrorEvent(MediaErrorEvent.MEDIA_ERROR, false, false, new MediaError(event.status, "")));
 			}
@@ -134,8 +137,10 @@ package org.denivip.osmf.elements
 				this.removeListeners();
 				_playlistLoader.close();
 				_playlistLoader = null;
-				
 			}
+
+            // Reset our error hit logic since we're trying again.
+            _errorHit = false;
 			
 			if( _parser != null )
 			{
@@ -147,16 +152,17 @@ package org.denivip.osmf.elements
 			_loadTrait = loadTrait;
 			updateLoadTrait(loadTrait, LoadState.LOADING);
 			
-			_playlistLoader = new URLLoader(new URLRequest(URLResource(loadTrait.resource).url));
+			_playlistLoader = new URLLoader();
 			_playlistLoader.addEventListener(Event.COMPLETE, onComplete);
 			_playlistLoader.addEventListener(IOErrorEvent.IO_ERROR, onError);
 			_playlistLoader.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onError);
 			_playlistLoader.addEventListener(flash.events.HTTPStatusEvent.HTTP_STATUS, onHTTPStatus);
+            _playlistLoader.load(new URLRequest(URLResource(loadTrait.resource).url));
 			
 			CONFIG::LOGGING
-				{
-					_loadTime = getTimer();
-				}       
+            {
+                _loadTime = getTimer();
+            }
 		}
 		
 		override protected function executeUnload(loadTrait:LoadTrait):void

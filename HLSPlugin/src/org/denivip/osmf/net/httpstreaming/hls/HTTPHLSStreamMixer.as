@@ -62,11 +62,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 		 */
 		public function HTTPHLSStreamMixer(dispatcher:IEventDispatcher)
 		{
-			if (dispatcher == null)
-			{
-				throw new ArgumentError(OSMFStrings.getString(OSMFStrings.INVALID_PARAM));
-			}
-			
 			_dispatcher = dispatcher;
 			
 			// we setup additional high priority event listeners in order to block

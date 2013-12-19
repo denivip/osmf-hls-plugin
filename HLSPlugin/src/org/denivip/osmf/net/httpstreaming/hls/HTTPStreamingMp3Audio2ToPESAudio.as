@@ -149,7 +149,6 @@
 			
 			if(flush)
 			{
-				trace("audio flush at state "+_state.toString());
 			}
 			else while(packet.bytesAvailable > 0)
 			{
