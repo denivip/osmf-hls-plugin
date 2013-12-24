@@ -26,8 +26,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 {
 	import flash.utils.ByteArray;
 	
-	import org.osmf.logging.Logger;
 	import org.osmf.logging.Log;
+	import org.osmf.logging.Logger;
 	import org.osmf.net.httpstreaming.flv.FLVTagVideo;
 
 	internal class HTTPStreamingMP2PESVideo extends HTTPStreamingMP2PESBase
@@ -77,12 +77,12 @@ package org.denivip.osmf.net.httpstreaming.hls
 				// Check PES header length
 				var length:uint = packet.readUnsignedByte();
 				var pts:Number =
-					((packet.readUnsignedByte() & 0x0e) << 29) +
-					((packet.readUnsignedShort() & 0xfffe) << 14) +
-					((packet.readUnsignedShort() & 0xfffe) >> 1);
-		
+					uint((packet.readUnsignedByte() & 0x0e) << 29) +
+					uint((packet.readUnsignedShort() & 0xfffe) << 14) +
+					uint((packet.readUnsignedShort() & 0xfffe) >> 1);
+				
 				length -= 5;
-
+				
 				var timestamp:Number;
 				if(flags == 0x03)
 				{

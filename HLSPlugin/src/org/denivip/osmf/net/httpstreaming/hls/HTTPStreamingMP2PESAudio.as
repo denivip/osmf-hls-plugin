@@ -92,9 +92,9 @@
 				var length:uint = packet.readUnsignedByte();
 
 				var pts:Number =
-					((packet.readUnsignedByte() & 0x0e) << 29) +
-					((packet.readUnsignedShort() & 0xfffe) << 14) +
-					((packet.readUnsignedShort() & 0xfffe) >> 1);
+					uint((packet.readUnsignedByte() & 0x0e) << 29) +
+					uint((packet.readUnsignedShort() & 0xfffe) << 14) +
+					uint((packet.readUnsignedShort() & 0xfffe) >> 1);
 
 				var timestamp:Number = Math.round(pts/90);
 				_haveNewTimestamp = true;
