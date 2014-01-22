@@ -129,7 +129,7 @@
 					_offset += timestamp - _prevTimestamp;
 				}
 				
-				if (_isDiscontunity || (!_streamOffsetSet && _prevTimestamp == 0)) {
+				if (_isDiscontunity || (!_streamOffsetSet)) {// && _prevTimestamp == 0)) {
 					if(timestamp > 0) {
 						_offset += timestamp;
 					}

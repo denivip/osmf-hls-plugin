@@ -103,14 +103,16 @@
 					_offset += timestamp - _prevTimestamp;
 				}
 				
-				if (_isDiscontunity || (!_streamOffsetSet && _prevTimestamp == 0)) {
-					if(timestamp > 0) {
+				if (_isDiscontunity || (!_streamOffsetSet)) {// && _prevTimestamp == 0)) {
+					/*if(timestamp > 0) {
 						_offset += timestamp;
-					}
+					}*/
+					_timestamp = _initialTimestamp;
 					_streamOffsetSet = true;
+				}else{
+					_timestamp = _initialTimestamp + _offset;
 				}
-
-				_timestamp = _initialTimestamp + _offset;
+				
 				_prevTimestamp = timestamp;
 				_timestampReseted = false;
 				_isDiscontunity = false;
