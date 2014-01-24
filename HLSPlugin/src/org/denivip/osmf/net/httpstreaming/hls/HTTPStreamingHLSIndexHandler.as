@@ -29,6 +29,7 @@
 	import flash.utils.getQualifiedClassName;
 	import flash.utils.getTimer;
 	
+	import org.denivip.osmf.logs.CDNLogger;
 	import org.denivip.osmf.plugins.HLSSettings;
 	import org.denivip.osmf.utility.Padding;
 	import org.denivip.osmf.utility.Url;
@@ -147,6 +148,8 @@
 			{
 				_reloadTime = getTimer() - _reloadTime;
 				logger.info("Playlist reload time {0} sec", (_reloadTime/1000));
+				//CDN
+				CDNLogger.getCDNData("Playlist reload time {0} sec", (_reloadTime/1000));
 			}
 			var quality:int;
 			var keyRequest:Array;

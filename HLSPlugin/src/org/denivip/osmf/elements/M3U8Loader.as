@@ -10,6 +10,7 @@ package org.denivip.osmf.elements
 	import flash.utils.getTimer;
 	
 	import org.denivip.osmf.elements.m3u8Classes.M3U8PlaylistParser;
+	import org.denivip.osmf.logs.CDNLogger;
 	import org.denivip.osmf.net.httpstreaming.hls.HTTPStreamingHLSNetLoader;
 	import org.osmf.elements.VideoElement;
 	import org.osmf.elements.proxyClasses.LoadFromDocumentLoadTrait;
@@ -91,6 +92,11 @@ package org.denivip.osmf.elements
 					logger.info("Playlist {0} loaded", url);
 					logger.info("size = {0}Kb", (_playlistLoader.bytesLoaded/1024).toFixed(3));
 					logger.info("load time = {0} sec", (_loadTime/1000));
+					
+					// CDN
+					CDNLogger.getCDNData("Playlist {0} loaded", url);
+					CDNLogger.getCDNData("size = {0}Kb", (_playlistLoader.bytesLoaded/1024).toFixed(3));
+					CDNLogger.getCDNData("load time = {0} sec", (_loadTime/1000));
 				}
 				
 				var resData:String = String((e.target as URLLoader).data);
