@@ -4,12 +4,17 @@ package org.denivip.osmf.logs
 
 	public class CDNLogger
 	{
-		public function CDNLogger()
-		{
-		}
-		
-		public static function getCDNData(msg:String, ...rest):void{
-			ExternalInterface.call('log',msg);
+		public static function getCDNData(type:String, descr:String, value:Number):void{
+			ExternalInterface.call("function(){" +
+				" _gaq.push([" +
+				"'_trackEvent'," +
+				" 'HLSPlayer', '" +
+				type +
+				"', '" +
+				descr +
+				"', " +
+				value +
+				"  ]) }");
 		}
 	}
 }

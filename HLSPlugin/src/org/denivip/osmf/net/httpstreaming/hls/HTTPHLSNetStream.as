@@ -32,6 +32,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 	import flash.utils.Timer;
 	
 	import org.denivip.osmf.events.HTTPHLSStreamingEvent;
+	import org.denivip.osmf.logs.CDNLogger;
 	import org.denivip.osmf.plugins.HLSSettings;
 	import org.osmf.events.DVRStreamInfoEvent;
 	import org.osmf.events.HTTPStreamingEvent;
@@ -1261,7 +1262,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 		{
 			CONFIG::LOGGING
 			{
-				logger.debug("Download complete: " + event.url + " (" + event.bytesDownloaded + " bytes)"); 
+				logger.debug("Download complete: " + event.url + " (" + event.bytesDownloaded + " bytes)");
 			}
 			_bytesLoaded += event.bytesDownloaded;
 			_reloadTryCount = 0; // reset error counter

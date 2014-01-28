@@ -149,7 +149,7 @@
 				_reloadTime = getTimer() - _reloadTime;
 				logger.info("Playlist reload time {0} sec", (_reloadTime/1000));
 				//CDN
-				CDNLogger.getCDNData("Playlist reload time {0} sec", (_reloadTime/1000));
+				CDNLogger.getCDNData("Playlist loading", "Playlist reload time {0} sec", (_reloadTime/1000));
 			}
 			var quality:int;
 			var keyRequest:Array;
