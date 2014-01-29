@@ -137,7 +137,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 			public function get currentChankDuration():Number{
 				if(_indexHandler is HTTPStreamingHLSIndexHandler)
 					return HTTPStreamingHLSIndexHandler(_indexHandler).currentChunkDuration;
-				return null;
+				return 0.0;
 			}
 		}
 		
