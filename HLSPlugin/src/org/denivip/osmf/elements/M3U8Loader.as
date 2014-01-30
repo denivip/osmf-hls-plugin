@@ -83,8 +83,8 @@ package org.denivip.osmf.elements
 		{
 			removeListeners();
 			
-			try
-            {
+			//try
+            //{
 				var url:String = _loadTrait.resource['url'];
 				_loadTime = getTimer() - _loadTime;
 				CONFIG::LOGGING
@@ -104,10 +104,10 @@ package org.denivip.osmf.elements
 				_parser.addEventListener(ParseEvent.PARSE_ERROR, parseError);
 				
 				_parser.parse(resData, URLResource(_loadTrait.resource));
-			}catch(err:Error){
-				updateLoadTrait(_loadTrait, LoadState.LOAD_ERROR);
-				dispatchEvent(new MediaErrorEvent(MediaErrorEvent.MEDIA_ERROR, false, false, new MediaError(err.errorID, err.message)));
-			}
+			//}catch(err:Error){
+			//	updateLoadTrait(_loadTrait, LoadState.LOAD_ERROR);
+			//	dispatchEvent(new MediaErrorEvent(MediaErrorEvent.MEDIA_ERROR, false, false, new MediaError(err.errorID, err.message)));
+			//}
 		}
 		
 		private function onHTTPStatus(event:flash.events.HTTPStatusEvent):void 
@@ -187,7 +187,7 @@ package org.denivip.osmf.elements
 		}
 		
 		private function finishPlaylistLoading(resource:MediaResourceBase):void{
-			try{
+			//try{
 				var loadedElem:MediaElement = new VideoElement(null, new HTTPStreamingHLSNetLoader());
 				loadedElem.resource = resource;
 				VideoElement(loadedElem).smoothing = true;
@@ -195,10 +195,10 @@ package org.denivip.osmf.elements
 				LoadFromDocumentLoadTrait(_loadTrait).mediaElement = loadedElem;
 				
 				updateLoadTrait(_loadTrait, LoadState.READY);
-			}catch(e:Error){
-				updateLoadTrait(_loadTrait, LoadState.LOAD_ERROR);
-				_loadTrait.dispatchEvent(new MediaErrorEvent(MediaErrorEvent.MEDIA_ERROR, false, false, new MediaError(e.errorID, e.message)));
-			}
+			//}catch(e:Error){
+			//	updateLoadTrait(_loadTrait, LoadState.LOAD_ERROR);
+			//	_loadTrait.dispatchEvent(new MediaErrorEvent(MediaErrorEvent.MEDIA_ERROR, false, false, new MediaError(e.errorID, e.message)));
+			//}
 		}
 		
 		CONFIG::LOGGING

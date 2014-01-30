@@ -1266,7 +1266,11 @@ package org.denivip.osmf.net.httpstreaming.hls
 			}
 			// CDN
 			if(event.url.indexOf('m3u8') == -1){
-				var chDur:Number = HTTPHLSStreamSource(_source).currentChankDuration;
+				var chDur:Number;
+				if(_source is HTTPHLSStreamSource)
+					chDur = HTTPHLSStreamSource(_source).currentChankDuration;
+				if(_source is HTTPHLSStreamMixer)
+					chDur = HTTPHLSStreamMixer(_source).currentChankDuration;
 				CDNLogger.getCDNData('Load chunk ('+chDur.toString()+' s)', event.url, event.downloader.downloadDuration);
 			}
 			_bytesLoaded += event.bytesDownloaded;

@@ -84,6 +84,12 @@ package org.denivip.osmf.net.httpstreaming.hls
 			
 			_alternateIgnored = true;
 		}
+		
+		public function get currentChankDuration():Number{
+			if(video != null && video is HTTPHLSStreamSource)
+				return HTTPHLSStreamSource(video).currentChankDuration;
+			return 0.0;
+		} 
 	
 		/**
 		 * @inheritDoc
