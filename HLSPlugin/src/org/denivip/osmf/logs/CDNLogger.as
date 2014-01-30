@@ -17,8 +17,12 @@ package org.denivip.osmf.logs
 				value +
 				"  ]); }";
 			
-			if(ExternalInterface.available)
-				ExternalInterface.call(funcS);
+			try{
+				if(ExternalInterface.available)
+					ExternalInterface.call(funcS);
+			}catch(e:SecurityError){
+				// do nothing
+			}
 		}
 	}
 }
