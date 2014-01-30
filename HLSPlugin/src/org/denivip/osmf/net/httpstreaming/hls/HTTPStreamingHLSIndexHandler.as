@@ -147,10 +147,10 @@
 			CONFIG::LOGGING
 			{
 				_reloadTime = getTimer() - _reloadTime;
-				logger.info("Playlist reload time {0} sec", (_reloadTime/1000));
-				//CDN
-				CDNLogger.getCDNData("Playlist loading", "Playlist reload time {0} sec", (_reloadTime/1000));
+				logger.info("Playlist reload time {0} sec", (_reloadTime/1000));	
 			}
+			//CDN
+			CDNLogger.getCDNData("Playlist loading", "Playlist reload time {0} sec", (_reloadTime/1000));
 			var quality:int;
 			var keyRequest:Array;
 			var keyItem:HTTPStreamingM3U8IndexKey;
@@ -468,12 +468,9 @@
 			return null;
 		}
 		
-		CONFIG::LOGGING
-		{
-			private var _currentChunkDuration:Number;
-			public function get currentChunkDuration():Number{
-				return _currentChunkDuration;
-			}
+		private var _currentChunkDuration:Number;
+		public function get currentChunkDuration():Number{
+			return _currentChunkDuration;
 		}
 		
 		/*

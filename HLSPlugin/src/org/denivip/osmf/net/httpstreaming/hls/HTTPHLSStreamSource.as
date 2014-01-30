@@ -132,13 +132,10 @@ package org.denivip.osmf.net.httpstreaming.hls
 			}
 		}
 		
-		CONFIG::LOGGING
-		{
-			public function get currentChankDuration():Number{
-				if(_indexHandler is HTTPStreamingHLSIndexHandler)
-					return HTTPStreamingHLSIndexHandler(_indexHandler).currentChunkDuration;
-				return 0.0;
-			}
+		public function get currentChankDuration():Number{
+			if(_indexHandler is HTTPStreamingHLSIndexHandler)
+				return HTTPStreamingHLSIndexHandler(_indexHandler).currentChunkDuration;
+			return 0.0;
 		}
 		
 		private function onDiscontinuity(event:HTTPHLSStreamingEvent):void{

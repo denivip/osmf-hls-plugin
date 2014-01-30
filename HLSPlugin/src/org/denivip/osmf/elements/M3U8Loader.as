@@ -92,10 +92,9 @@ package org.denivip.osmf.elements
 					logger.info("Playlist {0} loaded", url);
 					logger.info("size = {0}Kb", (_playlistLoader.bytesLoaded/1024).toFixed(3));
 					logger.info("load time = {0} sec", (_loadTime/1000));
-					
-					// CDN
-					CDNLogger.getCDNData("Load playlist ("+url+")", "playlist size="+(_playlistLoader.bytesLoaded/1024).toFixed(3)+"Kb", (_loadTime/1000));
 				}
+				// CDN
+				CDNLogger.getCDNData("Load playlist ("+url+")", "playlist size="+(_playlistLoader.bytesLoaded/1024).toFixed(3)+"Kb", (_loadTime/1000));
 				
 				var resData:String = String((e.target as URLLoader).data);
 				

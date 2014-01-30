@@ -1263,10 +1263,11 @@ package org.denivip.osmf.net.httpstreaming.hls
 			CONFIG::LOGGING
 			{
 				logger.debug("Download complete: " + event.url + " (" + event.bytesDownloaded + " bytes)");
-				if(event.url.indexOf('m3u8') == -1){
-					var chDur:Number = HTTPHLSStreamSource(_source).currentChankDuration;
-					CDNLogger.getCDNData('Load chunk ('+chDur.toString()+' s)', event.url, event.downloader.downloadDuration);
-				}
+			}
+			// CDN
+			if(event.url.indexOf('m3u8') == -1){
+				var chDur:Number = HTTPHLSStreamSource(_source).currentChankDuration;
+				CDNLogger.getCDNData('Load chunk ('+chDur.toString()+' s)', event.url, event.downloader.downloadDuration);
 			}
 			_bytesLoaded += event.bytesDownloaded;
 			_reloadTryCount = 0; // reset error counter
