@@ -16,7 +16,9 @@ package org.denivip.osmf.logs
 				"', " +
 				value +
 				"  ]); }";
-			ExternalInterface.call(funcS);
+			
+			if(ExternalInterface.available)
+				ExternalInterface.call(funcS);
 		}
 	}
 }
