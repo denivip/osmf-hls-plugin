@@ -85,10 +85,10 @@ package org.denivip.osmf.elements
 			
 			try
             {
+				var url:String = _loadTrait.resource['url'];
+				_loadTime = getTimer() - _loadTime;
 				CONFIG::LOGGING
 				{
-					_loadTime = getTimer() - _loadTime;
-					var url:String = _loadTrait.resource['url'];
 					logger.info("Playlist {0} loaded", url);
 					logger.info("size = {0}Kb", (_playlistLoader.bytesLoaded/1024).toFixed(3));
 					logger.info("load time = {0} sec", (_loadTime/1000));
@@ -162,10 +162,7 @@ package org.denivip.osmf.elements
 			_playlistLoader.addEventListener(flash.events.HTTPStatusEvent.HTTP_STATUS, onHTTPStatus);
             _playlistLoader.load(new URLRequest(URLResource(loadTrait.resource).url));
 			
-			CONFIG::LOGGING
-            {
-                _loadTime = getTimer();
-            }
+			_loadTime = getTimer();
 		}
 		
 		override protected function executeUnload(loadTrait:LoadTrait):void
