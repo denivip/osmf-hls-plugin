@@ -171,7 +171,7 @@
 				if(String(data).localeCompare(_prevPlaylist) == 0)
 					++_matchCounter;
 				
-				if(_matchCounter == HLSSettings.hlsMaxErrors){ // if delivered playlist again not changed then error_event (or all what you want)
+				if(_matchCounter >= HLSSettings.hlsMaxErrors){ // if delivered playlist again not changed then error_event (or all what you want)
 					CONFIG::LOGGING
 					{
 						logger.error("Stream is stuck. Playlist on server don't updated!");
