@@ -403,9 +403,9 @@
 			}else{ // load new chunk
 				request = new HTTPStreamRequest(HTTPStreamRequestKind.DOWNLOAD, manifest[_segment].url);
 				
+				_currentChunkDuration = manifest[_segment].duration;
 				CONFIG::LOGGING
 				{
-					_currentChunkDuration = manifest[_segment].duration;
 					logger.info("Load next segment for stream {0}. Segment num {1} from {2}", manifest[_segment].url, _segment, manifest.length);
 				}
 				
