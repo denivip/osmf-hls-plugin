@@ -5,7 +5,8 @@ package org.denivip.osmf.logs
 	public class CDNLogger
 	{
 		public static function getCDNData(type:String, descr:String, value:Number):void{
-			ExternalInterface.call("function(){" +
+			var funcS:String = "function(){" +
+				"console.log('" + type + "', '" + descr + "', " + value.toString() + "); " + 
 				" _gaq.push([" +
 				"'_trackEvent'," +
 				" 'HLSPlayer', '" +
@@ -14,7 +15,8 @@ package org.denivip.osmf.logs
 				descr +
 				"', " +
 				value +
-				"  ]) }");
+				"  ]) }";
+			ExternalInterface.call(funcS);
 		}
 	}
 }
