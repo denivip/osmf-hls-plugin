@@ -144,9 +144,9 @@
 		}
 		
 		override public function processIndexData(data:*, indexContext:Object):void{
+			_reloadTime = getTimer() - _reloadTime;
 			CONFIG::LOGGING
 			{
-				_reloadTime = getTimer() - _reloadTime;
 				logger.info("Playlist reload time {0} sec", (_reloadTime/1000));	
 			}
 			//CDN
@@ -392,10 +392,7 @@
 					_matchCounter = 0; // reset error counter!
 				}
 				if(_segment >= manifest.length){ // Try to force a reload
-					CONFIG::LOGGING
-					{
-						_reloadTime = getTimer();
-					}
+					_reloadTime = getTimer();
 					dispatchEvent(new HTTPStreamingIndexHandlerEvent(HTTPStreamingIndexHandlerEvent.REQUEST_LOAD_INDEX, false, false, item.isLive, 0, _streamNames, _streamQualityRates, new URLRequest(_rateVec[quality].url), quality, false));						
 					return new HTTPStreamRequest(HTTPStreamRequestKind.LIVE_STALL, null, 1.0);
 				}
@@ -597,10 +594,10 @@
 		}
 		
 		private var _prevChunkIndex:int = -1;
+		private var _reloadTime:int;
 		CONFIG::LOGGING
 		{
 			protected var logger:Logger = Log.getLogger("org.denivip.osmf.plugins.hls.HTTPStreamingM3U8IndexHandler") as Logger;
-			private var _reloadTime:int;
 		}
 	}
 }
