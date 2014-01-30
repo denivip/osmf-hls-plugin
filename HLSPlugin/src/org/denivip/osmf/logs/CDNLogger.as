@@ -21,7 +21,7 @@ package org.denivip.osmf.logs
 				if(ExternalInterface.available)
 					ExternalInterface.call(funcS);
 			}catch(e:SecurityError){
-				// do nothing
+				trace('shit happens...');
 			}
 		}
 	}

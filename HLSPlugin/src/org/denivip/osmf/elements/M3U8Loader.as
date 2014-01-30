@@ -117,7 +117,7 @@ package org.denivip.osmf.elements
 				// some 400-level fail, let's forward this out to jscript land
 				_errorHit = true;
 				updateLoadTrait(_loadTrait, LoadState.LOAD_ERROR);
-				_loadTrait.dispatchEvent(new MediaErrorEvent(MediaErrorEvent.MEDIA_ERROR, false, false, new MediaError(event.status, "")));
+				_loadTrait.dispatchEvent(new MediaErrorEvent(MediaErrorEvent.MEDIA_ERROR, false, false, new MediaError(event.status, "Can't load playlist")));
 			}
 		}
 		
