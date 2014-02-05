@@ -877,6 +877,14 @@ package org.denivip.osmf.net.httpstreaming.hls
 						appendBytesAction(NetStreamAppendBytesAction.END_SEQUENCE);
 					}
 					
+					//CDN
+					if(_chunkDLTimeCache.length > 0){
+						for each(var chD:Object in _chunkDLTimeCache){
+							CDNLogger.getCDNData(chD.type, chD.descr, chD.value);
+						}
+						_chunkDLTimeCache = [];
+					}
+					
 					setState(HTTPStreamingState.HALT);
 					break;
 				
@@ -1271,8 +1279,21 @@ package org.denivip.osmf.net.httpstreaming.hls
 					chDur = HTTPHLSStreamSource(_source).currentChankDuration;
 				if(_source is HTTPHLSStreamMixer)
 					chDur = HTTPHLSStreamMixer(_source).currentChankDuration;
-				CDNLogger.getCDNData('Load chunk ('+chDur.toString()+' s)', event.url, event.downloader.downloadDuration);
+				//CDNLogger.getCDNData('Load chunk ('+chDur.toString()+' s)', event.url, event.downloader.downloadDuration);
+				_chunkDLTimeCache.push({
+					type: 'Load chunk ('+chDur.toString()+' s)',
+					descr: event.url,
+					value: event.downloader.downloadDuration
+				});
 			}
+			
+			if(_chunkDLTimeCache.length >= CH_CACHE_LIMIT){
+				for each(var chD:Object in _chunkDLTimeCache){
+					CDNLogger.getCDNData(chD.type, chD.descr, chD.value);
+				}
+				_chunkDLTimeCache = [];
+			}
+			
 			_bytesLoaded += event.bytesDownloaded;
 			_reloadTryCount = 0; // reset error counter
 		}
@@ -1867,6 +1888,9 @@ package org.denivip.osmf.net.httpstreaming.hls
 		private var _isPaused:Boolean = false; // true if we're currently paused. see checkIfExtraKickNeeded
 		private var _liveStallStartTime:Date;
 
+		private var _chunkDLTimeCache:Array = [];
+		private static const CH_CACHE_LIMIT:int = 10;
+		
 		private static const HIGH_PRIORITY:int = int.MAX_VALUE;
 		
 		CONFIG::LOGGING
