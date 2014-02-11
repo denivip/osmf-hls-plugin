@@ -32,16 +32,17 @@ package org.denivip.osmf.logs
 				"', " +
 				speed.toFixed(3) + "Kbps" +
 				"  ]); }";
-			/*
+			
 			try{
 				if(ExternalInterface.available)
 					ExternalInterface.call(funcS);
 			}catch(e:SecurityError){
 				trace('shit happens...');
 			}
-			*/
+			/*
 			trace(funcS);
 			trace();
+			*/
 		}
 	}
 }
