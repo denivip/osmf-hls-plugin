@@ -880,7 +880,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 					//CDN
 					if(_chunkDLTimeCache.length > 0){
 						for each(var chD:Object in _chunkDLTimeCache){
-							CDNLogger.getCDNData(chD.type, chD.descr, chD.value);
+							CDNLogger.getCDNData(chD.size, chD.time);
 						}
 						_chunkDLTimeCache = [];
 					}
@@ -1274,22 +1274,26 @@ package org.denivip.osmf.net.httpstreaming.hls
 			}
 			// CDN
 			if(event.url.indexOf('m3u8') == -1){
-				var chDur:Number;
+				/*var chDur:Number;
 				if(_source is HTTPHLSStreamSource)
 					chDur = HTTPHLSStreamSource(_source).currentChankDuration;
 				if(_source is HTTPHLSStreamMixer)
 					chDur = HTTPHLSStreamMixer(_source).currentChankDuration;
 				//CDNLogger.getCDNData('Load chunk ('+chDur.toString()+' s)', event.url, event.downloader.downloadDuration);
 				_chunkDLTimeCache.push({
-					type: 'Load chunk ('+chDur.toString()+' s)',
-					descr: event.url,
+					type: 'chunk',
+					descr: event.url + '('+chDur.toFixed(3)+'s)',
 					value: event.downloader.downloadDuration
+				});*/
+				_chunkDLTimeCache.push({
+					size: event.bytesDownloaded,
+					time: event.downloader.downloadDuration
 				});
 			}
 			
 			if(_chunkDLTimeCache.length >= CH_CACHE_LIMIT){
 				for each(var chD:Object in _chunkDLTimeCache){
-					CDNLogger.getCDNData(chD.type, chD.descr, chD.value);
+					CDNLogger.getCDNData(chD.size, chD.time);
 				}
 				_chunkDLTimeCache = [];
 			}

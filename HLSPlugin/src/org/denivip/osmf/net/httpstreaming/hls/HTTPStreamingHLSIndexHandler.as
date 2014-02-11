@@ -150,7 +150,7 @@
 				logger.info("Playlist reload time {0} sec", (_reloadTime/1000));	
 			}
 			//CDN
-			CDNLogger.getCDNData("Playlist loading", "Playlist reload time {0} sec", (_reloadTime/1000));
+			//CDNLogger.getCDNData(, _reloadTime);
 			var quality:int;
 			var keyRequest:Array;
 			var keyItem:HTTPStreamingM3U8IndexKey;
