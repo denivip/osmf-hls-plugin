@@ -10,7 +10,8 @@ package org.denivip.osmf.logs
 		
 		public static function getCDNData(size:Number, time:Number):void{
 			time = (time == 0) ? .0001 : time;
-			var speed:Number = (size/1024)/(time); // bytes / s
+			size *= 8; // bits
+			var speed:Number = (size/1024)/(time); // bits / sec
 			var speedMbps:Number = speed/1024;
 			
 			var sSpeed:String;
@@ -29,8 +30,8 @@ package org.denivip.osmf.logs
 				"Download" +
 				"', '" +
 				sSpeed +
-				"', " +
-				speed.toFixed(3) + "Kbps" +
+				"', '" +
+				Math.round(speed).toString() + "Kbps'" +
 				"  ]); }";
 			
 			try{
@@ -39,6 +40,7 @@ package org.denivip.osmf.logs
 			}catch(e:SecurityError){
 				trace('shit happens...');
 			}
+			
 			/*
 			trace(funcS);
 			trace();
