@@ -23,26 +23,34 @@ package org.denivip.osmf.logs
 			else
 				sSpeed = TWO_MBPS;
 			
-			var funcS:String = "function(){" +
-				" _gaq.push([" +
+			var funcS:String = " _gaq.push([" +
 				"'_trackEvent'," +
 				" 'CDN', '" +
 				"Download" +
 				"', '" +
 				sSpeed +
-				"', '" +
-				Math.round(speed).toString() + "Kbps'" +
-				"  ]); }";
+				"', " +
+				Math.round(speed).toString() + 
+				"  ]);";
 			
+			funcS = "function(){" +
+				//"console.log(\"" + 
+				//funcS + 
+				//"\");" +
+				funcS +
+				"}";
+			
+			//trace(funcS);
 			try{
 				if(ExternalInterface.available)
 					ExternalInterface.call(funcS);
+					//ExternalInterface.call('gaLog', sSpeed, Math.round(speed).toString()+"Kbps");
 			}catch(e:SecurityError){
 				trace('shit happens...');
 			}
 			
 			/*
-			trace(funcS);
+			
 			trace();
 			*/
 		}
