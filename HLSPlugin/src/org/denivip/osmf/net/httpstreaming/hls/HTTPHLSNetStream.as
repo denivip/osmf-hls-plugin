@@ -36,6 +36,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 	import org.denivip.osmf.plugins.HLSSettings;
 	import org.osmf.events.DVRStreamInfoEvent;
 	import org.osmf.events.HTTPStreamingEvent;
+	import org.osmf.events.MediaError;
+	import org.osmf.events.MediaErrorEvent;
 	import org.osmf.events.QoSInfoEvent;
 	import org.osmf.media.MediaResourceBase;
 	import org.osmf.media.URLResource;
@@ -314,7 +316,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 		{
 			super.bufferTime = value;
 			_desiredBufferTime_Min = Math.max(OSMFSettings.hdsMinimumBufferTime, value);
-			_desiredBufferTime_Max = _desiredBufferTime_Min + OSMFSettings.hdsAdditionalBufferTime;
+			_desiredBufferTime_Max = _desiredBufferTime_Min + HLSSettings.hlsAddBufferSize;//OSMFSettings.hdsAdditionalBufferTime;
 		}
 		
 		/**
@@ -604,8 +606,10 @@ package org.denivip.osmf.net.httpstreaming.hls
 				default:
 					// Some http based error?  If yes, shut'er down.
 					var httpCode:int = parseInt(event.info.code);
-					if( !isNaN(httpCode) && httpCode >= 400 )
+					if( !isNaN(httpCode) && httpCode >= 400 ){
 						close();
+						dispatchEvent(new MediaErrorEvent(MediaErrorEvent.MEDIA_ERROR, true, false, new MediaError(404, "Can't open stream!")));
+					}
 					break;
 			}
 			
@@ -834,6 +838,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 								// if our buffer has grown big enough then go into wait
 								// mode where we let the NetStream consume the buffered 
 								// data
+								dispatchEvent(new NetStatusEvent(NetStatusEvent.NET_STATUS, false, false, {code: NetStreamCodes.NETSTREAM_BUFFER_FULL, level: "status"}));
 								setState(HTTPStreamingState.WAIT);
 							}
 						}
