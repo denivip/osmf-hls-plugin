@@ -315,7 +315,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 		{
 			super.bufferTime = value;
 			_desiredBufferTime_Min = Math.max(OSMFSettings.hdsMinimumBufferTime, value);
-			_desiredBufferTime_Max = _desiredBufferTime_Min + OSMFSettings.hdsAdditionalBufferTime;
+			_desiredBufferTime_Max = _desiredBufferTime_Min + HLSSettings.hlsAddBufferSize;//OSMFSettings.hdsAdditionalBufferTime;
 		}
 		
 		/**
@@ -837,6 +837,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 								// if our buffer has grown big enough then go into wait
 								// mode where we let the NetStream consume the buffered 
 								// data
+								dispatchEvent(new NetStatusEvent(NetStatusEvent.NET_STATUS, false, false, {code: NetStreamCodes.NETSTREAM_BUFFER_FULL, level: "status"}));
 								setState(HTTPStreamingState.WAIT);
 							}
 						}
