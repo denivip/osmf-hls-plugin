@@ -572,7 +572,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 					{
 						logger.debug("Received NETSTREAM_BUFFER_FULL. _wasBufferEmptied = "+_wasBufferEmptied+" bufferLength "+this.bufferLength);
 					}
-					bufferTime = (bufferTime >= HLSSettings.hlsBufferSizeDef) ? HLSSettings.hlsBufferSizeBig : HLSSettings.hlsBufferSizeDef;
+					if(bufferTime < HLSSettings.hlsBufferSizeBig) // if full pause buffer then do nothing
+						bufferTime = (bufferTime >= HLSSettings.hlsBufferSizeDef) ? HLSSettings.hlsBufferSizeBig : HLSSettings.hlsBufferSizeDef;
 					break;
 				
 				case NetStreamCodes.NETSTREAM_BUFFER_FLUSH:
@@ -835,10 +836,11 @@ package org.denivip.osmf.net.httpstreaming.hls
 							}
 							else if (this.bufferLength > _desiredBufferTime_Max)
 							{
+								// if buffer full so maybe we can extend it?
+								dispatchEvent(new NetStatusEvent(NetStatusEvent.NET_STATUS, false, false, {code: NetStreamCodes.NETSTREAM_BUFFER_FULL, level: "status"}));
 								// if our buffer has grown big enough then go into wait
 								// mode where we let the NetStream consume the buffered 
 								// data
-								dispatchEvent(new NetStatusEvent(NetStatusEvent.NET_STATUS, false, false, {code: NetStreamCodes.NETSTREAM_BUFFER_FULL, level: "status"}));
 								setState(HTTPStreamingState.WAIT);
 							}
 						}
