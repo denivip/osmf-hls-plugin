@@ -30,6 +30,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 	import flash.net.NetStreamPlayTransitions;
 	import flash.utils.ByteArray;
 	import flash.utils.Timer;
+	import flash.utils.getTimer;
 	
 	import org.denivip.osmf.events.HTTPHLSStreamingEvent;
 	import org.denivip.osmf.logs.CDNLogger;
@@ -563,7 +564,22 @@ package org.denivip.osmf.net.httpstreaming.hls
 							_notifyPlayUnpublishPending = false; 
 						}
 					}
-					bufferTime = OSMFSettings.hdsMinimumBufferTime;//HLSSettings.hlsBufferSizeDef;
+					if(_lastEmptyBufferTimestamp == 0)
+						bufferTime = OSMFSettings.hdsMinimumBufferTime;
+					else{
+						var playbackTime:Number = getTimer() - _lastEmptyBufferTimestamp;
+						if(playbackTime < bufferTime && playbackTime > bufferTime+3){
+							if(_bufferResizeCntr < MAX_RESIZE_CNT){
+								CONFIG::LOGGING
+								{
+									logger.debug("Playback time is unacceptable (pTime = {0}) extend buffer", playbackTime);
+								}
+								bufferTime *= 2;
+								_bufferResizeCntr++;
+							}
+						}
+						_lastEmptyBufferTimestamp = getTimer();
+					}
 					break;
 				
 				case NetStreamCodes.NETSTREAM_BUFFER_FULL:
@@ -1895,6 +1911,10 @@ package org.denivip.osmf.net.httpstreaming.hls
 		private var _wasBufferEmptied:Boolean = false;	// true if the player is waiting for BUFFER_FULL.
 														// this occurs when we receive a BUFFER_EMPTY or when we we're buffering
 														// in response to a seek.
+		private var _lastEmptyBufferTimestamp:int = 0;
+		private var _bufferResizeCntr:int = 0;
+		private static const MAX_RESIZE_CNT:int = 5;
+		
 		private var _isPlaying:Boolean = false; // true if we're currently playing. see checkIfExtraKickNeeded
 		private var _isPaused:Boolean = false; // true if we're currently paused. see checkIfExtraKickNeeded
 		private var _liveStallStartTime:Date;
