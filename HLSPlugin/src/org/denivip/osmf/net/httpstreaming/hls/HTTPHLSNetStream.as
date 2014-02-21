@@ -564,9 +564,10 @@ package org.denivip.osmf.net.httpstreaming.hls
 							_notifyPlayUnpublishPending = false; 
 						}
 					}
-					if(_lastEmptyBufferTimestamp == 0)
+					if(_lastEmptyBufferTimestamp == 0){
 						bufferTime = OSMFSettings.hdsMinimumBufferTime;
-					else{
+						_bufferResizeCntr = 0;
+					}else{
 						var playbackTime:Number = getTimer() - _lastEmptyBufferTimestamp;
 						if(playbackTime < bufferTime && playbackTime > bufferTime+3){
 							if(_bufferResizeCntr < MAX_RESIZE_CNT){
@@ -590,6 +591,10 @@ package org.denivip.osmf.net.httpstreaming.hls
 					}
 					if(bufferTime < HLSSettings.hlsBufferSizeBig) // if full pause buffer then do nothing
 						bufferTime = (bufferTime >= HLSSettings.hlsBufferSizeDef) ? HLSSettings.hlsBufferSizeBig : HLSSettings.hlsBufferSizeDef;
+					
+					// reset empty buffer spikes
+					_lastEmptyBufferTimestamp = 0;
+					
 					break;
 				
 				case NetStreamCodes.NETSTREAM_BUFFER_FLUSH:
