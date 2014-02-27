@@ -607,7 +607,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 					var httpCode:int = parseInt(event.info.code);
 					if( !isNaN(httpCode) && httpCode >= 400 ){
 						close();
-						dispatchEvent(new MediaErrorEvent(MediaErrorEvent.MEDIA_ERROR, true, false, new MediaError(404, "Can't open stream!")));
+						dispatchEvent(new MediaErrorEvent(MediaErrorEvent.MEDIA_ERROR, true, false, new MediaError(httpCode, "Can't open stream!")));
 					}
 					break;
 			}
