@@ -203,6 +203,10 @@ package org.denivip.osmf.net.httpstreaming.hls
 			return (_streamName != null);
 		}
 		
+		public function get totalDuration():Number{
+			return HTTPStreamingHLSIndexHandler(_indexHandler).totalDuration;
+		}
+		
 		/**
 		 * Opens and initializes a stream provider to handle a specific stream.
 		 */

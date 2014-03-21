@@ -127,6 +127,13 @@ package org.denivip.osmf.net.httpstreaming.hls
 				video.source != null &&
 				video.source.isLiveStalled;
 		}
+		
+		public function get totalTime():Number{
+			var aTime:Number = HTTPHLSStreamSource(audio.source).totalDuration;
+			var vTime:Number = HTTPHLSStreamSource(video.source).totalDuration;
+			
+			return (aTime < vTime) ? aTime : vTime;
+		}
 
 		/**
 		 *  Closes all associated sources.

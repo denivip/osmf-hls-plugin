@@ -868,8 +868,12 @@ package org.denivip.osmf.net.httpstreaming.hls
 						else
 						{
 							// if we reached the end of stream then we need stop and
-							// dispatch this event to all our clients.						
-							if (_source.endOfStream)
+							// dispatch this event to all our clients.
+							var isTimeOver:Boolean = false;
+							if(_source is HTTPHLSStreamMixer){
+								isTimeOver = (int(HTTPHLSStreamMixer(_source).totalTime) <= int(time));
+							}
+							if (_source.endOfStream || isTimeOver)
 							{
 								super.bufferTime = 0.1;
 								CONFIG::LOGGING

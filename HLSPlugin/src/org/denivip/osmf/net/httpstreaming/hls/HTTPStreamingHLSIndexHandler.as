@@ -64,6 +64,7 @@
 		private var _segment:int;
 		private var _absoluteSegment:int;
 		private var _quality:int = -1;
+		private var _totalDuration:Number;
 		
 		private var _streamNames:Array;
 		private var _streamQualityRates:Array;
@@ -193,6 +194,7 @@
 				var keyIvGiven:Boolean = false;
 				var keyIvIndex:int = 0;
 				var duration:Number = 0;
+				var tempTotalDuration:Number = 0;
 				
 				for(var i:int = 0; i < len; i++){
 					if(i == 0){
@@ -214,6 +216,7 @@
 						}
 						// _spike
 						indexItem = new HTTPStreamingM3U8IndexItem(duration, url, discontinuity);
+						tempTotalDuration += duration;
 						// Add key if it exists
 						if(keyExists) {
 							indexItem.key = keyIndex;						
@@ -279,6 +282,7 @@
 						}
 					}else if(lines[i].indexOf("#EXT-X-ENDLIST") == 0){
 						rateItem.isLive = false;
+						_totalDuration = tempTotalDuration;
 					}else if(lines[i].indexOf("#EXT-X-MEDIA-SEQUENCE:") == 0){
 						keyIvIndex = parseInt(lines[i].match(/(\d+)/)[1]);
 						rateItem.sequenceNumber = keyIvIndex;
@@ -468,6 +472,10 @@
 		private var _currentChunkDuration:Number;
 		public function get currentChunkDuration():Number{
 			return _currentChunkDuration;
+		}
+		
+		public function get totalDuration():Number{
+			return _totalDuration;
 		}
 		
 		/*
