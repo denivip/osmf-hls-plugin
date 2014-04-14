@@ -87,9 +87,9 @@ package org.denivip.osmf.net.httpstreaming.hls
 				if(flags == 0x03)
 				{
 					var dts:Number = 
-						((packet.readUnsignedByte() & 0x0e) << 29) + 
-						((packet.readUnsignedShort() & 0xfffe) << 14) + 
-						((packet.readUnsignedShort() & 0xfffe) >> 1);
+						uint((packet.readUnsignedByte() & 0x0e) << 29) + 
+						uint((packet.readUnsignedShort() & 0xfffe) << 14) + 
+						uint((packet.readUnsignedShort() & 0xfffe) >> 1);
 						
 					timestamp = Math.round(dts/90);
 					_compositionTime =  Math.round(pts/90) - timestamp;
