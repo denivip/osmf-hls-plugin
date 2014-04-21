@@ -871,11 +871,13 @@ package org.denivip.osmf.net.httpstreaming.hls
 							// dispatch this event to all our clients.
 							var isTimeOver:Boolean = false;
 							if(_source is HTTPHLSStreamMixer){
-								isTimeOver = (int(HTTPHLSStreamMixer(_source).totalTime) <= int(time));
+								var tTime:int = int(HTTPHLSStreamMixer(_source).totalTime);
+								isTimeOver = (tTime <= int(time));
 							}
-							if (_source.endOfStream || isTimeOver)
+							if ((_source.endOfStream || isTimeOver) && !_alreadyStopped)
 							{
 								super.bufferTime = 0.1;
+								_alreadyStopped = true;
 								CONFIG::LOGGING
 								{
 									logger.debug("End of stream reached. Stopping."); 
@@ -1930,6 +1932,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 
 		private var _chunkDLTimeCache:Array = [];
 		private static const CH_CACHE_LIMIT:int = 10;
+		
+		private var _alreadyStopped:Boolean = false;
 		
 		private static const HIGH_PRIORITY:int = int.MAX_VALUE;
 		

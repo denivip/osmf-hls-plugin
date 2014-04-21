@@ -132,7 +132,10 @@ package org.denivip.osmf.net.httpstreaming.hls
 			var aTime:Number = HTTPHLSStreamSource(audio.source).totalDuration;
 			var vTime:Number = HTTPHLSStreamSource(video.source).totalDuration;
 			
-			return (aTime < vTime) ? aTime : vTime;
+			aTime = isNaN(aTime) ? Number.MAX_VALUE : aTime;
+			vTime = isNaN(vTime) ? Number.MAX_VALUE : vTime;
+			
+			return Math.min(aTime, vTime);//(aTime < vTime) ? aTime : vTime;
 		}
 
 		/**
