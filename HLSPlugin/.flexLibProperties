@@ -13,7 +13,6 @@
     <classEntry path="org.denivip.osmf.plugins.HLSSettings"/>
     <classEntry path="org.denivip.osmf.logging.LogGrabber"/>
     <classEntry path="org.denivip.osmf.utils.Utils"/>
-    <classEntry path="org.denivip.osmf.logs.CDNLogger"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>
