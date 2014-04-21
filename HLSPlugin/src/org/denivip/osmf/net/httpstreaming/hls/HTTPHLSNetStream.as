@@ -220,6 +220,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 		override public function resume():void 
 		{
 			_isPaused = false;
+			_alreadyStopped = false;
 			super.resume();
 		}
 
