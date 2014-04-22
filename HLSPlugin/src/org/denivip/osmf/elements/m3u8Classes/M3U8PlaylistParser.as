@@ -49,6 +49,7 @@ package org.denivip.osmf.elements.m3u8Classes
 			
 			var result:MediaResourceBase;
 			var isLive:Boolean = true;
+			var isDVR:Boolean = (baseResource.url.indexOf('DVR') >= 0);
 			var streamItems:Vector.<DynamicStreamingItem>;
 			var tempStreamingRes:StreamingURLResource = null;
 			var tempDynamicRes:DynamicStreamingResource = null;
@@ -69,7 +70,7 @@ package org.denivip.osmf.elements.m3u8Classes
 							}
 						}
 						if(isLive)
-							tempStreamingRes.streamType = StreamType.LIVE;
+							tempStreamingRes.streamType = isDVR ? StreamType.DVR : StreamType.LIVE;
 					}
 					break;
 				}
@@ -81,6 +82,9 @@ package org.denivip.osmf.elements.m3u8Classes
 						tempStreamingRes = baseResource as StreamingURLResource;
 						if(tempStreamingRes){
 							tempDynamicRes.streamType = tempStreamingRes.streamType;
+							if(tempDynamicRes.streamType == StreamType.LIVE_OR_RECORDED && isDVR){
+								tempDynamicRes.streamType = StreamType.DVR;
+							}
 							tempDynamicRes.clipStartTime = tempStreamingRes.clipStartTime;
 							tempDynamicRes.clipEndTime = tempStreamingRes.clipEndTime;
 						}
