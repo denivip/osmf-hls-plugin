@@ -26,6 +26,7 @@
 {
 	import flash.net.NetConnection;
 	import flash.net.NetStream;
+	
 	import org.denivip.osmf.net.httpstreaming.dvr.HTTPHLSStreamingDVRCastDVRTrait;
 	import org.denivip.osmf.net.httpstreaming.dvr.HTTPHLSStreamingDVRCastTimeTrait;
 	import org.osmf.events.DVRStreamInfoEvent;
@@ -35,6 +36,7 @@
 	import org.osmf.metadata.MetadataNamespaces;
 	import org.osmf.net.DynamicStreamingResource;
 	import org.osmf.net.NetStreamLoadTrait;
+	import org.osmf.net.NetStreamSwitchManager;
 	import org.osmf.net.NetStreamSwitchManagerBase;
 	import org.osmf.net.NetStreamSwitcher;
 	import org.osmf.net.httpstreaming.DefaultHTTPStreamingSwitchManager;
@@ -43,7 +45,10 @@
 	import org.osmf.net.metrics.MetricFactory;
 	import org.osmf.net.metrics.MetricRepository;
 	import org.osmf.net.qos.QoSInfoHistory;
+	import org.osmf.net.rules.AfterUpSwitchBufferBandwidthRule;
 	import org.osmf.net.rules.BufferBandwidthRule;
+	import org.osmf.net.rules.DroppedFPSRule;
+	import org.osmf.net.rules.EmptyBufferRule;
 	import org.osmf.net.rules.RuleBase;
 	import org.osmf.traits.LoadState;
 	
@@ -57,6 +62,39 @@
 		override protected function createNetStream(connection:NetConnection, resource:URLResource):NetStream
 		{
 			return new HTTPHLSNetStream(connection, new HTTPStreamingHLSFactory(), resource);
+		}
+		
+		override protected function createNetStreamSwitchManager(connection:NetConnection, netStream:NetStream, dsResource:DynamicStreamingResource):NetStreamSwitchManagerBase{
+			var qosInfo:QoSInfoHistory = createNetStreamQoSInfoHistory(netStream);
+			var metricsFactory:MetricFactory = createMetricFactory(qosInfo);
+			var metricsRepo:MetricRepository = new MetricRepository(metricsFactory);
+			var rules:Vector.<RuleBase> = new Vector.<RuleBase>();
+			var weights:Vector.<Number> = new Vector.<Number>();
+			rules.push(new BufferBandwidthRule(metricsRepo, BANDWIDTH_BUFFER_RULE_WEIGHTS, BANDWIDTH_BUFFER_RULE_BUFFER_FRAGMENTS_THRESHOLD));
+			weights.push(1);
+			
+			// Create the emergency rules
+			var emergencyRules:Vector.<RuleBase> = new Vector.<RuleBase>();
+			
+			emergencyRules.push(new DroppedFPSRule(metricsRepo, 10, 0.1));
+			
+			emergencyRules.push
+				( new EmptyBufferRule
+					( metricsRepo
+						, EMPTY_BUFFER_RULE_SCALE_DOWN_FACTOR
+					)
+				);
+			
+			emergencyRules.push
+				( new AfterUpSwitchBufferBandwidthRule
+					( metricsRepo
+						, AFTER_UP_SWITCH_BANDWIDTH_BUFFER_RULE_BUFFER_FRAGMENTS_THRESHOLD
+						, AFTER_UP_SWITCH_BANDWIDTH_BUFFER_RULE_MIN_RATIO
+					)
+				);
+			
+			var switcher:NetStreamSwitcher = new NetStreamSwitcher(netStream, dsResource);
+			return new DefaultHTTPStreamingSwitchManager(netStream, switcher, metricsRepo, emergencyRules, true, rules, weights); 
 		}
 		
 		override protected function processFinishLoading(loadTrait:NetStreamLoadTrait):void
