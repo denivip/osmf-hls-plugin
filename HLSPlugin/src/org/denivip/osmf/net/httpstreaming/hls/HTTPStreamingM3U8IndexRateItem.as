@@ -25,7 +25,7 @@
  package org.denivip.osmf.net.httpstreaming.hls
 {
 	
-	internal class HTTPStreamingM3U8IndexRateItem
+	public class HTTPStreamingM3U8IndexRateItem
 	{
 		public var sequenceNumber:int;
 		public var isLive:Boolean;
