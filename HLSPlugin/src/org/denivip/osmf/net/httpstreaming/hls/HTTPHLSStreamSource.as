@@ -590,6 +590,16 @@ package org.denivip.osmf.net.httpstreaming.hls
 						{
 							_endFragment = (_downloader != null && _downloader.isOpen && _downloader.isComplete && !_downloader.hasData);
 							_hasErrors = (_downloader != null && _downloader.hasErrors);
+							
+							// stuck fix
+							if(_downloader.isOpen && _downloader.isComplete && _downloader.hasData){
+								CONFIG::LOGGING{
+									logger.warn("Trying to fix the stuck issue");
+								}
+								input = _downloader.getBytes(_downloader.totalAvailableBytes);
+								input.readBytes(new ByteArray());
+								_endFragment = true;
+							}
 						}
 					}
 					
