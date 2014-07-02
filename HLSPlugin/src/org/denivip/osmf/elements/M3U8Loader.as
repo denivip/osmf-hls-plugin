@@ -21,6 +21,7 @@ package org.denivip.osmf.elements
 	import org.osmf.media.MediaElement;
 	import org.osmf.media.MediaResourceBase;
 	import org.osmf.media.URLResource;
+	import org.osmf.metadata.TimelineMetadata;
 	import org.osmf.traits.LoadState;
 	import org.osmf.traits.LoadTrait;
 	import org.osmf.traits.LoaderBase;
@@ -189,6 +190,9 @@ package org.denivip.osmf.elements
 		private function finishPlaylistLoading(resource:MediaResourceBase):void{
 			try{
 				var loadedElem:MediaElement = new VideoElement(null, new HTTPStreamingHLSNetLoader());
+				
+				resource.addMetadataValue('SUB_TIMELINE', new TimelineMetadata(loadedElem));
+				
 				loadedElem.resource = resource;
 				VideoElement(loadedElem).smoothing = true;
 				

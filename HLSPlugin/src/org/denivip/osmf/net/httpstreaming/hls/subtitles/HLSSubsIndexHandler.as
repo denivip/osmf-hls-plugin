@@ -12,7 +12,9 @@ package org.denivip.osmf.net.httpstreaming.hls.subtitles
 	import org.osmf.events.TimelineMetadataEvent;
 	import org.osmf.media.MediaResourceBase;
 	import org.osmf.metadata.Metadata;
+	import org.osmf.metadata.TimelineMarker;
 	import org.osmf.metadata.TimelineMetadata;
+	import org.osmf.net.StreamingItem;
 	import org.osmf.net.httpstreaming.HTTPStreamRequest;
 	import org.osmf.net.httpstreaming.HTTPStreamRequestKind;
 	import org.osmf.net.httpstreaming.HTTPStreamingIndexHandlerBase;
@@ -29,7 +31,7 @@ package org.denivip.osmf.net.httpstreaming.hls.subtitles
 	public class HLSSubsIndexHandler extends HTTPStreamingIndexHandlerBase
 	{
 		private var _timeLine:TimelineMetadata;
-		private var _indexInfo:Object = null;
+		private var _indexInfo:StreamingItem = null;
 		private var _subItems:HTTPStreamingM3U8IndexRateItem = null;
 		private var _segment:int;
 		private var _absoluteSegment:int;
@@ -40,22 +42,27 @@ package org.denivip.osmf.net.httpstreaming.hls.subtitles
 			super();
 			
 			_timeLine = res.getMetadataValue('SUB_TIMELINE') as TimelineMetadata;
-			
+			/*
 			_timeLine.addEventListener(TimelineMetadataEvent.MARKER_TIME_REACHED,
 				function(e:TimelineMetadataEvent):void{
 					var sm:SubtitlesMarker = e.marker as SubtitlesMarker
 					trace(sm.text);
 				}
 			);
+			*/
 		}
 		
 		override public function initialize(indexInfo:Object):void{
-			_indexInfo = indexInfo;
+			_indexInfo = StreamingItem(indexInfo);
 			if( !_indexInfo ){
 				dispatchEvent(new HTTPStreamingEvent(HTTPStreamingEvent.INDEX_ERROR));
 				return;
 			}
 			
+			while(_timeLine.numMarkers){
+				var m:TimelineMarker = _timeLine.getMarkerAt(0);
+				_timeLine.removeMarker(m);
+			}
 			//notifyRatesReady();
 			
 			//dispatchEvent(new HTTPStreamingIndexHandlerEvent(HTTPStreamingIndexHandlerEvent.REQUEST_LOAD_INDEX, false, false, false, NaN, null, null, new URLRequest(indexInfo.url), 0, true));
@@ -63,7 +70,7 @@ package org.denivip.osmf.net.httpstreaming.hls.subtitles
 			urlLoader.addEventListener(Event.COMPLETE, function(e:Event):void{
 				processIndexData(urlLoader.data, {});
 			});
-			urlLoader.load(new URLRequest(_indexInfo.url));
+			urlLoader.load(new URLRequest(_indexInfo.streamName));
 		}
 		
 		override public function dispose():void{
@@ -75,7 +82,7 @@ package org.denivip.osmf.net.httpstreaming.hls.subtitles
 			data = String(data).replace(/\\\s*[\r?\n]\s*/g, "");
 			
 			var lines:Vector.<String> = Vector.<String>(String(data).split(/\r?\n/));
-			_subItems = new HTTPStreamingM3U8IndexRateItem(0, _indexInfo.url);
+			_subItems = new HTTPStreamingM3U8IndexRateItem(0, _indexInfo.streamName);
 			var indexItem:HTTPStreamingM3U8IndexItem;
 			var len:int = lines.length;
 			var duration:Number = 0;
@@ -165,7 +172,7 @@ package org.denivip.osmf.net.httpstreaming.hls.subtitles
 					urlLoader.addEventListener(Event.COMPLETE, function(e:Event):void{
 						processIndexData(urlLoader.data, {});
 					});
-					urlLoader.load(new URLRequest(_indexInfo.url));
+					urlLoader.load(new URLRequest(_indexInfo.streamName));
 					return new HTTPStreamRequest(HTTPStreamRequestKind.LIVE_STALL, null, 1.0);
 				}
 			}

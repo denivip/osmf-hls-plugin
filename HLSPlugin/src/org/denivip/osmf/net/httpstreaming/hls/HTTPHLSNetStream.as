@@ -44,6 +44,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 	import org.osmf.net.NetClient;
 	import org.osmf.net.NetStreamCodes;
 	import org.osmf.net.NetStreamPlaybackDetailsRecorder;
+	import org.osmf.net.StreamingItem;
 	import org.osmf.net.StreamingURLResource;
 	import org.osmf.net.httpstreaming.HTTPStreamHandlerQoSInfo;
 	import org.osmf.net.httpstreaming.HTTPStreamingFactory;
@@ -153,6 +154,61 @@ package org.denivip.osmf.net.httpstreaming.hls
 			
 			_mainTimer = new Timer(OSMFSettings.hdsMainTimerInterval); 
 			_mainTimer.addEventListener(TimerEvent.TIMER, onMainTimer);
+		}
+		
+		public function get resource():URLResource{
+			return _resource;
+		}
+		
+		
+		public function get hasSubtitles():Boolean{
+			if(_source is HTTPHLSStreamSource)
+				return HTTPHLSStreamSource(_source).hasSubtitles;
+			else if(_source is HTTPHLSStreamMixer)
+				return HTTPHLSStreamSource(HTTPHLSStreamMixer(_source).video).hasSubtitles;
+			
+			return false;
+		}
+		
+		public function get numSubtitles():int{
+			if(_source is HTTPHLSStreamSource)
+				return HTTPHLSStreamSource(_source).numSubtitles;
+			else if(_source is HTTPHLSStreamMixer)
+				return HTTPHLSStreamSource(HTTPHLSStreamMixer(_source).video).numSubtitles;
+			
+			return 0;
+		}
+		
+		public function getSubtitlesItemAt(index:int):StreamingItem{
+			if(_source is HTTPHLSStreamSource)
+				return HTTPHLSStreamSource(_source).getSubtitlesItemAt(index);
+			else if(_source is HTTPHLSStreamMixer)
+				return HTTPHLSStreamSource(HTTPHLSStreamMixer(_source).video).getSubtitlesItemAt(index);
+			
+			return null;
+		}
+		
+		public function switchSubtitles(index:int):void{
+			if(_source is HTTPHLSStreamSource)
+				return HTTPHLSStreamSource(_source).switchSubtitles(index);
+			else if(_source is HTTPHLSStreamMixer)
+				return HTTPHLSStreamSource(HTTPHLSStreamMixer(_source).video).switchSubtitles(index);
+		}
+		
+		public function get currentSubs():int{
+			if(_source is HTTPHLSStreamSource)
+				return HTTPHLSStreamSource(_source).currSubs;
+			else if(_source is HTTPHLSStreamMixer)
+				return HTTPHLSStreamSource(HTTPHLSStreamMixer(_source).video).currSubs;
+			
+			return -1;
+		}
+		
+		public function set hideSubs(value:Boolean):void{
+			if(value)
+				dispatchEvent(new Event('hideSubs'));
+			else
+				dispatchEvent(new Event('showSubs'));
 		}
 		
 		///////////////////////////////////////////////////////////////////////

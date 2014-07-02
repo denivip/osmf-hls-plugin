@@ -337,10 +337,13 @@
 			var manifest:Vector.<HTTPStreamingM3U8IndexItem> = item.manifest;
 			if(!manifest.length)
 				return new HTTPStreamRequest(HTTPStreamRequestKind.DONE);	// nothing in the manifest...
-			var len:int = manifest.length;
-			var tempItem:HTTPStreamingM3U8IndexItem = manifest[len-1];
-			if(time > tempItem.startTime+tempItem.duration)	// is requested time past the last item in the manifest?
-				return new HTTPStreamRequest(HTTPStreamRequestKind.DONE);	
+			
+			if(!item.isLive){
+				var len:int = manifest.length;
+				var tempItem:HTTPStreamingM3U8IndexItem = manifest[len-1];
+				if(time > tempItem.startTime+tempItem.duration)	// is requested time past the last item in the manifest?
+					return new HTTPStreamRequest(HTTPStreamRequestKind.DONE);	
+			}
 			
 			var i:int;
 			for(i = 0; i < len; i++){
