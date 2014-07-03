@@ -16,6 +16,11 @@
 	</natures>
 	<linkedResources>
 		<link>
+			<name>bin-debug</name>
+			<type>2</type>
+			<location>C:/Program Files (x86)/EasyPHP/data/localweb/SMP</location>
+		</link>
+		<link>
 			<name>bin-release</name>
 			<type>2</type>
 			<locationURI>$%7BPARENT-1-PROJECT_LOC%7D/release</locationURI>
