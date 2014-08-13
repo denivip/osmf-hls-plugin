@@ -1613,7 +1613,8 @@ package org.denivip.osmf.net.httpstreaming.hls
                             bytes = new ByteArray();
                             vTag.write(bytes);
 							_flvParserProcessed += bytes.length;
-							attemptAppendBytes(bytes);
+							//Appears to result in lots of framedrops:
+							//attemptAppendBytes(bytes);
 						}
                         
 						if (haveSeenVideoTag)
