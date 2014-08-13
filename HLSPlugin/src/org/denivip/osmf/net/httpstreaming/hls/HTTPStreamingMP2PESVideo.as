@@ -24,6 +24,7 @@
  
 package org.denivip.osmf.net.httpstreaming.hls
 {
+	import debug.VideoInfo;
 	import flash.utils.ByteArray;
 	
 	import org.osmf.logging.Log;
@@ -40,9 +41,12 @@ package org.denivip.osmf.net.httpstreaming.hls
 		
 		private var spsNAL:HTTPStreamingH264NALU = null;
 		private var ppsNAL:HTTPStreamingH264NALU = null;
+		private var avccTag:FLVTagVideo = null;
+		private var dataReturnTag:ByteArray;
 		
 		public function HTTPStreamingMP2PESVideo()
 		{
+			dataReturnTag = new ByteArray();
 			_scState = 0;
 			_nalData = new ByteArray();
 			_vTag = null;
@@ -51,6 +55,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 		
 		override public function processES(pusi:Boolean, packet:ByteArray, flush:Boolean = false): ByteArray
 		{
+			dataReturnTag.clear();
+			var i:int, l:int;
 			if(pusi)
 			{
 				// start of a new PES packet
@@ -126,15 +132,14 @@ package org.denivip.osmf.net.httpstreaming.hls
 			if(!flush)
 				var dStart:uint = packet.position;	// assume that the copy will be from start-of-data
 
-			var nals:Vector.<HTTPStreamingH264NALU> = new Vector.<HTTPStreamingH264NALU>;
 			var nal:HTTPStreamingH264NALU;
-			
+			var avccTag:FLVTagVideo = null;
 			if(flush)
 			{
 				nal = new HTTPStreamingH264NALU(_nalData); // full length to end, don't need to trim last 3 bytes
 				if(nal.NALtype != 0)
 				{
-					nals.push(nal); // could inline this (see below)
+					handleNal(nal);
 					CONFIG::LOGGING
 					{
 						logger.info("pushed one flush nal of type "+nal.NALtype.toString());
@@ -147,99 +152,124 @@ package org.denivip.osmf.net.httpstreaming.hls
 				var value:uint = packet.readUnsignedByte();
 				
 				// finding only 3-byte start codes is ok as trailing zeros are ignored in most (all?) cases
-				
-				switch(_scState)
-				{
-					case 0:
-						if(value == 0x00)
-							_scState = 1;
-						break;
-					case 1:
-						if(value == 0x00)
-							_scState = 2;
-						else
-							_scState = 0;
-						break;
-					case 2:
-						if(value == 0x00)	// more than 2 zeros... no problem
-						{
-							// state stays at 2
-							break;
-						}
-						else if(value == 0x01)
-						{
-							// perf
-							_nalData.writeBytes(packet, dStart, packet.position-dStart);
-							dStart = packet.position;
-							// at this point we have the NAL data plus the *next* start code in _nalData
-							// unless there was no previous NAL in which case _nalData is either empty or has the leading zeros, if any
-							if(_nalData.length > 4) // require >1 byte of payload
-							{
-								_nalData.length -= 3; // trim off the 0 0 1 (might be one more zero, but in H.264 that's ok)
-								nal = new HTTPStreamingH264NALU(_nalData);
-								if(nal.NALtype != 0)
-								{
-									nals.push(nal); // could inline this as well, rather than stacking and processing later in the function	
-								}
-							}
-							else
-							{
-								CONFIG::LOGGING
-								{
-									logger.warn("length too short! = " + _nalData.length.toString());
-								}
-							}
-							_nalData = new ByteArray(); // and start collecting into the next one
-							_scState = 0; // got one, now go back to looking
-							break;
-						}
-						else
-						{
-							_scState = 0; // go back to looking
-							break;
-						}
-						// notreached
-						break;
-					default:
-						// shouldn't ever get here
+				if (_scState == 0) {
+					
+					if(value == 0x00)
+						_scState = 1;
+						
+				} else if (_scState == 1) {
+					
+					if(value == 0x00)
+						_scState = 2;
+					else
 						_scState = 0;
-						break;
-				} // switch _scState
+						
+				} else if (_scState == 2) {
+					
+					if(value == 0x00)	// more than 2 zeros... no problem
+					{
+						// state stays at 2
+					}
+					else if(value == 0x01)
+					{
+						// perf
+						_nalData.writeBytes(packet, dStart, packet.position-dStart);
+						dStart = packet.position;
+						// at this point we have the NAL data plus the *next* start code in _nalData
+						// unless there was no previous NAL in which case _nalData is either empty or has the leading zeros, if any
+						if(_nalData.length > 4) // require >1 byte of payload
+						{
+							_nalData.length -= 3; // trim off the 0 0 1 (might be one more zero, but in H.264 that's ok)
+							nal = new HTTPStreamingH264NALU(_nalData);
+							if(nal.NALtype != 0)
+							{
+								handleNal(nal);
+							}
+						}
+						else
+						{
+							CONFIG::LOGGING
+							{
+								logger.warn("length too short! = " + _nalData.length.toString());
+							}
+						}
+						_nalData = new ByteArray(); // and start collecting into the next one
+						_scState = 0; // got one, now go back to looking							
+					}
+					else
+					{
+						_scState = 0; // go back to looking
+						
+					}
+				}else {
+					// shouldn't ever get here
+					_scState = 0;
+				}				
 			} // while bytesAvailable
 			
 			if(!flush && packet.position-dStart > 0)
 				_nalData.writeBytes(packet, dStart, packet.position-dStart);
 			
-			// find  SPS + PPS if we can
-			for each(nal in nals)
+			if(flush)
 			{
-				switch(nal.NALtype)
+				CONFIG::LOGGING
 				{
-					case 7:
-						spsNAL = nal;
-						break;
-					case 8:
-						ppsNAL = nal;
-						break;
-					default:
-						break;
+					logger.info(" *** VIDEO FLUSH CALLED");
 				}
+				if(_vTag && _vTagData.length > 0)
+				{
+					_vTag.data = _vTagData; // set at end (see below)
+					writeReturnTag(_vTag);
+					if(avccTag)
+					{
+						avccTag.timestamp = _vTag.timestamp;
+						avccTag = null;
+					}
+						
+					CONFIG::LOGGING
+					{
+						logger.info("flushing one vtag");
+					}
+				}
+				
+				_vTag = null; // can't start new one, don't have the info
 			}
-	
-			var tags:Vector.<FLVTagVideo> = new Vector.<FLVTagVideo>;
-			var tag:FLVTagVideo;
-			var avccTag:FLVTagVideo = null;
-			var avcc:ByteArray = new ByteArray();
 			
+			return dataReturnTag;
+		}
+		
+		[Inline]
+		private function writeReturnTag(tag:FLVTagVideo):void {
+			FLVTagVideo(tag).write(dataReturnTag);
+		}	
+		
+		[Inline]
+		private function handleNal(nal:HTTPStreamingH264NALU):FLVTagVideo 
+		{
 			// note that this breaks if the sps and pps are in different segments that we process
+			var tag:FLVTagVideo;
+			var avcc:ByteArray;
+			
+			switch(nal.NALtype)
+			{
+				case 7:
+					spsNAL = nal;
+					break;
+				case 8:
+					ppsNAL = nal;
+					break;
+				default:
+					break;
+			}
 			
 			if(spsNAL && ppsNAL)
 			{
+				avcc = new ByteArray();
 				var spsLength:Number = spsNAL.length;
 				var ppsLength:Number = ppsNAL.length;
 				tag = new FLVTagVideo();
 				
-				tag.timestamp = _timestamp;
+				//tag.timestamp = _timestamp;
 				tag.codecID = FLVTagVideo.CODEC_ID_AVC;
 				tag.frameType = FLVTagVideo.FRAME_TYPE_KEYFRAME;
 				tag.avcPacketType = FLVTagVideo.AVC_PACKET_TYPE_SEQUENCE_HEADER;
@@ -259,111 +289,107 @@ package org.denivip.osmf.net.httpstreaming.hls
 				
 				tag.data = avcc;
 				
-				tags.push(tag);
+				//	writeReturnTag(tag);
+				// doing this later on in the AUD
 				avccTag = tag;
 				
 				spsNAL = null;
 				ppsNAL = null;
+				
+			}else if(avccTag){
+				//update the spsNAL nal if it exists
+				if (spsNAL) {
+					avcc = avccTag.data;
+					avcc.position = 1;
+					avcc.writeBytes(spsNAL.NALdata, 1, 3);
+					avcc.writeByte(0xff); // 111111 + 2 bit NAL size - 1
+					avcc.writeByte(0xe1); // number of SPS
+					avcc.writeByte(spsLength >> 8); // 16-bit SPS byte count
+					avcc.writeByte(spsLength);
+					avcc.writeBytes(spsNAL.NALdata, 0, spsLength); // the SPS
+				}
+				//update the ppsNAL nal if it exists
+				if (ppsNAL) {
+					avcc = avccTag.data;
+					avcc.position = 8;
+					var l:int = avcc.readByte();
+					avcc.position += l;
+					
+					avcc.writeByte(0x01); // number of PPS
+					avcc.writeByte(ppsLength >> 8); // 16-bit PPS byte count
+					avcc.writeByte(ppsLength);
+					avcc.writeBytes(ppsNAL.NALdata, 0, ppsLength);
+				}
 			}
 			
-			for each(nal in nals)
+			//http://gentlelogic.blogspot.nl/2011/11/exploring-h264-part-2-h264-bitstream.html
+			
+			if(nal.NALtype == 9)	// AUD -  should read the flags in here too, perhaps
 			{
-				if(nal.NALtype == 9)	// AUD -  should read the flags in here too, perhaps
-				{
-					// close the last _vTag and start a new one
-					if(_vTag && _vTagData.length == 0){
-						; // warnings =|
-						CONFIG::LOGGING
-						{
-							logger.warn("zero-length vtag"); // can't happen if we are writing the AUDs in
-							if(avccTag) 
-								logger.info(" avccts "+avccTag.timestamp.toString()+" vtagts "+_vTag.timestamp.toString());
-						}
-					}
-					
-					if(_vTag && _vTagData.length > 0)
+				// close the last _vTag and start a new one
+				if(_vTag && _vTagData.length == 0){
+					; // warnings =|
+					CONFIG::LOGGING
 					{
-						_vTag.data = _vTagData; // set at end (see below)
-						tags.push(_vTag);
-						if(avccTag)
-						{
-							avccTag.timestamp = _vTag.timestamp;
-							avccTag = null;
-						}
+						logger.warn("zero-length vtag"); // can't happen if we are writing the AUDs in
+						if(avccTag) 
+							logger.info(" avccts "+avccTag.timestamp.toString()+" vtagts "+_vTag.timestamp.toString());
+					}
+				}
+				
+				if(_vTag && _vTagData.length > 0)
+				{
+					
+					if(avccTag)
+					{
+						avccTag.timestamp = _vTag.timestamp;
+						writeReturnTag(avccTag);
+						//avccTag = null;
+					}
+					_vTag.data = _vTagData; // set at end (see below)
+					writeReturnTag(_vTag);
+					if (VideoInfo.glitchMode) {
+						writeReturnTag(_vTag);
+					}
+				}
+				
+				_vTag = null;
+			}
+			else if(nal.NALtype != 7 && nal.NALtype != 8) // no spsNal / ppsNal
+			{
+				if(_vTag == null)
+				{
+					CONFIG::LOGGING
+					{
+						logger.info("needed to create vtag");
 					}
 					_vTag = new FLVTagVideo();
 					_vTagData = new ByteArray(); // we assemble the nalus outside, set at end
-					
-					_vTagData.writeUnsignedInt(nal.length);
-					_vTagData.writeBytes(nal.NALdata); // start with this very NAL, an AUD (XXX not sure this is needed)
-					
 					_vTag.codecID = FLVTagVideo.CODEC_ID_AVC;
 					_vTag.frameType = FLVTagVideo.FRAME_TYPE_INTER; // adjust to keyframe later
 					_vTag.avcPacketType = FLVTagVideo.AVC_PACKET_TYPE_NALU;
 					_vTag.timestamp = _timestamp;
 					_vTag.avcCompositionTimeOffset = _compositionTime;
 				}
-				else if(nal.NALtype != 7 && nal.NALtype != 8)
-				{
-					if(_vTag == null)
-					{
-						CONFIG::LOGGING
-						{
-							logger.info("needed to create vtag");
-						}
-						_vTag = new FLVTagVideo();
-						_vTagData = new ByteArray(); // we assemble the nalus outside, set at end
-						_vTag.codecID = FLVTagVideo.CODEC_ID_AVC;
-						_vTag.frameType = FLVTagVideo.FRAME_TYPE_INTER; // adjust to keyframe later
-						_vTag.avcPacketType = FLVTagVideo.AVC_PACKET_TYPE_NALU;
-						_vTag.timestamp = _timestamp;
-						_vTag.avcCompositionTimeOffset = _compositionTime;
-					}
+				if (nal.NALtype == 1 ) {
+					//trace("b-slice");
 					
-					
-					if(nal.NALtype == 5) // if keyframe
-					{
-						_vTag.frameType = FLVTagVideo.FRAME_TYPE_KEYFRAME;
-					}
-					
-					_vTagData.writeUnsignedInt(nal.length);
-					_vTagData.writeBytes(nal.NALdata);
 				}
-			}
-			
-			if(flush)
-			{
-				CONFIG::LOGGING
-				{
-					logger.info(" *** VIDEO FLUSH CALLED");
-				}
-				if(_vTag && _vTagData.length > 0)
-				{
-					_vTag.data = _vTagData; // set at end (see below)
-					tags.push(_vTag);
-					if(avccTag)
-					{
-						avccTag.timestamp = _vTag.timestamp;
-						avccTag = null;
-					}
-						
-					CONFIG::LOGGING
-					{
-						logger.info("flushing one vtag");
-					}
+				if (nal.NALtype == 6 ) {
+					//trace("SEI");
+					//don't need to write SEI.
+					//_vTag.frameType = FLVTagVideo.FRAME_TYPE_INFO;					
 				}
 				
-				_vTag = null; // can't start new one, don't have the info
+				if(nal.NALtype == 5) // if keyframe
+				{
+					_vTag.frameType = FLVTagVideo.FRAME_TYPE_KEYFRAME;					
+				}
+				
+				_vTagData.writeUnsignedInt(nal.length);
+				_vTagData.writeBytes(nal.NALdata);
 			}
-			
-			var tagData:ByteArray = new ByteArray();
-			
-			for each(tag in tags)
-			{
-				tag.write(tagData);
-			}
-			
-			return tagData;
+			return avccTag;
 		}
 		
 		CONFIG::LOGGING

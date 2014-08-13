@@ -25,6 +25,7 @@
  package org.denivip.osmf.net.httpstreaming.hls
 {
 	import flash.utils.ByteArray;
+	import util.Util;
 	
 	import org.osmf.logging.Log;
 	import org.osmf.logging.Logger;
@@ -96,8 +97,11 @@
 					uint((packet.readUnsignedShort() & 0xfffe) << 14) +
 					uint((packet.readUnsignedShort() & 0xfffe) >> 1);
 
-				var timestamp:Number = Math.round(pts/90);
-				_haveNewTimestamp = true;
+				var timestamp:Number = Math.round(pts / 90);
+				
+				if (timestamp !== _prevTimestamp){
+					_haveNewTimestamp = true;
+				}
 				
 				if(!_timestampReseted) {
 					_offset += timestamp - _prevTimestamp;
@@ -127,7 +131,7 @@
 
 			var tag:FLVTagAudio;
 			var tagData:ByteArray = new ByteArray();
-						
+		
 			if(!flush)
 			{
 				var dStart:uint = packet.position;
@@ -150,16 +154,16 @@
 					value = packet.readUnsignedByte();
 					_adtsHeader[_state] = value;
 				}
-					
+				
+				if(_haveNewTimestamp)
+				{
+					_audioTime = _timestamp;
+					_haveNewTimestamp = false;
+				}
+				
 				switch(_state)
 				{
 					case 0: // first 0xff of flags
-						if(_haveNewTimestamp)
-						{
-							_audioTime = _timestamp;
-							_haveNewTimestamp = false;
-						}
-							
 						if(value == 0xff)
 						{
 							_state = 1;
@@ -259,7 +263,7 @@
 							_adtsHeader.length = 4;
 							tag.data = _adtsHeader;
 							_needACHeader = false;
-							
+							//trace("write tagdata 1, length:" + tag.data.length + " " + _audioTime);
 							tag.write(tagData); // unroll out vector
 						}
 						break;
@@ -297,12 +301,18 @@
 							tag.soundSize = FLVTagAudio.SOUND_SIZE_16BITS;
 							tag.data = _audioData;
 							
-							tag.write(tagData); // unrolled out the vector for audio tags
+							if (_audioTime < Math.max(0, _initialTimestamp + 500)) {								
+								trace(this + " skipping " + Util.numberToTime(_audioTime/1000) + " " + Util.bytes2String(_audioData.length));
+							}else {
+								tag.write(tagData); // unrolled out the vector for audio tags
+								//trace("write tagdata 2 length: " + tag.data.length + " " + _audioTime);
+							}
+							
 						}
 						break;
 				} // switch
 			} // while
-			
+			//trace(Util.numberToTime(_audioTime/1000));
 			tagData.position = 0;
 			
 			return tagData;

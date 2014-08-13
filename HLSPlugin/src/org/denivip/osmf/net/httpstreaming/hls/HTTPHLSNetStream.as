@@ -29,7 +29,9 @@ package org.denivip.osmf.net.httpstreaming.hls
 	import flash.net.NetStreamPlayOptions;
 	import flash.net.NetStreamPlayTransitions;
 	import flash.utils.ByteArray;
+	import flash.utils.getTimer;
 	import flash.utils.Timer;
+	import util.Util;
 	
 	import org.denivip.osmf.events.HTTPHLSStreamingEvent;
 	import org.denivip.osmf.plugins.HLSSettings;
@@ -361,6 +363,23 @@ package org.denivip.osmf.net.httpstreaming.hls
 				_videoHandler.getDVRInfo(streamName);
 			}
 		}
+		
+		/**
+		 * Called when the runtime has changed throttle mode, which can be "throttle", "pause", "resume". 
+		 * Can also be called manually to preserve early throttle events.
+		 */
+		public function setThrottleMode(throttleMode:String):void
+		{
+			if (throttleMode != "throttle" && throttleMode != "pause" && throttleMode != "resume")
+			{
+				return;
+			}
+			if (playbackDetailsRecorder != null)
+			{
+				playbackDetailsRecorder.setThrottleMode(throttleMode);
+			}
+		}
+		
 		
 		///////////////////////////////////////////////////////////////////////
 		/// Internals
@@ -795,6 +814,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 					var processed:int = 0;
 					var keepProcessing:Boolean = true;
 					
+					var now:int = getTimer();
 					while(keepProcessing)
 					{
 						var bytes:ByteArray = _source.getBytes();
@@ -807,7 +827,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 						if (
 							    (_state != HTTPStreamingState.PLAY) 	// we are no longer in play mode
 							 || (bytes == null) 						// or we don't have any additional data
-							 || (processed >= OSMFSettings.hdsBytesProcessingLimit) 	// or we have processed enough data  
+							 //|| (processed >= OSMFSettings.hdsBytesProcessingLimit 	// or we have processed enough data  
+							 || (getTimer() - now > HLSSettings.hlsMaxProcessingTime) //we processed enough.
 						)
 						{
 							keepProcessing = false;
