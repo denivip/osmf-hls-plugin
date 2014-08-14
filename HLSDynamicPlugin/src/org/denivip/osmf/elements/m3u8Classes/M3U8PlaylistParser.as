@@ -5,8 +5,6 @@ package org.denivip.osmf.elements.m3u8Classes
 	import org.denivip.osmf.net.HLSDynamicStreamingResource;
 	import org.denivip.osmf.utility.Url;
 	import org.osmf.events.ParseEvent;
-	import org.osmf.logging.Log;
-	import org.osmf.logging.Logger;
 	import org.osmf.media.MediaResourceBase;
 	import org.osmf.media.MediaType;
 	import org.osmf.media.URLResource;
@@ -17,7 +15,6 @@ package org.denivip.osmf.elements.m3u8Classes
 	import org.osmf.net.StreamType;
 	import org.osmf.net.StreamingItem;
 	import org.osmf.net.StreamingURLResource;
-	import org.osmf.net.qos.QualityLevel;
 	
 	
 	[Event(name="parseComplete", type="org.osmf.events.ParseEvent")]
@@ -57,6 +54,7 @@ package org.denivip.osmf.elements.m3u8Classes
 			var tempStreamingRes:StreamingURLResource = null;
 			var tempDynamicRes:DynamicStreamingResource = null;
 			var alternateStreams:Vector.<StreamingItem> = null;
+			var subtitles:Vector.<StreamingItem> = null;
 			var initialStreamName:String = '';
 			for(var i:int = 1; i < lines.length; i++){
 				var line:String = String(lines[i]).replace(/^([\s|\t|\n]+)?(.*)([\s|\t|\n]+)?$/gm, "$2");
@@ -149,6 +147,26 @@ package org.denivip.osmf.elements.m3u8Classes
 							new StreamingItem(MediaType.AUDIO, stUrl, 0, {label:stName, language:lang})
 						);
 					}
+					if(line.search(/TYPE=(.*?)\W/) > 0 && line.match(/TYPE=(.*?)\W/)[1] == 'SUBTITLES'){
+						if(line.search(/URI="(.*?)"/) > 0){
+							stUrl = line.match(/URI="(.*?)"/)[1];
+							if(stUrl.search(/(file|https?):\/\//) != 0){
+								stUrl = baseResource.url.substr(0, baseResource.url.lastIndexOf('/')+1) + stUrl;
+							}
+						}
+						if(line.search(/LANGUAGE="(.*?)"/) > 0){
+							lang = line.match(/LANGUAGE="(.*?)"/)[1]
+						}
+						if(line.search(/NAME="(.*?)"/) > 0){
+							stName = line.match(/NAME="(.*?)"/)[1];
+						}
+						if(!subtitles)
+							subtitles = new Vector.<StreamingItem>();
+						
+						subtitles.push(
+							new StreamingItem('subtitles', stUrl, 0, {label:stName, language:lang})
+						);
+					}
 				}
 			}
 			
@@ -192,6 +210,12 @@ package org.denivip.osmf.elements.m3u8Classes
 			
 			if(alternateStreams && result is StreamingURLResource){
 				(result as StreamingURLResource).alternativeAudioStreamItems = alternateStreams;
+			}
+			
+			if(subtitles){
+				var subsMetadata:Metadata = new Metadata();
+				subsMetadata.addValue('data', subtitles);
+				result.addMetadataValue('subtitles', subsMetadata);
 			}
 			
 			if(result is StreamingURLResource && StreamingURLResource(result).streamType == StreamType.DVR){

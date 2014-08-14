@@ -29,10 +29,13 @@ package org.denivip.osmf.net.httpstreaming.hls
 	import flash.utils.IDataInput;
 	
 	import org.denivip.osmf.events.HTTPHLSStreamingEvent;
+	import org.denivip.osmf.net.httpstreaming.hls.subtitles.HLSSubsIndexHandler;
 	import org.osmf.events.DVRStreamInfoEvent;
 	import org.osmf.events.HTTPStreamingEvent;
 	import org.osmf.events.HTTPStreamingIndexHandlerEvent;
 	import org.osmf.media.MediaResourceBase;
+	import org.osmf.metadata.Metadata;
+	import org.osmf.net.StreamingItem;
 	import org.osmf.net.httpstreaming.HTTPStreamHandlerQoSInfo;
 	import org.osmf.net.httpstreaming.HTTPStreamRequest;
 	import org.osmf.net.httpstreaming.HTTPStreamRequestKind;
@@ -123,7 +126,14 @@ package org.denivip.osmf.net.httpstreaming.hls
 			
 			_indexDownloaderMonitor.addEventListener(HTTPStreamingEvent.DOWNLOAD_COMPLETE, 	onIndexComplete);
 			_indexDownloaderMonitor.addEventListener(HTTPStreamingEvent.DOWNLOAD_ERROR, 	onIndexError);
-				
+			
+			
+			var subsMeta:Metadata = _resource.getMetadataValue('subtitles') as Metadata;
+			if(subsMeta){
+				_subsHandler = new HLSSubsIndexHandler(_resource);
+				_subs = subsMeta.getValue('data');
+			}
+			
 			setState(HTTPStreamingState.INIT);
 			
 			CONFIG::LOGGING
@@ -134,6 +144,38 @@ package org.denivip.osmf.net.httpstreaming.hls
 		
 		private function onDiscontinuity(event:HTTPHLSStreamingEvent):void{
 			_discontinuityOnNextSegment = true;
+		}
+		
+		
+		private var _currSubs:int;
+		
+		public function get hasSubtitles():Boolean{
+			return (_subs != null);
+		}
+		
+		public function get numSubtitles():int{
+			if(_subs){
+				return _subs.length;
+			}
+			return 0;
+		}
+		
+		public function getSubtitlesItemAt(index:int):StreamingItem{
+			if(_subs && index < _subs.length){
+				return _subs[index];
+			}
+			return null;
+		}
+		
+		public function switchSubtitles(index:int):void{
+			if(_subs && index < _subs.length){
+				_subsHandler.initialize(_subs[index]);
+				_currSubs = index;
+			}
+		}
+		
+		public function get currSubs():int{
+			return _currSubs;
 		}
 		
 		/**
@@ -238,6 +280,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 			args.indexInfo = _indexInfo;
 			args.streamName = _streamName;
 			_indexHandler.initialize(args);
+			if(_subsHandler)
+				_subsHandler.initialize(_subs[0]);
 		}
 		
 		/**
@@ -259,6 +303,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 			_indexDownloaderMonitor.removeEventListener(HTTPStreamingEvent.DOWNLOAD_ERROR, onIndexError);
 			
 			_indexHandler.dispose();
+			if(_subsHandler)
+				_subsHandler.dispose();
 			
 			_discontinuityOnNextSegment = false;
 			_endFragment = true;
@@ -440,11 +486,15 @@ package org.denivip.osmf.net.httpstreaming.hls
 					if(!_didBeginSeek) // we are in seeking mode
 					{
 						_request = _indexHandler.getFileForTime(_seekTarget, _qualityLevel);
+						if(_subsHandler)
+							_subsHandler.getFileForTime(_seekTarget, _qualityLevel);
 						wasSeek = true;
 					}
 					else
 					{
 						_request = _indexHandler.getNextFile(_qualityLevel);
+						if(_subsHandler)
+							_subsHandler.getNextFile(_qualityLevel);
 					}
 					
 					// update _isLiveStalled so HTTPNetStream can access it.
@@ -1051,6 +1101,11 @@ package org.denivip.osmf.net.httpstreaming.hls
 		private var _indexHandler:HTTPStreamingIndexHandlerBase = null;
 		private var _fileHandler:HTTPStreamingFileHandlerBase = null;	
 		private var _indexInfo:HTTPStreamingIndexInfoBase = null;
+		
+		private var _subsHandler:HLSSubsIndexHandler = null;
+		
+		private var _subs:Vector.<StreamingItem> = null;
+		
 		
 		private var _streamName:String = null;
 		private var _seekTarget:Number = -1;

@@ -24,6 +24,7 @@ package org.denivip.osmf.elements
 	import org.osmf.traits.LoadState;
 	import org.osmf.traits.LoadTrait;
 	import org.osmf.traits.LoaderBase;
+	import org.osmf.metadata.TimelineMetadata;
 	
 	/**
 	 * Loader for .m3u8 playlist file.
@@ -189,6 +190,9 @@ package org.denivip.osmf.elements
 		private function finishPlaylistLoading(resource:MediaResourceBase):void{
 			try{
 				var loadedElem:MediaElement = new VideoElement(null, new HTTPStreamingHLSNetLoader());
+				
+				resource.addMetadataValue('SUB_TIMELINE', new TimelineMetadata(loadedElem));
+				
 				loadedElem.resource = resource;
 				VideoElement(loadedElem).smoothing = true;
 				

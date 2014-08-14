@@ -24,7 +24,7 @@
  
  package org.denivip.osmf.net.httpstreaming.hls
 {
-	internal class HTTPStreamingM3U8IndexItem
+	public class HTTPStreamingM3U8IndexItem
 	{
 		public var startTime:Number;
 		
