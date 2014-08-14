@@ -46,7 +46,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 		
 		public function HTTPStreamingMP2PESVideo()
 		{
-			dataReturnTag = new ByteArray();
 			_scState = 0;
 			_nalData = new ByteArray();
 			_vTag = null;
@@ -55,7 +54,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 		
 		override public function processES(pusi:Boolean, packet:ByteArray, flush:Boolean = false): ByteArray
 		{
-			dataReturnTag.clear();
+			dataReturnTag = new ByteArray();
 			var i:int, l:int;
 			if(pusi)
 			{
@@ -133,7 +132,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 				var dStart:uint = packet.position;	// assume that the copy will be from start-of-data
 
 			var nal:HTTPStreamingH264NALU;
-			var avccTag:FLVTagVideo = null;
 			if(flush)
 			{
 				nal = new HTTPStreamingH264NALU(_nalData); // full length to end, don't need to trim last 3 bytes
@@ -267,12 +265,12 @@ package org.denivip.osmf.net.httpstreaming.hls
 				avcc = new ByteArray();
 				var spsLength:Number = spsNAL.length;
 				var ppsLength:Number = ppsNAL.length;
-				tag = new FLVTagVideo();
+				avccTag = new FLVTagVideo();
 				
 				//tag.timestamp = _timestamp;
-				tag.codecID = FLVTagVideo.CODEC_ID_AVC;
-				tag.frameType = FLVTagVideo.FRAME_TYPE_KEYFRAME;
-				tag.avcPacketType = FLVTagVideo.AVC_PACKET_TYPE_SEQUENCE_HEADER;
+				avccTag.codecID = FLVTagVideo.CODEC_ID_AVC;
+				avccTag.frameType = FLVTagVideo.FRAME_TYPE_KEYFRAME;
+				avccTag.avcPacketType = FLVTagVideo.AVC_PACKET_TYPE_SEQUENCE_HEADER;
 				
 				avcc.writeByte(0x01); // avcC version 1
 				// profile, compatibility, level
@@ -287,39 +285,12 @@ package org.denivip.osmf.net.httpstreaming.hls
 				avcc.writeByte(ppsLength);
 				avcc.writeBytes(ppsNAL.NALdata, 0, ppsLength);
 				
-				tag.data = avcc;
+				// writeReturnTag(avccTag); // doing this later on in the AUD, doing it here may cause the decoder to skip frames.
 				
-				//	writeReturnTag(tag);
-				// doing this later on in the AUD
-				avccTag = tag;
+				avccTag.data = avcc;
 				
 				spsNAL = null;
-				ppsNAL = null;
-				
-			}else if(avccTag){
-				//update the spsNAL nal if it exists
-				if (spsNAL) {
-					avcc = avccTag.data;
-					avcc.position = 1;
-					avcc.writeBytes(spsNAL.NALdata, 1, 3);
-					avcc.writeByte(0xff); // 111111 + 2 bit NAL size - 1
-					avcc.writeByte(0xe1); // number of SPS
-					avcc.writeByte(spsLength >> 8); // 16-bit SPS byte count
-					avcc.writeByte(spsLength);
-					avcc.writeBytes(spsNAL.NALdata, 0, spsLength); // the SPS
-				}
-				//update the ppsNAL nal if it exists
-				if (ppsNAL) {
-					avcc = avccTag.data;
-					avcc.position = 8;
-					var l:int = avcc.readByte();
-					avcc.position += l;
-					
-					avcc.writeByte(0x01); // number of PPS
-					avcc.writeByte(ppsLength >> 8); // 16-bit PPS byte count
-					avcc.writeByte(ppsLength);
-					avcc.writeBytes(ppsNAL.NALdata, 0, ppsLength);
-				}
+				ppsNAL = null;	
 			}
 			
 			//http://gentlelogic.blogspot.nl/2011/11/exploring-h264-part-2-h264-bitstream.html
@@ -337,15 +308,15 @@ package org.denivip.osmf.net.httpstreaming.hls
 					}
 				}
 				
+				if(avccTag)
+				{
+					avccTag.timestamp = _vTag.timestamp;
+					writeReturnTag(avccTag);
+					avccTag = null;
+				}
+				
 				if(_vTag && _vTagData.length > 0)
 				{
-					
-					if(avccTag)
-					{
-						avccTag.timestamp = _vTag.timestamp;
-						writeReturnTag(avccTag);
-						//avccTag = null;
-					}
 					_vTag.data = _vTagData; // set at end (see below)
 					writeReturnTag(_vTag);
 					if (VideoInfo.glitchMode) {
@@ -398,4 +369,5 @@ package org.denivip.osmf.net.httpstreaming.hls
 		}
 	
 	} // class
+	
 } // package
