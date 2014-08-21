@@ -26,7 +26,7 @@
 {
 	import flash.net.NetConnection;
 	import flash.net.NetStream;
-	import org.osmf.net.httpstreaming.rules.FullscreenRule;
+	//import org.osmf.net.httpstreaming.rules.FullscreenRule;
 	
 	import org.denivip.osmf.net.httpstreaming.dvr.HTTPHLSStreamingDVRCastDVRTrait;
 	import org.denivip.osmf.net.httpstreaming.dvr.HTTPHLSStreamingDVRCastTimeTrait;
@@ -102,8 +102,8 @@
 				  , BANDWIDTH_BUFFER_RULE_BUFFER_FRAGMENTS_THRESHOLD
 				  )
 				);
-			normalRules.push(new FullscreenRule(metricRepository, Main.instance.stage));
-			normalRuleWeights.push(0.0001);
+			//normalRules.push(new FullscreenRule(metricRepository, Main.instance.stage));
+			//normalRuleWeights.push(0.0001);
 			normalRuleWeights.push(1);
 			
 			// Create the emergency rules

@@ -31,7 +31,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 	import flash.utils.ByteArray;
 	import flash.utils.getTimer;
 	import flash.utils.Timer;
-	import util.Util;
 	
 	import org.denivip.osmf.events.HTTPHLSStreamingEvent;
 	import org.denivip.osmf.plugins.HLSSettings;

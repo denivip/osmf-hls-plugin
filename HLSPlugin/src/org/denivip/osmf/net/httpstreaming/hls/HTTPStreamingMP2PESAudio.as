@@ -25,7 +25,6 @@
  package org.denivip.osmf.net.httpstreaming.hls
 {
 	import flash.utils.ByteArray;
-	import util.Util;
 	
 	import org.osmf.logging.Log;
 	import org.osmf.logging.Logger;
@@ -302,7 +301,7 @@
 							tag.data = _audioData;
 							
 							if (_audioTime < Math.max(0, _initialTimestamp + 500)) {								
-								trace(this + " skipping " + Util.numberToTime(_audioTime/1000) + " " + Util.bytes2String(_audioData.length));
+								//trace(this + " skipping " + Util.numberToTime(_audioTime/1000) + " " + Util.bytes2String(_audioData.length));
 							}else {
 								tag.write(tagData); // unrolled out the vector for audio tags
 								//trace("write tagdata 2 length: " + tag.data.length + " " + _audioTime);

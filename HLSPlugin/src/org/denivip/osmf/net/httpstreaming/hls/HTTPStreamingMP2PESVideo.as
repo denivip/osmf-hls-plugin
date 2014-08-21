@@ -25,7 +25,6 @@
  
 package org.denivip.osmf.net.httpstreaming.hls
 {
-	import debug.VideoInfo;
 	import flash.utils.ByteArray;
 	
 	import org.osmf.logging.Log;
