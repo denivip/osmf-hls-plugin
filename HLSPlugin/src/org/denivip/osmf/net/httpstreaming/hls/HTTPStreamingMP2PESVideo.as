@@ -19,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * Tecteun
  *
  * ***** END LICENSE BLOCK ***** */
  
@@ -34,22 +35,22 @@ package org.denivip.osmf.net.httpstreaming.hls
 	internal class HTTPStreamingMP2PESVideo extends HTTPStreamingMP2PESBase
 	{
 		private var _nalData:ByteArray;
-		
-		private var _vTag:FLVTagVideo;
-		private var _vTagData:ByteArray;
 		private var _scState:int;
 		
-		private var spsNAL:HTTPStreamingH264NALU = null;
-		private var ppsNAL:HTTPStreamingH264NALU = null;
-		private var avccTag:FLVTagVideo = null;
+		//Store AVCC-nal out of band
+		private var spsNALs:Vector.<HTTPStreamingH264NALU> = new Vector.<HTTPStreamingH264NALU>;
+		private var ppsNALs:Vector.<HTTPStreamingH264NALU> = new Vector.<HTTPStreamingH264NALU>;
+		private var _avccTag:FLVTagVideo;
+		private var _vTag:FLVTagVideo;
+		private var _vTagData:ByteArray;
+		
+		//Return buffer
 		private var dataReturnTag:ByteArray;
 		
 		public function HTTPStreamingMP2PESVideo()
 		{
 			_scState = 0;
 			_nalData = new ByteArray();
-			_vTag = null;
-			_vTagData = null;
 		}
 		
 		override public function processES(pusi:Boolean, packet:ByteArray, flush:Boolean = false): ByteArray
@@ -71,7 +72,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 				CONFIG::LOGGING
 				{
 					if(flags != 0x03) {
-						logger.warn("video PES packet without DTS");
+						//Why don't we have a DTS?
+						//logger.warn("video PES packet without DTS");
 					}
 				}
 				
@@ -210,27 +212,17 @@ package org.denivip.osmf.net.httpstreaming.hls
 			
 			if(flush)
 			{
+				;
 				CONFIG::LOGGING
 				{
 					logger.info(" *** VIDEO FLUSH CALLED");
 				}
-				if(_vTag && _vTagData.length > 0)
-				{
-					_vTag.data = _vTagData; // set at end (see below)
+				if (_vTag && _vTagData.length > 0) {
 					writeReturnTag(_vTag);
-					if(avccTag)
-					{
-						avccTag.timestamp = _vTag.timestamp;
-						avccTag = null;
-					}
-						
-					CONFIG::LOGGING
-					{
-						logger.info("flushing one vtag");
-					}
 				}
-				
-				_vTag = null; // can't start new one, don't have the info
+				if (_avccTag) {
+					_avccTag = null;
+				}
 			}
 			
 			return dataReturnTag;
@@ -238,93 +230,56 @@ package org.denivip.osmf.net.httpstreaming.hls
 		
 		[Inline]
 		private function writeReturnTag(tag:FLVTagVideo):void {
-			FLVTagVideo(tag).write(dataReturnTag);
+			if(tag){
+				FLVTagVideo(tag).write(dataReturnTag);
+			}
 		}	
 		
+		/**
+		 * handling the Nalu
+		 * http://gentlelogic.blogspot.nl/2011/11/exploring-h264-part-2-h264-bitstream.html
+		 * @param	nal
+		 */
 		[Inline]
-		private function handleNal(nal:HTTPStreamingH264NALU):FLVTagVideo 
+		private function handleNal(nal:HTTPStreamingH264NALU):void 
 		{
-			// note that this breaks if the sps and pps are in different segments that we process
-			var tag:FLVTagVideo;
-			var avcc:ByteArray;
-			
-			switch(nal.NALtype)
+			//trace(_timestamp +  " " + nal.NALtype);
+			if(nal.NALtype == 7)
 			{
-				case 7:
-					spsNAL = nal;
-					break;
-				case 8:
-					ppsNAL = nal;
-					break;
-				default:
-					break;
+				spsNALs.push(nal);
 			}
-			
-			if(spsNAL && ppsNAL)
+			else if (nal.NALtype == 8)
 			{
-				avcc = new ByteArray();
-				var spsLength:Number = spsNAL.length;
-				var ppsLength:Number = ppsNAL.length;
-				avccTag = new FLVTagVideo();
-				
-				//tag.timestamp = _timestamp;
-				avccTag.codecID = FLVTagVideo.CODEC_ID_AVC;
-				avccTag.frameType = FLVTagVideo.FRAME_TYPE_KEYFRAME;
-				avccTag.avcPacketType = FLVTagVideo.AVC_PACKET_TYPE_SEQUENCE_HEADER;
-				
-				avcc.writeByte(0x01); // avcC version 1
-				// profile, compatibility, level
-				avcc.writeBytes(spsNAL.NALdata, 1, 3);
-				avcc.writeByte(0xff); // 111111 + 2 bit NAL size - 1
-				avcc.writeByte(0xe1); // number of SPS
-				avcc.writeByte(spsLength >> 8); // 16-bit SPS byte count
-				avcc.writeByte(spsLength);
-				avcc.writeBytes(spsNAL.NALdata, 0, spsLength); // the SPS
-				avcc.writeByte(0x01); // number of PPS
-				avcc.writeByte(ppsLength >> 8); // 16-bit PPS byte count
-				avcc.writeByte(ppsLength);
-				avcc.writeBytes(ppsNAL.NALdata, 0, ppsLength);
-				
-				// writeReturnTag(avccTag); // doing this later on in the AUD, doing it here may cause the decoder to skip frames.
-				
-				avccTag.data = avcc;
-				
-				spsNAL = null;
-				ppsNAL = null;	
+				ppsNALs.push(nal);				
 			}
-			
-			//http://gentlelogic.blogspot.nl/2011/11/exploring-h264-part-2-h264-bitstream.html
+			else 
+			{
+				var tag:FLVTagVideo = handleAvccTag(_timestamp);
+				if (tag) {
+					_avccTag = tag;
+				}
+			}
 			
 			if(nal.NALtype == 9)	// AUD -  should read the flags in here too, perhaps
 			{
-				// close the last _vTag and start a new one
-				if(_vTag && _vTagData.length == 0){
-					; // warnings =|
-					CONFIG::LOGGING
-					{
-						logger.warn("zero-length vtag"); // can't happen if we are writing the AUDs in
-						if(avccTag) 
-							logger.info(" avccts "+avccTag.timestamp.toString()+" vtagts "+_vTag.timestamp.toString());
-					}
-				}
-				
-				if(avccTag)
-				{
-					avccTag.timestamp = _vTag.timestamp;
-					writeReturnTag(avccTag);
-					avccTag = null;
-				}
-				
+				//var _vTag:FLVTagVideo = new FLVTagVideo();
+				//_vTag.codecID = FLVTagVideo.CODEC_ID_AVC;
+				//_vTag.avcPacketType = FLVTagVideo.AVC_PACKET_TYPE_END_OF_SEQUENCE;
+				//writeReturnTag(_vTag);
 				if(_vTag && _vTagData.length > 0)
 				{
+					//handle Avcc before keyframe
+					if(_avccTag)
+					{
+						writeReturnTag(_avccTag);
+						_avccTag = null;
+					}
 					_vTag.data = _vTagData; // set at end (see below)
 					writeReturnTag(_vTag);
-					if (VideoInfo.glitchMode) {
-						writeReturnTag(_vTag);
-					}
 				}
 				
-				_vTag = null;
+				//AUD: create a new vTag with this timestamp!
+				genVtag();
 			}
 			else if(nal.NALtype != 7 && nal.NALtype != 8) // no spsNal / ppsNal
 			{
@@ -334,33 +289,96 @@ package org.denivip.osmf.net.httpstreaming.hls
 					{
 						logger.info("needed to create vtag");
 					}
-					_vTag = new FLVTagVideo();
-					_vTagData = new ByteArray(); // we assemble the nalus outside, set at end
-					_vTag.codecID = FLVTagVideo.CODEC_ID_AVC;
-					_vTag.frameType = FLVTagVideo.FRAME_TYPE_INTER; // adjust to keyframe later
-					_vTag.avcPacketType = FLVTagVideo.AVC_PACKET_TYPE_NALU;
-					_vTag.timestamp = _timestamp;
-					_vTag.avcCompositionTimeOffset = _compositionTime;
+					//Should not get here.
+					genVtag();
 				}
+			/*
 				if (nal.NALtype == 1 ) {
-					//trace("b-slice");
-					
+					//trace("b-slice");					
 				}
 				if (nal.NALtype == 6 ) {
-					//trace("SEI");
-					//don't need to write SEI.
-					//_vTag.frameType = FLVTagVideo.FRAME_TYPE_INFO;					
+					//trace("SEI ->  " + _timestamp);
+					//_vTag.frameType = FLVTagVideo.FRAME_TYPE_INFO;
 				}
-				
+			*/	
 				if(nal.NALtype == 5) // if keyframe
 				{
-					_vTag.frameType = FLVTagVideo.FRAME_TYPE_KEYFRAME;					
+					_vTag.frameType = FLVTagVideo.FRAME_TYPE_KEYFRAME;
 				}
 				
 				_vTagData.writeUnsignedInt(nal.length);
 				_vTagData.writeBytes(nal.NALdata);
+				
+				//will write this _vTag + _vTagData in AUD
+			}
+			
+		}
+		
+		[Inline]
+		private function handleAvccTag(timestamp:uint):FLVTagVideo {
+			var avccTag:FLVTagVideo = null;
+			
+			// note that this breaks if the sps and pps are in different segments that we process
+			if(spsNALs.length > 0 && ppsNALs.length > 0)
+			{
+				var avcc:ByteArray = new ByteArray();
+				avccTag = new FLVTagVideo();
+				
+				//timestamp seems not important for AVCDecoderConfigurationRecord
+				avccTag.timestamp = timestamp;
+				avccTag.codecID = FLVTagVideo.CODEC_ID_AVC;
+				avccTag.frameType = FLVTagVideo.FRAME_TYPE_KEYFRAME;
+				avccTag.avcPacketType = FLVTagVideo.AVC_PACKET_TYPE_SEQUENCE_HEADER;
+				
+				avcc.writeByte(0x01); // avcC version 1
+				// profile, compatibility, level
+				avcc.writeBytes(spsNALs[0].NALdata, 1, 3);
+				
+				//avcc.writeByte(0x3); //Adobe does not set reserved bytes -> 
+				avcc.writeByte(0xff); // 111111 + 2 bit NAL size - 1
+				
+				//write sps'ses
+				//padded 3 bits 111 +
+				//avcc.writeByte(spsNALs.length); //Adobe does not set reserved bytes -> 
+				avcc.writeByte(parseInt("0xE" + spsNALs.length, 16)); // number of SPS
+				while (spsNALs.length > 0) {
+					var spsNAL:HTTPStreamingH264NALU = spsNALs.shift();
+					var spsLength:Number = spsNAL.length;
+					/*
+						spsNAL.NALdata.position = 1;
+						trace("profile " + spsNAL.NALdata.readUnsignedByte());
+						spsNAL.NALdata.position++;
+						trace("level_idc " + spsNAL.NALdata.readUnsignedByte());
+					*/
+					avcc.writeByte(spsLength >> 8); // 16-bit SPS byte count
+					avcc.writeByte(spsLength);
+					avcc.writeBytes(spsNAL.NALdata, 0, spsLength); // the SPS
+				}
+
+				//write pps'ses
+				avcc.writeByte(ppsNALs.length); // number of PPS
+				while (ppsNALs.length > 0) {
+					var ppsNAL:HTTPStreamingH264NALU = ppsNALs.shift();
+					var ppsLength:Number = ppsNAL.length;
+					avcc.writeByte(ppsLength >> 8); // 16-bit PPS byte count
+					avcc.writeByte(ppsLength);
+					avcc.writeBytes(ppsNAL.NALdata, 0, ppsLength);
+				}
+				avccTag.data = avcc;
 			}
 			return avccTag;
+		}
+		
+		[Inline]
+		private function genVtag():void 
+		{
+			_vTag = new FLVTagVideo();
+			_vTagData = new ByteArray(); // we assemble the nalus outside, set at end
+			_vTag.codecID = FLVTagVideo.CODEC_ID_AVC;
+			_vTag.frameType = FLVTagVideo.FRAME_TYPE_INTER; // adjust to keyframe later
+			_vTag.avcPacketType = FLVTagVideo.AVC_PACKET_TYPE_NALU;
+			_vTag.timestamp = _timestamp;
+			_vTag.avcCompositionTimeOffset = _compositionTime;
 		}
 		
 		CONFIG::LOGGING

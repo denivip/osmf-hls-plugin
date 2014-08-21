@@ -67,6 +67,7 @@
 		private var _streamNames:Array;
 		private var _streamQualityRates:Array;
 		private var _streamURLs:Array;
+		private var _streamMetaData:Array;
 		
 		// for error handling (if playlist don't update on server)
 		private var _prevPlaylist:String;
@@ -105,12 +106,14 @@
 			_streamNames = [];
 			_streamQualityRates = [];
 			_streamURLs = [];
+			_streamMetaData = [];
 			
 			for each(var hsi:HLSStreamInfo in _indexInfo.streams){
 				_streamNames.push(hsi.streamName);
 				_streamQualityRates.push(hsi.bitrate);
 				var url:String = Url.absolute(_baseURL, hsi.streamName);
 				_streamURLs.push(url);
+				_streamMetaData.push( { width:hsi.width, height:hsi.height } );
 			}
 			
 			_rateVec = new Vector.<HTTPStreamingM3U8IndexRateItem>(_indexInfo.streams.length);
@@ -546,8 +549,9 @@
 		
 		private function notifyTotalDuration(duration:Number, live:Boolean):void{
 			var sdo:FLVTagScriptDataObject = new FLVTagScriptDataObject();
-			var metaInfo:Object = {};
+			var metaInfo:Object = _streamMetaData[_quality];
             metaInfo.duration = live ? 0 : duration;
+            
 			
 			sdo.objects = ["onMetaData", metaInfo];
 			dispatchEvent(

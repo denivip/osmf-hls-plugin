@@ -56,6 +56,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 		private var _seekTime:Number;
 		private var _key:HTTPStreamingM3U8IndexKey = null;
 		private var _iv:ByteArray = null;
+		private var ivptr:int;
+		private var mkey:int;		
 		
 		// AES-128 specific variables
 		private var decoder:HTTPStreamingDecoder;
@@ -64,6 +66,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 			_audioPES = new HTTPStreamingMP2PESAudio;
 			_videoPES = new HTTPStreamingMP2PESVideo;
 			_mp3audioPES = new HTTPStreamingMp3Audio2ToPESAudio;
+			ivptr = CModule.malloc(16);
+			mkey = CModule.malloc(16);
 		}
 		
 		override public function beginProcessFile(seek:Boolean, seekTime:Number):void
@@ -74,11 +78,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 				initialOffset = Math.floor(seekTime);
 			}
 			if(_iv && _key){
-				var ivptr:int = CModule.malloc(16);
 				_iv.position = 0;
 				CModule.writeBytes(ivptr, _iv.length, _iv);
-
-				var mkey:int = CModule.malloc(16);
 				 _key.key.position = 0;
 				CModule.writeBytes(mkey, _key.key.length, _key.key);
 				if (decoder) {
