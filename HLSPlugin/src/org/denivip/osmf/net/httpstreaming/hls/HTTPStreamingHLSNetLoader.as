@@ -26,6 +26,7 @@
 {
 	import flash.net.NetConnection;
 	import flash.net.NetStream;
+	//import org.osmf.net.httpstreaming.rules.FullscreenRule;
 	
 	import org.denivip.osmf.net.httpstreaming.dvr.HTTPHLSStreamingDVRCastDVRTrait;
 	import org.denivip.osmf.net.httpstreaming.dvr.HTTPHLSStreamingDVRCastTimeTrait;
@@ -64,37 +65,82 @@
 			return new HTTPHLSNetStream(connection, new HTTPStreamingHLSFactory(), resource);
 		}
 		
-		override protected function createNetStreamSwitchManager(connection:NetConnection, netStream:NetStream, dsResource:DynamicStreamingResource):NetStreamSwitchManagerBase{
-			var qosInfo:QoSInfoHistory = createNetStreamQoSInfoHistory(netStream);
-			var metricsFactory:MetricFactory = createMetricFactory(qosInfo);
-			var metricsRepo:MetricRepository = new MetricRepository(metricsFactory);
-			var rules:Vector.<RuleBase> = new Vector.<RuleBase>();
-			var weights:Vector.<Number> = new Vector.<Number>();
-			rules.push(new BufferBandwidthRule(metricsRepo, BANDWIDTH_BUFFER_RULE_WEIGHTS, BANDWIDTH_BUFFER_RULE_BUFFER_FRAGMENTS_THRESHOLD));
-			weights.push(1);
+		/**
+		 * @private
+		 * 
+		 * Overridden to allow the creation of a NetStreamSwitchManager object.
+		 *  
+		 *  @langversion 3.0
+		 *  @playerversion Flash 10
+		 *  @playerversion AIR 1.5
+		 *  @productversion OSMF 1.0
+		 */
+		//from C:\Work\svn-checkouts\osmf\framework\OSMF\org\osmf\net\httpstreaming\HTTPStreamingNetLoader.as
+		override protected function createNetStreamSwitchManager(connection:NetConnection, netStream:NetStream, dsResource:DynamicStreamingResource):NetStreamSwitchManagerBase
+		{
+			/*
+			AdobePatentID="2278US01"
+			*/
+
+			// Create a QoSInfoHistory, to hold a history of QoSInfo provided by the NetStream
+			var netStreamQoSInfoHistory:QoSInfoHistory = createNetStreamQoSInfoHistory(netStream);
+			
+			// Create a MetricFactory, to be used by the metric repository for instantiating metrics
+			var metricFactory:MetricFactory = createMetricFactory(netStreamQoSInfoHistory);
+			
+			// Create the MetricRepository, which caches metrics
+			var metricRepository:MetricRepository = new MetricRepository(metricFactory);
+			
+			// Create the normal rule
+			var normalRules:Vector.<RuleBase> = new Vector.<RuleBase>();
+			var normalRuleWeights:Vector.<Number> = new Vector.<Number>();
+			
+			normalRules.push
+				( new BufferBandwidthRule
+				  ( metricRepository
+				  , BANDWIDTH_BUFFER_RULE_WEIGHTS
+				  , BANDWIDTH_BUFFER_RULE_BUFFER_FRAGMENTS_THRESHOLD
+				  )
+				);
+			//normalRules.push(new FullscreenRule(metricRepository, Main.instance.stage));
+			//normalRuleWeights.push(0.0001);
+			normalRuleWeights.push(1);
 			
 			// Create the emergency rules
 			var emergencyRules:Vector.<RuleBase> = new Vector.<RuleBase>();
 			
-			emergencyRules.push(new DroppedFPSRule(metricsRepo, 10, 0.1));
+			emergencyRules.push(new DroppedFPSRule(metricRepository, 10, 0.1));
 			
 			emergencyRules.push
 				( new EmptyBufferRule
-					( metricsRepo
-						, EMPTY_BUFFER_RULE_SCALE_DOWN_FACTOR
-					)
+				  ( metricRepository
+				  , EMPTY_BUFFER_RULE_SCALE_DOWN_FACTOR
+				  )
 				);
 			
 			emergencyRules.push
 				( new AfterUpSwitchBufferBandwidthRule
-					( metricsRepo
-						, AFTER_UP_SWITCH_BANDWIDTH_BUFFER_RULE_BUFFER_FRAGMENTS_THRESHOLD
-						, AFTER_UP_SWITCH_BANDWIDTH_BUFFER_RULE_MIN_RATIO
-					)
+				  ( metricRepository
+					, AFTER_UP_SWITCH_BANDWIDTH_BUFFER_RULE_BUFFER_FRAGMENTS_THRESHOLD
+					, AFTER_UP_SWITCH_BANDWIDTH_BUFFER_RULE_MIN_RATIO
+				  )
 				);
 			
-			var switcher:NetStreamSwitcher = new NetStreamSwitcher(netStream, dsResource);
-			return new DefaultHTTPStreamingSwitchManager(netStream, switcher, metricsRepo, emergencyRules, true, rules, weights); 
+			// Create a NetStreamSwitcher, which will handle the low-level details of NetStream
+			// stream switching
+			var nsSwitcher:NetStreamSwitcher = new NetStreamSwitcher(netStream, dsResource);
+			
+			// Finally, return an instance of the DefaultSwitchManager, passing it
+			// the objects we instatiated above
+			return new DefaultHTTPStreamingSwitchManager
+				( netStream
+				, nsSwitcher
+				, metricRepository
+				, emergencyRules
+				, true
+				, normalRules
+				, normalRuleWeights, 0.85, 5, 30, 0.9, 6, 2 //maximum upswitch of 2!
+				);
 		}
 		
 		override protected function processFinishLoading(loadTrait:NetStreamLoadTrait):void
