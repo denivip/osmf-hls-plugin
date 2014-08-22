@@ -597,10 +597,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 									logger.warn("Trying to fix the stuck issue");
 								}
 								input = _downloader.getBytes(_downloader.totalAvailableBytes);
-								if(input){
-									input.readBytes(new ByteArray());
-									_endFragment = true;
-								}
+								input.readBytes(new ByteArray());
+								_endFragment = true;
 							}
 						}
 					}
