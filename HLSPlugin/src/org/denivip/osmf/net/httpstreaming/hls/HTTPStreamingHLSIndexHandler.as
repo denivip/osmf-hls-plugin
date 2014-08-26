@@ -218,7 +218,7 @@
 							if(keyIvGiven) {
 								indexItem.iv = keyIv;
 							} else {
-								indexItem.iv = Padding.zeropad(keyIvIndex, 32);
+								indexItem.iv = Padding.zeropad(keyIvIndex, 16, 32);
 								keyIvIndex++;
 							}
 						}
@@ -456,12 +456,12 @@
 					if (item.key >= 0) {
 						var keys:Vector.<HTTPStreamingM3U8IndexKey> = rateItem.key;
 						if (item.key < keys.length) {
-							return item.iv;
+                            return item.iv;
 						}
 					}
 				}
 			}
-			return null;
+            return null;
 		}
 		
 		/*

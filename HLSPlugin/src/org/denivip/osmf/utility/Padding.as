@@ -6,8 +6,8 @@ package org.denivip.osmf.utility
 	public class Padding
 	{
 		
-		public static function zeropad(num:int, length:uint):String {
-			var str:String = num.toString();
+		public static function zeropad(num:int, radix:int, length:uint):String {
+			var str:String = num.toString(radix);
 			while(str.length < length) {
 				str = "0" + str;
 			}

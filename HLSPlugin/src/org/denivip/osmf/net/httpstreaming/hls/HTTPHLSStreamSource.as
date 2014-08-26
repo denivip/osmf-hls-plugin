@@ -572,7 +572,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 				case HTTPStreamingState.READ:
 					if (_downloader != null)
 					{
-						input = _downloader.getBytes(_fileHandler.inputBytesNeeded);
+                        if(_downloader.isComplete)
+						    input = _downloader.getBytes(_fileHandler.inputBytesNeeded);
 						
 						if (input != null)
 						{
