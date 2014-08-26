@@ -218,7 +218,7 @@
 							if(keyIvGiven) {
 								indexItem.iv = keyIv;
 							} else {
-								indexItem.iv = Padding.zeropad(keyIvIndex, 32);
+								indexItem.iv = Padding.zeropad(keyIvIndex, 16, 32);
 								keyIvIndex++;
 							}
 						}
