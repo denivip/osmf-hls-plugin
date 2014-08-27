@@ -15,10 +15,10 @@
             var pqs = new ParsedQueryString();
             var parameterNames = pqs.params(false);
             var parameters = {
-                src: "http://edge-3.2gzr.com/52a1f665531a480b8b528cc6.m3u8",
+                src: "http://pp.live.francetv.fr/simulcast/France_2/hls/index.m3u8",//"http://pp.live.francetv.fr/simulcast/test_denivip/hls_monde/index.m3u8",//"http://pp.live.francetv.fr//simulcast/France_2/HLSS/index.m3u8",//
                 autoPlay: "false",
                 verbose: true,
-                controlBarAutoHide: "true",
+                controlBarAutoHide: "false",
                 controlBarPosition: "bottom",
                 poster: "images/poster.png",
                 plugin_hls: "HLSDynamicPlugin.swf"
@@ -59,7 +59,22 @@
 	            }
 			);
             
+            /* Uncomment this code to be notified of playback errors in JavaScript:
+            
+             function onMediaPlaybackError(playerId, code, message, detail)            
+             {
+             	alert(playerId + "\n\n" + code + "\n" + message + "\n" + detail);            
+             }
+             
+             */
+            
         </script>
+        <style type="text/css">
+        <!-- .Verdana {
+            font-family: Verdana, Geneva, sans-serif;
+        }
+        -->
+        </style>
     </head>
     <body>
         <table width="100%" border="0" cellspacing="5">
@@ -77,6 +92,7 @@
                 </td>
             </tr>
         </table>
+		
         <table width="100%" border="0" cellspacing="5">
             <tr>
                 <td>
@@ -87,7 +103,7 @@
                     </div>
                 </td>
             </tr>
-            <tr>
+            <!--<tr>
                 <td>
                     <p>
                         Click on one of the links below to have it loaded
@@ -99,20 +115,22 @@
                             // listed media links:
                             
                             var linkingCode = "";
-                            var links = [
-                                {link: "http://edge-1.2gzr.com/5178d5fe531a484b777dacf1.m3u8", name: "Simple HLS stream"},
-                                {link: "http://184.72.239.149/vod/smil:BigBuckBunny.smil/playlist.m3u8", name: "Multi-bitrate HLS stream"},
-                                {link: "http://m4stv.inqb8r.tv/studentTV/studentTV.stream_360p/playlist.m3u8", name: "Live HLS stream"},
-                                {link: "http://www.codecomposer.net/hls/playlist.m3u8", name: "Discontinuity stream"}
-                            ];
+                            var links = ["http://mediapm.edgesuite.net/osmf/content/test/manifest-files/dynamic_Streaming.f4m", 
+                            "http://mediapm.edgesuite.net/osmf/content/test/manifest-files/progressive.f4m", 
+                            "http://mediapm.edgesuite.net/osmf/content/test/train_1500.mp3", 
+                            "http://mediapm.edgesuite.net/strobe/content/test/AFaerysTale_sylviaApostol_640_500_short.flv", 
+                            "rtmp://cp67126.edgefcs.net/ondemand/mp4:mediapm/osmf/content/test/sample1_700kbps.f4v", 
+                            "http://drmtest.adobe.com/content/identity.f4v", 
+                            "images/vegetation.jpg", 
+                            "playlists/playlist.m3u"];
                             
                             for (var i = 0; i < links.length; i++) {
                                 var link = links[i];
                                 linkingCode = linkingCode +
                                 '<a href="StrobeMediaPlayback.html?src=' +
-                                encodeURI(link['link']) +
+                                encodeURI(link) +
                                 '">' +
-                                link['name'] +
+                                link +
                                 '</a><br/>';
                             }
                             
@@ -120,7 +138,9 @@
                         </script>
                     </p>
                 </td>
-            </tr>
+            </tr>-->
         </table>
+		
+        <a href="setup.html">Player Setup</a>
     </body>
 </html>

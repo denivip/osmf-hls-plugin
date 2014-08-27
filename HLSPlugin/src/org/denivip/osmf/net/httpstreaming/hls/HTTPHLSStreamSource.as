@@ -271,7 +271,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 			args.streamName = _streamName;
 			_indexHandler.initialize(args);
 			if(_subsHandler)
-				_subsHandler.initialize(_subs[1]);
+				_subsHandler.initialize(_subs[0]);
 		}
 		
 		/**
@@ -619,7 +619,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 				case HTTPStreamingState.READ:
 					if (_downloader != null)
 					{
-						input = _downloader.getBytes(_fileHandler.inputBytesNeeded);
+						if(_downloader.isComplete)
+							input = _downloader.getBytes(_fileHandler.inputBytesNeeded);
 						
 						if (input != null)
 						{
