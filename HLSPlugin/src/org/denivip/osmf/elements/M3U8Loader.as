@@ -188,7 +188,7 @@ package org.denivip.osmf.elements
 		
 		private function finishPlaylistLoading(resource:MediaResourceBase):void{
 			try{
-				var loadedElem:MediaElement = new VideoElement(null, new HTTPStreamingHLSNetLoader());
+				var loadedElem:MediaElement = new HLSVideoElement(null, new HTTPStreamingHLSNetLoader());
 				loadedElem.resource = resource;
 				VideoElement(loadedElem).smoothing = true;
 				

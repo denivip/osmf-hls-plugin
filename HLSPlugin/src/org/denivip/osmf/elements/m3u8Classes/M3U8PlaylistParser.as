@@ -3,10 +3,9 @@ package org.denivip.osmf.elements.m3u8Classes
 	import flash.events.EventDispatcher;
 	
 	import org.denivip.osmf.net.HLSDynamicStreamingResource;
+	import org.denivip.osmf.net.HLSStreamingResource;
 	import org.denivip.osmf.utility.Url;
 	import org.osmf.events.ParseEvent;
-	import org.osmf.logging.Log;
-	import org.osmf.logging.Logger;
 	import org.osmf.media.MediaResourceBase;
 	import org.osmf.media.MediaType;
 	import org.osmf.media.URLResource;
@@ -18,6 +17,10 @@ package org.denivip.osmf.elements.m3u8Classes
 	import org.osmf.net.StreamingItem;
 	import org.osmf.net.StreamingURLResource;
 	
+	CONFIG::LOGGING {
+		import org.osmf.logging.Log;
+		import org.osmf.logging.Logger;
+	}
 	
 	[Event(name="parseComplete", type="org.osmf.events.ParseEvent")]
 	[Event(name="parseError", type="org.osmf.events.ParseEvent")]
@@ -51,16 +54,17 @@ package org.denivip.osmf.elements.m3u8Classes
 			var isLive:Boolean = true;
 			var isDVR:Boolean = (baseResource.url.indexOf('DVR') >= 0);
 			var streamItems:Vector.<DynamicStreamingItem>;
-			var tempStreamingRes:StreamingURLResource = null;
+			var tempStreamingRes:HLSStreamingResource = null;
 			var tempDynamicRes:DynamicStreamingResource = null;
-			var alternateStreams:Vector.<StreamingItem> = null;
+			var alternateAudio:Vector.<StreamingItem> = null;
+			var alternateVideo:Vector.<StreamingItem> = null;
 			var initialStreamName:String = '';
 			for(var i:int = 1; i < lines.length; i++){
 				var line:String = String(lines[i]).replace(/^([\s|\t|\n]+)?(.*)([\s|\t|\n]+)?$/gm, "$2");
 				
 				if(line.indexOf("#EXTINF:") == 0){
 					result = baseResource;
-					tempStreamingRes = result as StreamingURLResource;
+					tempStreamingRes = result as HLSStreamingResource;
 					
 					if(tempStreamingRes && tempStreamingRes.streamType == StreamType.LIVE_OR_RECORDED){
 						for(var j:int = i+1; j < lines.length; j++){
@@ -79,7 +83,7 @@ package org.denivip.osmf.elements.m3u8Classes
 					if(!result){
 						result = new HLSDynamicStreamingResource(baseResource.url);
 						tempDynamicRes = result as DynamicStreamingResource;
-						tempStreamingRes = baseResource as StreamingURLResource;
+						tempStreamingRes = baseResource as HLSStreamingResource;
 						if(tempStreamingRes){
 							tempDynamicRes.streamType = tempStreamingRes.streamType;
 							if(tempDynamicRes.streamType == StreamType.LIVE_OR_RECORDED && isDVR){
@@ -128,11 +132,32 @@ package org.denivip.osmf.elements.m3u8Classes
 						if(line.search(/NAME="(.*?)"/) > 0){
 							stName = line.match(/NAME="(.*?)"/)[1];
 						}
-						if(!alternateStreams)
-							alternateStreams = new Vector.<StreamingItem>();
+						if(!alternateAudio)
+							alternateAudio = new Vector.<StreamingItem>();
 						
-						alternateStreams.push(
+						alternateAudio.push(
 							new StreamingItem(MediaType.AUDIO, stUrl, 0, {label:stName, language:lang})
+						);
+					}
+					
+					if(line.search(/TYPE=(.*?)\W/) > 0 && line.match(/TYPE=(.*?)\W/)[1] == 'VIDEO'){
+						var vUrl:String;
+						var vName:String;
+						if(line.search(/URI="(.*?)"/) > 0){
+							vUrl = line.match(/URI="(.*?)"/)[1];
+							if(vUrl.search(/(file|https?):\/\//) != 0){
+								vUrl = baseResource.url.substr(0, baseResource.url.lastIndexOf('/')+1) + vUrl;
+							}
+						}
+						if(line.search(/NAME="(.*?)"/) > 0){
+							vName = line.match(/NAME="(.*?)"/)[1];
+						}
+						
+						if(!alternateVideo)
+							alternateVideo = new Vector.<StreamingItem>();
+						
+						alternateVideo.push(
+							new StreamingItem(MediaType.VIDEO, vUrl, 0, {label:vName})
 						);
 					}
 				}
@@ -140,16 +165,10 @@ package org.denivip.osmf.elements.m3u8Classes
 			
 			if(tempDynamicRes && tempDynamicRes.streamItems){
 				if(tempDynamicRes.streamItems.length == 1){
-					tempStreamingRes = baseResource as StreamingURLResource;
+					tempStreamingRes = baseResource as HLSStreamingResource;
 					if(tempStreamingRes){
-						// var url:String = (lines[i].search(/(ftp|file|https?):\/\//) == 0) ?  lines[i] : rateItem.url.substr(0, rateItem.url.lastIndexOf('/')+1) + lines[i];
-						/*
-						var url:String = (tempDynamicRes.streamItems[0].streamName.search(/(ftp|file|https?):\/\//) == 0) 
-							? tempDynamicRes.streamItems[0].streamName 
-							: tempDynamicRes.host.substr(0, tempDynamicRes.host.lastIndexOf('/')+1) + tempDynamicRes.streamItems[0].streamName;
-						*/
 						var url:String = Url.absolute(tempDynamicRes.host, tempDynamicRes.streamItems[0].streamName);
-						result = new StreamingURLResource(
+						result = new HLSStreamingResource(
 							url,
 							tempStreamingRes.streamType,
 							tempStreamingRes.clipStartTime,
@@ -176,8 +195,13 @@ package org.denivip.osmf.elements.m3u8Classes
 			var httpMetadata:Metadata = new Metadata();
 			result.addMetadataValue(MetadataNamespaces.HTTP_STREAMING_METADATA, httpMetadata);
 			
-			if(alternateStreams && result is StreamingURLResource){
-				(result as StreamingURLResource).alternativeAudioStreamItems = alternateStreams;
+			if(alternateVideo && result is HLSStreamingResource){
+				(result as HLSStreamingResource).alternativeVideoStreamItems = alternateVideo;
+				(baseResource as HLSStreamingResource).alternativeVideoStreamItems = alternateVideo; // f** spike
+			}
+			
+			if(alternateAudio && result is StreamingURLResource){
+				(result as StreamingURLResource).alternativeAudioStreamItems = alternateAudio;
 			}
 			
 			if(result is StreamingURLResource && StreamingURLResource(result).streamType == StreamType.DVR){

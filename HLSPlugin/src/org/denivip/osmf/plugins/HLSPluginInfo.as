@@ -1,5 +1,6 @@
 package org.denivip.osmf.plugins
 {
+	import org.denivip.osmf.elements.M3U8Element;
 	import org.denivip.osmf.elements.M3U8Loader;
 	import org.osmf.elements.LoadFromDocumentElement;
 	import org.osmf.media.MediaElement;
@@ -7,7 +8,6 @@ package org.denivip.osmf.plugins
 	import org.osmf.media.MediaFactoryItemType;
 	import org.osmf.media.MediaResourceBase;
 	import org.osmf.media.PluginInfo;
-	import org.osmf.media.URLResource;
 		
 	public class HLSPluginInfo extends PluginInfo
 	{
@@ -31,7 +31,7 @@ package org.denivip.osmf.plugins
 		}
 		
 		private function createMediaElement():MediaElement{
-			return new LoadFromDocumentElement(null, new M3U8Loader());
+			return new M3U8Element(null);
 		}
 	}
 }
