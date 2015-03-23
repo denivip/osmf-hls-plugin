@@ -48,3 +48,24 @@ hlsMaxReloadRetryes = 5 - for HTTPHLSNetStream, when live-stream playing. Number
 hlsReloadTimeout = 5000 - timeout between playlist reloads
 
 hlsMaxErrors = 10 - for HTTPStreamingHLSIndexHandler (for live-streaming, again). Used when playlist "stuck" on server, and request returns not updated playlist.
+
+Multi-angle feature:
+
+For camera(angle) switching you can use AlternativeVideoTrait class:
+
+import org.denivip.osmf.traits.AlternativeVideoTrait;
+
+it has one API metod:
+switchTo(<index>) [where index is value from 0 to 'num of alternate streams-1'] - just provide stream switching.
+*after calling this method you must seek your player to current position, in other cases OSMF can't correctly reset cache and will be continue playing old video to end of the cache.
+
+and dispatch event:
+AlternativeVideoEvent.VIDEO_SWITCHING_CHANGE when switching was complete (you can use this event for updating switching menu);
+
+2. Labels for menu you can find in your resource in the alternativeVideoStreams vector.
+
+var streams:Vector.<StreamingItems> = resource.alternativeVideoStreams;
+for(var i:int = 0; i< streams.length; i++){
+    var streamName:String = streams[i].info.label; // for name from playlist
+    // do what you want
+}

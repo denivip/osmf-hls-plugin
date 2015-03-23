@@ -12,6 +12,7 @@ Supported features:
 - Discontinuity (#EXT-X-DISCONTINUITY tag)
 - iframes support (Facebook/Twitter/etc)
 - JavaScript isn't needed to work
+- Multi-angle video supported.
 
 Supported tags:
 Main tags:
