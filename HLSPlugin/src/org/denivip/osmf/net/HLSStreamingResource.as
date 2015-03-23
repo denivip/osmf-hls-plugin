@@ -7,6 +7,16 @@ package org.denivip.osmf.net
 	
 	public class HLSStreamingResource extends StreamingURLResource
 	{
+		public static function createHLSResource(source:StreamingURLResource):HLSStreamingResource{
+			return new HLSStreamingResource(source.url,
+											source.streamType,
+											source.clipStartTime,
+											source.clipEndTime,
+											source.connectionArguments,
+											source.urlIncludesFMSApplicationInstance,
+											source.drmContentData);
+		}
+		
 		public function HLSStreamingResource(url:String
 											 , streamType:String = null
 											 , clipStartTime:Number = NaN

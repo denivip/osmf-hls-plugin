@@ -64,7 +64,7 @@ package org.denivip.osmf.elements.m3u8Classes
 				
 				if(line.indexOf("#EXTINF:") == 0){
 					result = baseResource;
-					tempStreamingRes = result as HLSStreamingResource;
+					tempStreamingRes = HLSStreamingResource.createHLSResource(result as StreamingURLResource);// as HLSStreamingResource;
 					
 					if(tempStreamingRes && tempStreamingRes.streamType == StreamType.LIVE_OR_RECORDED){
 						for(var j:int = i+1; j < lines.length; j++){
@@ -83,7 +83,7 @@ package org.denivip.osmf.elements.m3u8Classes
 					if(!result){
 						result = new HLSDynamicStreamingResource(baseResource.url);
 						tempDynamicRes = result as DynamicStreamingResource;
-						tempStreamingRes = baseResource as HLSStreamingResource;
+						tempStreamingRes = HLSStreamingResource.createHLSResource(baseResource as StreamingURLResource);
 						if(tempStreamingRes){
 							tempDynamicRes.streamType = tempStreamingRes.streamType;
 							if(tempDynamicRes.streamType == StreamType.LIVE_OR_RECORDED && isDVR){
