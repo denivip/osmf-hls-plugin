@@ -32,6 +32,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 	import flash.utils.Timer;
 	
 	import org.denivip.osmf.events.HTTPHLSStreamingEvent;
+	import org.denivip.osmf.net.HLSStreamingResource;
 	import org.denivip.osmf.plugins.HLSSettings;
 	import org.osmf.events.DVRStreamInfoEvent;
 	import org.osmf.events.HTTPStreamingEvent;
@@ -238,6 +239,9 @@ package org.denivip.osmf.net.httpstreaming.hls
 			
 				case NetStreamPlayTransitions.SWAP:
 					changeAudioStreamTo(param.streamName);
+					break;
+				case 'switch_video':
+					changeVideoStreamTo(param.streamName);
 					break;
 				
 				default:
@@ -503,6 +507,28 @@ package org.denivip.osmf.net.httpstreaming.hls
 				
 				_audioStreamNeedsChanging = false;
 				_desiredAudioStreamName = null;
+			}
+			
+			_notifyPlayUnpublishPending = false;
+		}
+		
+		private function changeVideoStreamTo(streamName:String):void
+		{
+			_videoStreamNeedsChanging = true;
+			_desiredVideoStreamName = streamName;
+			
+			if (
+				_source.isReady 
+				&& (_videoHandler != null && _videoHandler.streamName != _desiredVideoStreamName)
+			)
+			{
+				CONFIG::LOGGING
+				{
+					logger.debug("Stream source is ready so we can initiate change video source to [" + _desiredQualityStreamName + "]");
+				}
+				HTTPHLSStreamSource(_videoHandler).changeVideoStream(_desiredVideoStreamName);
+				_videoStreamNeedsChanging = false;
+				_desiredVideoStreamName = null;
 			}
 			
 			_notifyPlayUnpublishPending = false;
@@ -791,6 +817,10 @@ package org.denivip.osmf.net.httpstreaming.hls
 					if (_audioStreamNeedsChanging)
 					{
 						changeAudioStreamTo(_desiredAudioStreamName);
+					}
+					if (_videoStreamNeedsChanging)
+					{
+						changeVideoStreamTo(_desiredVideoStreamName);
 					}
 					var processed:int = 0;
 					var keepProcessing:Boolean = true;
@@ -1145,6 +1175,11 @@ package org.denivip.osmf.net.httpstreaming.hls
 			{
 				lastTransitionIndex = (_resource as DynamicStreamingResource).indexFromName(event.url);
 				lastTransitionStreamURL = event.url;
+			}
+			
+			if(_resource is HLSStreamingResource)
+			{
+				
 			}
 			
 			dispatchEvent( 
@@ -1812,6 +1847,9 @@ package org.denivip.osmf.net.httpstreaming.hls
 		private var _desiredQualityStreamName:String = null;
 		private var _audioStreamNeedsChanging:Boolean = false;
 		private var _desiredAudioStreamName:String = null;
+		
+		private var _videoStreamNeedsChanging:Boolean = false;
+		private var _desiredVideoStreamName:String = null;
 		
 		private var _seekTarget:Number = -1;
 		private var _enhancedSeekTarget:Number = -1;

@@ -17,6 +17,7 @@
     <classEntry path="org.denivip.osmf.events.AlternativeVideoEvent"/>
     <classEntry path="org.denivip.osmf.net.HLSStreamingResource"/>
     <classEntry path="org.denivip.osmf.elements.HLSVideoElement"/>
+    <classEntry path="org.denivip.osmf.elements.M3U8Element"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>

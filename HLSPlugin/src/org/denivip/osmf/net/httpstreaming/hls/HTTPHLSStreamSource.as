@@ -354,6 +354,17 @@ package org.denivip.osmf.net.httpstreaming.hls
 			}
 		}
 		
+		public function changeVideoStream(streamName:String):void
+		{
+			CONFIG::LOGGING
+			{
+				logger.debug("Prepare to switch the video stream to " + streamName);
+			}
+			
+			if(_streamName != streamName)
+				beginVideoStreamChange(streamName);
+		}
+		
 		/**
 		 * 
 		 */
@@ -420,6 +431,10 @@ package org.denivip.osmf.net.httpstreaming.hls
 					if (_qualityLevelChanged)
 					{
 						endQualityLevelChange();
+					}
+					if (_videoStreamChanged)
+					{
+						endVideoStreamChange();
 					}
 					
 					_fragmentDuration = -1;
@@ -906,6 +921,22 @@ package org.denivip.osmf.net.httpstreaming.hls
 
 		}
 		
+		private function beginVideoStreamChange(streamName:String):void{
+			_videoStreamChanged = true;
+			_streamName = streamName;
+			_dispatcher.dispatchEvent(
+				new HTTPStreamingEvent(
+					HTTPStreamingEvent.TRANSITION,
+					false,
+					false,
+					NaN,
+					null,
+					null,
+					streamName
+				)
+			);
+		}
+		
 		/**
 		 * @private
 		 * 
@@ -947,6 +978,45 @@ package org.denivip.osmf.net.httpstreaming.hls
 			CONFIG::LOGGING
 			{
 				logger.debug("Quality level switch completed. The current quality level [" + _qualityLevel + "] with stream ["  + loggedStreamName + " ].");
+			}
+		}
+		
+		private function endVideoStreamChange():void
+		{
+			CONFIG::LOGGING
+			{
+				if (_streamName == null)
+				{
+					loggedStreamName = _streamName;
+				}
+				else
+				{
+					loggedStreamName = _streamName.substr(_streamName.lastIndexOf("/"));
+				}
+			}
+			
+			_videoStreamChanged = false;
+			_indexInfo['streams'][0] = new HLSStreamInfo(_streamName, 0);
+			var args:Object = {};
+			args.indexInfo = _indexInfo;
+			args.streamName = _streamName;
+			_indexHandler.initialize(args);
+			
+			_dispatcher.dispatchEvent(
+				new HTTPStreamingEvent(
+					HTTPStreamingEvent.TRANSITION_COMPLETE,
+					false,
+					false,
+					NaN,
+					null,
+					null,
+					_streamName
+				)
+			);
+			
+			CONFIG::LOGGING
+			{
+				logger.debug("Video stream switch completed. The current stream ["  + loggedStreamName + " ].");
 			}
 		}
 		
@@ -1015,6 +1085,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 		private var _desiredQualityLevel:int = -1;
 		private var _desiredQualityStreamName:String = null;
 		private var _qualityAndStreamNameInSync:Boolean = false;
+		
+		private var _videoStreamChanged:Boolean = false;
 		
 		private var _fragmentDuration:Number = 0;
 		private var _endFragment:Boolean = false;
