@@ -13,6 +13,10 @@
     <classEntry path="org.denivip.osmf.plugins.HLSSettings"/>
     <classEntry path="org.denivip.osmf.logging.LogGrabber"/>
     <classEntry path="org.denivip.osmf.utils.Utils"/>
+    <classEntry path="org.denivip.osmf.traits.AlternativeVideoTrait"/>
+    <classEntry path="org.denivip.osmf.events.AlternativeVideoEvent"/>
+    <classEntry path="org.denivip.osmf.net.HLSStreamingResource"/>
+    <classEntry path="org.denivip.osmf.elements.HLSVideoElement"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>
