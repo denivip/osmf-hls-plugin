@@ -145,7 +145,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 				addEventListener(DRMStatusEvent.DRM_STATUS, onDRMStatus);
 			}
 			
-			this.bufferTime = OSMFSettings.hdsMinimumBufferTime;
+			this.bufferTime = HLSSettings.hlsBufferSizeDef;//OSMFSettings.hdsMinimumBufferTime;
 			this.bufferTimeMax = 0;
 			
 			setState(HTTPStreamingState.INIT);
@@ -318,7 +318,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 		override public function set bufferTime(value:Number):void
 		{
 			super.bufferTime = value;
-			_desiredBufferTime_Min = Math.max(OSMFSettings.hdsMinimumBufferTime, value);
+			_desiredBufferTime_Min = Math.max(HLSSettings.hlsBufferSizeDef, value);
 			_desiredBufferTime_Max = _desiredBufferTime_Min + HLSSettings.hlsAddBufferSize;//OSMFSettings.hdsAdditionalBufferTime;
 		}
 		
@@ -550,7 +550,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 			{
 				case NetStreamCodes.NETSTREAM_PLAY_START:
 					if(!_started){
-						bufferTime = OSMFSettings.hdsMinimumBufferTime;//HLSSettings.hlsBufferSizeDef;
+						bufferTime = HLSSettings.hlsBufferSizeDef;
 						_started = true;
 						CONFIG::LOGGING
 						{
@@ -588,7 +588,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 							_notifyPlayUnpublishPending = false; 
 						}
 					}
-					bufferTime = OSMFSettings.hdsMinimumBufferTime;//HLSSettings.hlsBufferSizeDef;
+					bufferTime = HLSSettings.hlsBufferSizeDef;
 					break;
 				
 				case NetStreamCodes.NETSTREAM_BUFFER_FULL:
@@ -625,7 +625,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 							logger.debug("Seek notify caught and stopped");
 						}
 					}
-					bufferTime = OSMFSettings.hdsMinimumBufferTime;//HLSSettings.hlsBufferSizeDef;
+					bufferTime = HLSSettings.hlsBufferSizeDef;
 					break;
 				
 				default:
