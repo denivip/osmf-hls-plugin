@@ -30,6 +30,7 @@ Live:
 Optional:
 *    #EXT-X-TARGETDURATION
 *    #EXT-X-DISCONTINUITY
+*    #EXT-X-MEDIA (with TYPES AUDIO/VIDEO and SUBTITLES in subtitles branch)
 *    #EXT-X-KEY (AES-128 only)
 
 Fresh binaries you can find in the 'release' directory.
