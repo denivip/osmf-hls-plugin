@@ -15,18 +15,23 @@ Supported features:
 - Multi-angle video supported.
 
 Supported tags:
+
 Main tags:
-    #EXTM3U
-    #EXTINF
-    #EXT-X-ENDLIST
+*    #EXTM3U
+*    #EXTINF
+*    #EXT-X-ENDLIST
+
 Multi-bitrate streaming:
-    #EXT-X-STREAM-INF (with reqired BANDWIDTH parameter)
+*    #EXT-X-STREAM-INF (with reqired BANDWIDTH parameter)
+
 Live:
-    #EXT-X-MEDIA-SEQUENCE
+*    #EXT-X-MEDIA-SEQUENCE
+
 Optional:
-    #EXT-X-TARGETDURATION
-    #EXT-X-DISCONTINUITY
-    #EXT-X-KEY (AES-128 only)
+*    #EXT-X-TARGETDURATION
+*    #EXT-X-DISCONTINUITY
+*    #EXT-X-MEDIA (with TYPES AUDIO/VIDEO and SUBTITLES in subtitles branch)
+*    #EXT-X-KEY (AES-128 only)
 
 Fresh binaries you can find in the 'release' directory.
 Documentation available in the 'docs'.
