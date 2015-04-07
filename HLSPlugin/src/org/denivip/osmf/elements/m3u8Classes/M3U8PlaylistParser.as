@@ -165,7 +165,7 @@ package org.denivip.osmf.elements.m3u8Classes
 			
 			if(tempDynamicRes && tempDynamicRes.streamItems){
 				if(tempDynamicRes.streamItems.length == 1){
-					tempStreamingRes = baseResource as HLSStreamingResource;
+					tempStreamingRes = HLSStreamingResource.createHLSResource(baseResource as StreamingURLResource);
 					if(tempStreamingRes){
 						var url:String = Url.absolute(tempDynamicRes.host, tempDynamicRes.streamItems[0].streamName);
 						result = new HLSStreamingResource(
@@ -197,7 +197,7 @@ package org.denivip.osmf.elements.m3u8Classes
 			
 			if(alternateVideo && result is HLSStreamingResource){
 				(result as HLSStreamingResource).alternativeVideoStreamItems = alternateVideo;
-				(baseResource as HLSStreamingResource).alternativeVideoStreamItems = alternateVideo; // f** spike
+				baseResource['alternativeVideoStreamItems'] = alternateVideo; // f** spike
 			}
 			
 			if(alternateAudio && result is StreamingURLResource){
