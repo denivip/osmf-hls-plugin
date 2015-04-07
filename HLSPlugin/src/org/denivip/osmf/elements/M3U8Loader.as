@@ -16,14 +16,19 @@ package org.denivip.osmf.elements
 	import org.osmf.events.MediaError;
 	import org.osmf.events.MediaErrorEvent;
 	import org.osmf.events.ParseEvent;
-	import org.osmf.logging.Log;
-	import org.osmf.logging.Logger;
+	
 	import org.osmf.media.MediaElement;
 	import org.osmf.media.MediaResourceBase;
 	import org.osmf.media.URLResource;
 	import org.osmf.traits.LoadState;
 	import org.osmf.traits.LoadTrait;
 	import org.osmf.traits.LoaderBase;
+	
+	CONFIG::LOGGING
+	{
+		import org.osmf.logging.Log;
+		import org.osmf.logging.Logger;
+	}
 	
 	/**
 	 * Loader for .m3u8 playlist file.
