@@ -7,23 +7,31 @@ package org.denivip.osmf.elements
 	import flash.events.SecurityErrorEvent;
 	import flash.net.URLLoader;
 	import flash.net.URLRequest;
+	import flash.net.URLRequestHeader;
+	import flash.net.URLRequestMethod;
+	import flash.net.URLVariables;
 	import flash.utils.getTimer;
 	
 	import org.denivip.osmf.elements.m3u8Classes.M3U8PlaylistParser;
 	import org.denivip.osmf.net.httpstreaming.hls.HTTPStreamingHLSNetLoader;
+	import org.denivip.osmf.plugins.HLSSettings;
 	import org.osmf.elements.VideoElement;
 	import org.osmf.elements.proxyClasses.LoadFromDocumentLoadTrait;
 	import org.osmf.events.MediaError;
 	import org.osmf.events.MediaErrorEvent;
 	import org.osmf.events.ParseEvent;
-	import org.osmf.logging.Log;
-	import org.osmf.logging.Logger;
 	import org.osmf.media.MediaElement;
 	import org.osmf.media.MediaResourceBase;
 	import org.osmf.media.URLResource;
 	import org.osmf.traits.LoadState;
 	import org.osmf.traits.LoadTrait;
 	import org.osmf.traits.LoaderBase;
+	
+	CONFIG::LOGGING
+	{
+		import org.osmf.logging.Log;
+		import org.osmf.logging.Logger;
+	}
 	
 	/**
 	 * Loader for .m3u8 playlist file.
@@ -152,12 +160,25 @@ package org.denivip.osmf.elements
 			_loadTrait = loadTrait;
 			updateLoadTrait(loadTrait, LoadState.LOADING);
 			
+			var request:URLRequest = new URLRequest();
+			if(HLSSettings.headerParamName){
+				var header:Array = [
+					new URLRequestHeader(HLSSettings.headerParamName, HLSSettings.headerParamValue)
+				];
+				request.requestHeaders = header;
+				var formVars:URLVariables = new URLVariables();
+				formVars.blah = "blue";
+				request.data = formVars;
+				request.method = URLRequestMethod.POST;
+			}
+			request.url = URLResource(loadTrait.resource).url;
+			
 			_playlistLoader = new URLLoader();
 			_playlistLoader.addEventListener(Event.COMPLETE, onComplete);
 			_playlistLoader.addEventListener(IOErrorEvent.IO_ERROR, onError);
 			_playlistLoader.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onError);
 			_playlistLoader.addEventListener(flash.events.HTTPStatusEvent.HTTP_STATUS, onHTTPStatus);
-            _playlistLoader.load(new URLRequest(URLResource(loadTrait.resource).url));
+            _playlistLoader.load(request);
 			
 			CONFIG::LOGGING
             {
@@ -188,7 +209,7 @@ package org.denivip.osmf.elements
 		
 		private function finishPlaylistLoading(resource:MediaResourceBase):void{
 			try{
-				var loadedElem:MediaElement = new VideoElement(null, new HTTPStreamingHLSNetLoader());
+				var loadedElem:MediaElement = new HLSVideoElement(null, new HTTPStreamingHLSNetLoader());
 				loadedElem.resource = resource;
 				VideoElement(loadedElem).smoothing = true;
 				

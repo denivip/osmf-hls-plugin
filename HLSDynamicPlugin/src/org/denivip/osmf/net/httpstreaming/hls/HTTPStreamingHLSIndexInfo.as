@@ -45,5 +45,6 @@
 		
 		public function get baseURL():String{ return _baseURL; }
 		public function get streams():Vector.<HLSStreamInfo>{ return _streams; }
+		public function set streams(value:Vector.<HLSStreamInfo>):void{ _streams = value; }
 	}
 }

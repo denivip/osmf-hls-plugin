@@ -29,6 +29,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 	import flash.utils.IDataInput;
 	
 	import org.denivip.osmf.events.HTTPHLSStreamingEvent;
+	import org.denivip.osmf.net.HLSDynamicStreamingResource;
+	import org.denivip.osmf.net.IAlternativeVideoResource;
 	import org.osmf.events.DVRStreamInfoEvent;
 	import org.osmf.events.HTTPStreamingEvent;
 	import org.osmf.events.HTTPStreamingIndexHandlerEvent;
@@ -363,6 +365,17 @@ package org.denivip.osmf.net.httpstreaming.hls
 			}
 		}
 		
+		public function changeVideoStream(streamName:String):void
+		{
+			CONFIG::LOGGING
+			{
+				logger.debug("Prepare to switch the video stream to " + streamName);
+			}
+			
+			if(_streamName != streamName)
+				beginVideoStreamChange(streamName);
+		}
+		
 		/**
 		 * 
 		 */
@@ -429,6 +442,10 @@ package org.denivip.osmf.net.httpstreaming.hls
 					if (_qualityLevelChanged)
 					{
 						endQualityLevelChange();
+					}
+					if (_videoStreamChanged)
+					{
+						endVideoStreamChange();
 					}
 					
 					_fragmentDuration = -1;
@@ -957,6 +974,22 @@ package org.denivip.osmf.net.httpstreaming.hls
 
 		}
 		
+		private function beginVideoStreamChange(streamName:String):void{
+			_videoStreamChanged = true;
+			_streamName = streamName;
+			_dispatcher.dispatchEvent(
+				new HTTPStreamingEvent(
+					HTTPStreamingEvent.TRANSITION,
+					false,
+					false,
+					NaN,
+					null,
+					null,
+					streamName
+				)
+			);
+		}
+		
 		/**
 		 * @private
 		 * 
@@ -965,6 +998,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 		private function endQualityLevelChange():void
 		{
 			_qualityLevel = _desiredQualityLevel;
+			if(_resource is HLSDynamicStreamingResource)
+				HLSDynamicStreamingResource(_resource).qualityLevel = _qualityLevel;
 			_streamName = _desiredQualityStreamName;
 			
 			CONFIG::LOGGING
@@ -998,6 +1033,45 @@ package org.denivip.osmf.net.httpstreaming.hls
 			CONFIG::LOGGING
 			{
 				logger.debug("Quality level switch completed. The current quality level [" + _qualityLevel + "] with stream ["  + loggedStreamName + " ].");
+			}
+		}
+		
+		private function endVideoStreamChange():void
+		{
+			CONFIG::LOGGING
+			{
+				if (_streamName == null)
+				{
+					loggedStreamName = _streamName;
+				}
+				else
+				{
+					loggedStreamName = _streamName.substr(_streamName.lastIndexOf("/"));
+				}
+			}
+			
+			_videoStreamChanged = false;
+			_indexInfo['streams'] = IAlternativeVideoResource(_resource).alternativeVideoStream(_streamName, _qualityLevel); //new HLSStreamInfo(_streamName, 0);
+			var args:Object = {};
+			args.indexInfo = _indexInfo;
+			args.streamName = _streamName;
+			_indexHandler.initialize(args);
+			
+			_dispatcher.dispatchEvent(
+				new HTTPStreamingEvent(
+					HTTPStreamingEvent.TRANSITION_COMPLETE,
+					false,
+					false,
+					NaN,
+					null,
+					null,
+					_streamName
+				)
+			);
+			
+			CONFIG::LOGGING
+			{
+				logger.debug("Video stream switch completed. The current stream ["  + loggedStreamName + " ].");
 			}
 		}
 		
@@ -1066,6 +1140,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 		private var _desiredQualityLevel:int = -1;
 		private var _desiredQualityStreamName:String = null;
 		private var _qualityAndStreamNameInSync:Boolean = false;
+		
+		private var _videoStreamChanged:Boolean = false;
 		
 		private var _fragmentDuration:Number = 0;
 		private var _endFragment:Boolean = false;

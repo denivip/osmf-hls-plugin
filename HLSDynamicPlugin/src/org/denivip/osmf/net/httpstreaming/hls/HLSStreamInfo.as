@@ -13,6 +13,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 			_bitrate = bitrate;
 		}
 		
+		public function set streamName(value:String):void{ if(_streamName != value) _streamName = value; }
 		public function get streamName():String{ return _streamName; }
 		public function get bitrate():Number{ return _bitrate; }
 	}

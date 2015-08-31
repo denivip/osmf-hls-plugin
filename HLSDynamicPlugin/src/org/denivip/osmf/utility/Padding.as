@@ -7,7 +7,7 @@ package org.denivip.osmf.utility
 	{
 		
 		public static function zeropad(num:int, radix:int, length:uint):String {
-			var str:String = num.toString();
+			var str:String = num.toString(radix);
 			while(str.length < length) {
 				str = "0" + str;
 			}

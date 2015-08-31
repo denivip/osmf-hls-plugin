@@ -25,6 +25,9 @@
  package org.denivip.osmf.net.httpstreaming.hls
 {
 	import flash.net.URLRequest;
+	import flash.net.URLRequestHeader;
+	import flash.net.URLRequestMethod;
+	import flash.net.URLVariables;
 	import flash.utils.ByteArray;
 	import flash.utils.getQualifiedClassName;
 	import flash.utils.getTimer;
@@ -35,15 +38,18 @@
 	import org.osmf.events.DVRStreamInfoEvent;
 	import org.osmf.events.HTTPStreamingEvent;
 	import org.osmf.events.HTTPStreamingIndexHandlerEvent;
-	import org.osmf.logging.Log;
-	import org.osmf.logging.Logger;
 	import org.osmf.net.httpstreaming.HTTPStreamRequest;
 	import org.osmf.net.httpstreaming.HTTPStreamRequestKind;
 	import org.osmf.net.httpstreaming.HTTPStreamingIndexHandlerBase;
 	import org.osmf.net.httpstreaming.dvr.DVRInfo;
 	import org.osmf.net.httpstreaming.flv.FLVTagScriptDataMode;
 	import org.osmf.net.httpstreaming.flv.FLVTagScriptDataObject;
-
+	
+	CONFIG::LOGGING {
+		import org.osmf.logging.Log;
+		import org.osmf.logging.Logger;
+	}
+	
 	[Event(name="notifyIndexReady", type="org.osmf.events.HTTPStreamingFileIndexHandlerEvent")]
 	[Event(name="notifyRates", type="org.osmf.events.HTTPStreamingFileIndexHandlerEvent")]
 	[Event(name="notifyTotalDuration", type="org.osmf.events.HTTPStreamingFileIndexHandlerEvent")]
@@ -128,7 +134,20 @@
 				}
 			}
 			
-			dispatchEvent(new HTTPStreamingIndexHandlerEvent(HTTPStreamingIndexHandlerEvent.REQUEST_LOAD_INDEX, false, false, false, NaN, null, null, new URLRequest(_streamURLs[index]), index, true));
+			var request:URLRequest = new URLRequest();
+			if(HLSSettings.headerParamName){
+				var header:Array = [
+					new URLRequestHeader(HLSSettings.headerParamName, HLSSettings.headerParamValue)
+				];
+				request.requestHeaders = header;
+				var formVars:URLVariables = new URLVariables();
+				formVars.blah = "blue";
+				request.data = formVars;
+				request.method = URLRequestMethod.POST;
+			}
+			request.url = _streamURLs[index];
+			
+			dispatchEvent(new HTTPStreamingIndexHandlerEvent(HTTPStreamingIndexHandlerEvent.REQUEST_LOAD_INDEX, false, false, false, NaN, null, null, request, index, true));
 		}
 		
 		override public function dispose():void{
@@ -272,7 +291,17 @@
 							rateItem.addIndexKey(keyItem);
 							keyIndex++;
 							keyRequest = new Array(keyItem, quality);
-							dispatchEvent(new HTTPStreamingIndexHandlerEvent(HTTPStreamingIndexHandlerEvent.REQUEST_LOAD_INDEX, false, false, false, NaN, null, null, new URLRequest(keyUrl), keyRequest, true));
+							
+							var request:URLRequest = new URLRequest();
+							if(HLSSettings.headerParamName){
+								var header:Array = [
+									new URLRequestHeader(HLSSettings.headerParamName, HLSSettings.headerParamValue)
+								];
+								request.requestHeaders = header;
+							}
+							request.url = keyUrl;
+							
+							dispatchEvent(new HTTPStreamingIndexHandlerEvent(HTTPStreamingIndexHandlerEvent.REQUEST_LOAD_INDEX, false, false, false, NaN, null, null, request, keyRequest, true));
 						}
 					}else if(lines[i].indexOf("#EXT-X-ENDLIST") == 0){
 						rateItem.isLive = false;
@@ -393,7 +422,21 @@
 					{
 						_reloadTime = getTimer();
 					}
-					dispatchEvent(new HTTPStreamingIndexHandlerEvent(HTTPStreamingIndexHandlerEvent.REQUEST_LOAD_INDEX, false, false, item.isLive, 0, _streamNames, _streamQualityRates, new URLRequest(_rateVec[quality].url), quality, false));						
+					
+					var urlrequest:URLRequest = new URLRequest();
+					if(HLSSettings.headerParamName){
+						var header:Array = [
+							new URLRequestHeader(HLSSettings.headerParamName, HLSSettings.headerParamValue)
+						];
+						urlrequest.requestHeaders = header;
+						var formVars:URLVariables = new URLVariables();
+						formVars.blah = "blue";
+						urlrequest.data = formVars;
+						urlrequest.method = URLRequestMethod.POST;
+					}
+					urlrequest.url = _rateVec[quality].url;
+					
+					dispatchEvent(new HTTPStreamingIndexHandlerEvent(HTTPStreamingIndexHandlerEvent.REQUEST_LOAD_INDEX, false, false, item.isLive, 0, _streamNames, _streamQualityRates, urlrequest, quality, false));						
 					return new HTTPStreamRequest(HTTPStreamRequestKind.LIVE_STALL, null, 1.0);
 				}
 			}
@@ -456,12 +499,12 @@
 					if (item.key >= 0) {
 						var keys:Vector.<HTTPStreamingM3U8IndexKey> = rateItem.key;
 						if (item.key < keys.length) {
-							return item.iv;
+                            return item.iv;
 						}
 					}
 				}
 			}
-			return null;
+            return null;
 		}
 		
 		/*
@@ -470,7 +513,16 @@
 		private function checkRateAvilable(quality:int):HTTPStreamRequest{
 			if(!_rateVec[quality]){
 				if(_streamQualityRates.length > quality){
-					dispatchEvent(new HTTPStreamingIndexHandlerEvent(HTTPStreamingIndexHandlerEvent.REQUEST_LOAD_INDEX, false, false, false, NaN, null, null, new URLRequest(_streamURLs[quality]), quality, true));
+					var request:URLRequest = new URLRequest();
+					if(HLSSettings.headerParamName){
+						var header:Array = [
+							new URLRequestHeader(HLSSettings.headerParamName, HLSSettings.headerParamValue)
+						];
+						request.requestHeaders = header;
+					}
+					request.url = _streamURLs[quality];
+					
+					dispatchEvent(new HTTPStreamingIndexHandlerEvent(HTTPStreamingIndexHandlerEvent.REQUEST_LOAD_INDEX, false, false, false, NaN, null, null, request, quality, true));
 					return new HTTPStreamRequest(HTTPStreamRequestKind.RETRY, null, 1);
 				}else{
 					return new HTTPStreamRequest(HTTPStreamRequestKind.DONE);

@@ -4,13 +4,10 @@ package org.denivip.osmf.plugins
 
 	public class HLSSettings
 	{
-		public static const NAMESPACE:String = "org.denivip.osmf.hls";
-		
 		// Buffer control
 		public static var hlsBufferSizePause	:Number = 64;
 		public static var hlsBufferSizeBig		:Number = 16;
 		public static var hlsBufferSizeDef		:Number = OSMFSettings.hdsMinimumBufferTime;
-		public static var hlsBufferSizeMin		:Number = 4;
 		
 		public static var hlsAddBufferSize		:Number = 10;
 		
