@@ -28,6 +28,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 	import flash.utils.IDataInput;
 	
 	import org.denivip.osmf.events.HTTPHLSStreamingEvent;
+	import org.denivip.osmf.net.HLSDynamicStreamingResource;
+	import org.denivip.osmf.net.IAlternativeVideoResource;
 	import org.osmf.events.DVRStreamInfoEvent;
 	import org.osmf.events.HTTPStreamingEvent;
 	import org.osmf.events.HTTPStreamingIndexHandlerEvent;
@@ -945,6 +947,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 		private function endQualityLevelChange():void
 		{
 			_qualityLevel = _desiredQualityLevel;
+			if(_resource is HLSDynamicStreamingResource)
+				HLSDynamicStreamingResource(_resource).qualityLevel = _qualityLevel;
 			_streamName = _desiredQualityStreamName;
 			
 			CONFIG::LOGGING
@@ -996,7 +1000,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 			}
 			
 			_videoStreamChanged = false;
-			_indexInfo['streams'][0] = new HLSStreamInfo(_streamName, 0);
+			_indexInfo['streams'] = IAlternativeVideoResource(_resource).alternativeVideoStream(_streamName, _qualityLevel); //new HLSStreamInfo(_streamName, 0);
 			var args:Object = {};
 			args.indexInfo = _indexInfo;
 			args.streamName = _streamName;

@@ -1,6 +1,6 @@
 package org.denivip.osmf.elements
 {
-	import org.denivip.osmf.net.HLSStreamingResource;
+	import org.denivip.osmf.net.IAlternativeVideoResource;
 	import org.denivip.osmf.net.httpstreaming.hls.HTTPHLSNetStream;
 	import org.denivip.osmf.traits.AlternativeVideoTrait;
 	import org.osmf.elements.VideoElement;
@@ -24,7 +24,7 @@ package org.denivip.osmf.elements
 			// add av_trait
 			var loadTrait:NetStreamLoadTrait = (getTrait(MediaTraitType.LOAD) as NetStreamLoadTrait);
 			_stream = loadTrait.netStream as HTTPHLSNetStream;
-			var temp:HLSStreamingResource = resource as HLSStreamingResource;
+			var temp:IAlternativeVideoResource = resource as IAlternativeVideoResource;
 			if(temp != null && temp.alternativeVideoStreamItems != null && temp.alternativeVideoStreamItems.length > 0){
 				
 				var avTrait:AlternativeVideoTrait = loadTrait.getTrait(AlternativeVideoTrait.ALTERNATIVE_VIDEO) as AlternativeVideoTrait;

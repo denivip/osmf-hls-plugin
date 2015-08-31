@@ -1,11 +1,11 @@
 package org.denivip.osmf.traits
 {
 	import flash.net.NetStreamPlayOptions;
-	import flash.net.NetStreamPlayTransitions;
 	
 	import org.denivip.osmf.events.AlternativeVideoEvent;
-	import org.denivip.osmf.net.HLSStreamingResource;
+	import org.denivip.osmf.net.IAlternativeVideoResource;
 	import org.denivip.osmf.net.httpstreaming.hls.HTTPHLSNetStream;
+	import org.osmf.media.MediaResourceBase;
 	import org.osmf.net.NetClient;
 	import org.osmf.net.NetStreamCodes;
 	import org.osmf.net.NetStreamUtils;
@@ -17,7 +17,7 @@ package org.denivip.osmf.traits
 	{
 		public static const ALTERNATIVE_VIDEO:String = "alternativeVideo";
 		
-		public function AlternativeVideoTrait(stream:HTTPHLSNetStream, resource:HLSStreamingResource)
+		public function AlternativeVideoTrait(stream:HTTPHLSNetStream, resource:IAlternativeVideoResource)
 		{
 			super(ALTERNATIVE_VIDEO);
 			
@@ -135,7 +135,7 @@ package org.denivip.osmf.traits
 				
 				_transitionInProgress = true;
 				
-				var playArgs:Object = NetStreamUtils.getPlayArgsForResource(_streamingResource);
+				var playArgs:Object = NetStreamUtils.getPlayArgsForResource(MediaResourceBase(_streamingResource));
 				
 				var nso:NetStreamPlayOptions = new NetStreamPlayOptions();
 				nso.start = playArgs.start;
@@ -188,7 +188,7 @@ package org.denivip.osmf.traits
 		protected var _indexToSwitchTo:int = INVALID_TRANSITION_INDEX;
 		
 		private var _netStream:HTTPHLSNetStream = null;
-		private var _streamingResource:HLSStreamingResource;
+		private var _streamingResource:IAlternativeVideoResource;
 		
 		private var _transitionInProgress:Boolean = false;
 		private var _activeTransitionIndex:int = DEFAULT_TRANSITION_INDEX;

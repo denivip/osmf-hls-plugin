@@ -17,5 +17,8 @@ package org.denivip.osmf.plugins
 		
 		// HLSIndexHandler
 		public static var hlsMaxErrors:int = 10;
+		
+		public static var headerParamName:String = null;
+		public static var headerParamValue:String = null;
 	}
 }

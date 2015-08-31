@@ -2,7 +2,6 @@ package org.denivip.osmf.plugins
 {
 	import org.denivip.osmf.elements.M3U8Element;
 	import org.denivip.osmf.elements.M3U8Loader;
-	import org.osmf.elements.LoadFromDocumentElement;
 	import org.osmf.media.MediaElement;
 	import org.osmf.media.MediaFactoryItem;
 	import org.osmf.media.MediaFactoryItemType;

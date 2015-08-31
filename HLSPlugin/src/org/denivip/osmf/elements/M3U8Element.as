@@ -6,7 +6,6 @@ package org.denivip.osmf.elements
 	import org.osmf.elements.XMLLoader;
 	import org.osmf.elements.proxyClasses.LoadFromDocumentLoadTrait;
 	import org.osmf.events.LoadEvent;
-	import org.osmf.media.MediaElement;
 	import org.osmf.media.MediaResourceBase;
 	import org.osmf.net.StreamingXMLResource;
 	import org.osmf.traits.LoadState;

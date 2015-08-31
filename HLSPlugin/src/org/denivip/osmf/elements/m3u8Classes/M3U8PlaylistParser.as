@@ -2,8 +2,10 @@ package org.denivip.osmf.elements.m3u8Classes
 {
 	import flash.events.EventDispatcher;
 	
+	import org.denivip.osmf.net.HLSDynamicStreamingItem;
 	import org.denivip.osmf.net.HLSDynamicStreamingResource;
 	import org.denivip.osmf.net.HLSStreamingResource;
+	import org.denivip.osmf.net.IAlternativeVideoResource;
 	import org.denivip.osmf.utility.Url;
 	import org.osmf.events.ParseEvent;
 	import org.osmf.media.MediaResourceBase;
@@ -105,9 +107,16 @@ package org.denivip.osmf.elements.m3u8Classes
 						width = parseInt(line.match(/RESOLUTION=(\d+)x(\d+)/)[1]);
 						height = parseInt(line.match(/RESOLUTION=(\d+)x(\d+)/)[2]);
 					}
+					var group:String = '';
+					if(line.search(/VIDEO="(.*?)"/) > 0){
+						group = line.match(/VIDEO="(.*?)"/)[1];
+					}
 					
 					var name:String = lines[i+1];
-					streamItems.push(new DynamicStreamingItem(name, bw, width, height));
+					/*if(name.search(/(file|https?):\/\//) != 0){
+						name = baseResource.url.substr(0, baseResource.url.lastIndexOf('/')+1) + name;
+					}*/
+					streamItems.push(new HLSDynamicStreamingItem(name, bw, group, width, height));
 					// store stream name of first stream encountered
 					if(initialStreamName == ''){
 						initialStreamName = name;
@@ -143,21 +152,26 @@ package org.denivip.osmf.elements.m3u8Classes
 					if(line.search(/TYPE=(.*?)\W/) > 0 && line.match(/TYPE=(.*?)\W/)[1] == 'VIDEO'){
 						var vUrl:String;
 						var vName:String;
+						var vGroup:String;
 						if(line.search(/URI="(.*?)"/) > 0){
 							vUrl = line.match(/URI="(.*?)"/)[1];
-							if(vUrl.search(/(file|https?):\/\//) != 0){
+							/*if(vUrl.search(/(file|https?):\/\//) != 0){
 								vUrl = baseResource.url.substr(0, baseResource.url.lastIndexOf('/')+1) + vUrl;
-							}
+							}*/
 						}
 						if(line.search(/NAME="(.*?)"/) > 0){
 							vName = line.match(/NAME="(.*?)"/)[1];
+						}
+						
+						if(line.search(/GROUP-ID="(.*?)"/) > 0){
+							vGroup = line.match(/GROUP-ID="(.*?)"/)[1];
 						}
 						
 						if(!alternateVideo)
 							alternateVideo = new Vector.<StreamingItem>();
 						
 						alternateVideo.push(
-							new StreamingItem(MediaType.VIDEO, vUrl, 0, {label:vName})
+							new StreamingItem(MediaType.VIDEO, vUrl, 0, {label:vName, group:vGroup})
 						);
 					}
 				}
@@ -195,8 +209,8 @@ package org.denivip.osmf.elements.m3u8Classes
 			var httpMetadata:Metadata = new Metadata();
 			result.addMetadataValue(MetadataNamespaces.HTTP_STREAMING_METADATA, httpMetadata);
 			
-			if(alternateVideo && result is HLSStreamingResource){
-				(result as HLSStreamingResource).alternativeVideoStreamItems = alternateVideo;
+			if(alternateVideo && result is IAlternativeVideoResource){
+				(result as IAlternativeVideoResource).alternativeVideoStreamItems = alternateVideo;
 				baseResource['alternativeVideoStreamItems'] = alternateVideo; // f** spike
 			}
 			
