@@ -24,7 +24,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.events.IEventDispatcher;
-	import flash.external.ExternalInterface;
 	import flash.utils.ByteArray;
 	import flash.utils.IDataInput;
 	
@@ -161,7 +160,9 @@ package org.denivip.osmf.net.httpstreaming.hls
 		{
 			var fh:HTTPStreamingMP2TSFileHandler = _fileHandler as HTTPStreamingMP2TSFileHandler;
 			if (fh) {
-				var eof:Boolean = _endOfStream && fh.endOfStream;
+				var eof:Boolean = _endOfStream;
+				var fheof:Boolean = fh.endOfStream;
+				eof = eof && fheof;
 				if (eof) {
 					trace("End of HLS Stream!");
 				}

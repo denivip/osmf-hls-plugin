@@ -77,7 +77,7 @@ package worker
 		
 		protected function processData(event:TimerEvent):void{
 			if (_input.bytesAvailable) {
-				if (!_inputCache.bytesAvailable) {
+				if (!_inputCache.bytesAvailable || _inputCache.bytesAvailable < 187) {
 					//_inputCache.clear();
 					_input.readBytes(_inputCache, _inputCache.length);
 					_input.clear();
@@ -88,6 +88,9 @@ package worker
 			}
 			
 			if(_inputCache.bytesAvailable < 187) {
+				if(_inputCache.bytesAvailable == 0 && _input.bytesAvailable == 0){
+					wtm.send(Messages.DONE);
+				}
 				return;
 			}
 			

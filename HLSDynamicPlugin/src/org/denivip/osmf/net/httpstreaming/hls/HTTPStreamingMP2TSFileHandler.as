@@ -134,12 +134,13 @@ package org.denivip.osmf.net.httpstreaming.hls
 				var msg:String = wtm.receive();
 				trace("["+new Date().toLocaleString()+"]<--- "+msg);
 				
-				if(msg.length>4 && msg.indexOf(Messages.DONE) == 0){
-					var lastProc:Number = Number(msg.substr(5));
+				if(msg.length>=4 && msg.indexOf(Messages.DONE) == 0){
+					/*var lastProc:Number = Number(msg.substr(5));
 					trace("["+new Date().toLocaleString()+"] Finished processing:"+lastProc+" of "+_lastPos);
 					if (this._lastPos == lastProc) {
 						_endOfStream = true;						
-					}
+					}*/
+					_endOfStream = true;
 				} else if (msg == Messages.NOTDONE){
 					_endOfStream = false;
 				} else if (msg == Messages.READY) {
@@ -335,11 +336,14 @@ package org.denivip.osmf.net.httpstreaming.hls
 		}
 		
 		public function get endOfStream():Boolean{
-			if (_endOfStream && (_cachedOutputBytes.length == 0) && (_cachedInputBytes.length == 0)) {
-				trace("["+new Date().toLocaleString()+"] True end of HLS stream achieved");								
-			}
+			trace("["+new Date().toLocaleString()+"] EOF check");
+			trace("cached input bytes ="+_cachedInputBytes.length);
+			trace("cached output bytes ="+_cachedOutputBytes.length);
 			
-			return _endOfStream && (_cachedOutputBytes.length == 0) && (_cachedInputBytes.length == 0);
+			var endOfInput:Boolean = (_cachedInputBytes.length == 0);
+			var endOfOutput:Boolean = (_cachedOutputBytes.length == 0);
+			
+			return _endOfStream && endOfInput && endOfOutput;
 		}
 		
 		CONFIG::LOGGING

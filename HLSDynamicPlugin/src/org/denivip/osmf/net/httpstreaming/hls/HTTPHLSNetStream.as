@@ -552,6 +552,10 @@ package org.denivip.osmf.net.httpstreaming.hls
 				logger.debug("NetStatus event:" + event.info.code);
 			}
 			
+			trace("NetStatus event:" + event.info.code);
+			if(ExternalInterface.available)
+				ExternalInterface.call('console.log', "["+new Date().toLocaleString()+"] NetStatus event: ("+event.info.code+")");
+			
 			switch(event.info.code)
 			{
 				case NetStreamCodes.NETSTREAM_PLAY_START:
@@ -899,11 +903,13 @@ package org.denivip.osmf.net.httpstreaming.hls
 								setState(HTTPStreamingState.WAIT);
 							}
 						}
-						else
+						else if(!isNaN(_duration))
 						{
+							var iTime:int = int(time);
+							var iTTime:int = int(_duration);
 							// if we reached the end of stream then we need stop and
 							// dispatch this event to all our clients.						
-							if (_source.endOfStream)
+							if (iTime >= iTTime && _source.endOfStream)
 							{
 								super.bufferTime = 0.1;
 								CONFIG::LOGGING
@@ -1759,7 +1765,9 @@ package org.denivip.osmf.net.httpstreaming.hls
 			{
 				logger.debug("onScriptData called with mode [" + event.scriptDataMode + "].");
 			}
-
+			
+			_duration = event.scriptDataObject.objects[1].duration;
+			
 			switch (event.scriptDataMode)
 			{
 				case FLVTagScriptDataMode.NORMAL:
@@ -1934,7 +1942,9 @@ package org.denivip.osmf.net.httpstreaming.hls
 		private var _isPlaying:Boolean = false; // true if we're currently playing. see checkIfExtraKickNeeded
 		private var _isPaused:Boolean = false; // true if we're currently paused. see checkIfExtraKickNeeded
 		private var _liveStallStartTime:Date;
-
+		
+		private var _duration:Number = NaN;
+		
 		private static const HIGH_PRIORITY:int = int.MAX_VALUE;
 		
 		CONFIG::LOGGING
