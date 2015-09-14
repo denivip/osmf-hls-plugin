@@ -18,7 +18,6 @@ package org.denivip.osmf.elements.m3u8Classes
 	import org.osmf.net.StreamType;
 	import org.osmf.net.StreamingItem;
 	import org.osmf.net.StreamingURLResource;
-	import org.osmf.net.qos.QualityLevel;
 	
 	CONFIG::LOGGING {
 		import org.osmf.logging.Log;
@@ -196,6 +195,7 @@ package org.denivip.osmf.elements.m3u8Classes
 					tempStreamingRes = HLSStreamingResource.createHLSResource(baseResource as StreamingURLResource);
 					if(tempStreamingRes){
 						var url:String = Url.absolute(tempDynamicRes.host, tempDynamicRes.streamItems[0].streamName);
+						
 						result = new HLSStreamingResource(
 							url,
 							tempStreamingRes.streamType,
@@ -205,6 +205,9 @@ package org.denivip.osmf.elements.m3u8Classes
 							tempStreamingRes.urlIncludesFMSApplicationInstance,
 							tempStreamingRes.drmContentData
 						);
+						
+						if(alternateVideo)
+							HLSStreamingResource(result).baseUrl = tempDynamicRes.host;
 					}
 				}else{
 					if(baseResource.getMetadataValue(MetadataNamespaces.RESOURCE_INITIAL_INDEX) != null){

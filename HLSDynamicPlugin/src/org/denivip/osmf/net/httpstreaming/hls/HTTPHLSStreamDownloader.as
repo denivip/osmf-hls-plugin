@@ -27,7 +27,6 @@ package org.denivip.osmf.net.httpstreaming.hls
 	import flash.events.ProgressEvent;
 	import flash.events.SecurityErrorEvent;
 	import flash.events.TimerEvent;
-	import flash.external.ExternalInterface;
 	import flash.net.URLRequest;
 	import flash.net.URLStream;
 	import flash.utils.ByteArray;

@@ -3,6 +3,7 @@ package org.denivip.osmf.net
 	import flash.utils.ByteArray;
 	
 	import org.denivip.osmf.net.httpstreaming.hls.HLSStreamInfo;
+	import org.denivip.osmf.utility.Url;
 	import org.osmf.net.StreamingItem;
 	import org.osmf.net.StreamingURLResource;
 	
@@ -29,6 +30,8 @@ package org.denivip.osmf.net
 			super(url, streamType, clipStartTime, clipEndTime, connectionArguments, urlIncludesFMSApplicationInstance, drmContentData);
 		}
 		
+		public var baseUrl:String;
+		
 		public function get alternativeVideoStreamItems():Vector.<StreamingItem>
 		{
 			if (_alternativeVideoStreamItems == null)
@@ -43,7 +46,8 @@ package org.denivip.osmf.net
 		}
 		
 		public function alternativeVideoStream(name:String, quality:int):Vector.<HLSStreamInfo>{
-			return Vector.<HLSStreamInfo>([new HLSStreamInfo(name, 0)]);
+			var url:String = Url.absolute(baseUrl, name);
+			return Vector.<HLSStreamInfo>([new HLSStreamInfo(url, 0)]);
 		}
 		
 		private var _alternativeVideoStreamItems:Vector.<StreamingItem> = null;

@@ -10,7 +10,6 @@ package org.denivip.osmf.elements
 	import flash.net.URLRequestHeader;
 	import flash.net.URLRequestMethod;
 	import flash.net.URLVariables;
-	import flash.utils.getTimer;
 	
 	import org.denivip.osmf.elements.m3u8Classes.M3U8PlaylistParser;
 	import org.denivip.osmf.net.httpstreaming.hls.HTTPStreamingHLSNetLoader;
@@ -161,16 +160,6 @@ package org.denivip.osmf.elements
 			updateLoadTrait(loadTrait, LoadState.LOADING);
 			
 			var request:URLRequest = new URLRequest();
-			if(HLSSettings.headerParamName){
-				var header:Array = [
-					new URLRequestHeader(HLSSettings.headerParamName, HLSSettings.headerParamValue)
-				];
-				request.requestHeaders = header;
-				var formVars:URLVariables = new URLVariables();
-				formVars.blah = "blue";
-				request.data = formVars;
-				request.method = URLRequestMethod.POST;
-			}
 			request.url = URLResource(loadTrait.resource).url;
 			
 			_playlistLoader = new URLLoader();

@@ -25,10 +25,7 @@
  
 package org.denivip.osmf.net.httpstreaming.hls
 {	
-	import com.hurlant.crypto.symmetric.NullPad;
-	
 	import flash.events.Event;
-	import flash.sampler.NewObjectSample;
 	import flash.system.MessageChannel;
 	import flash.system.Worker;
 	import flash.system.WorkerDomain;
