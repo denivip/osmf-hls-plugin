@@ -158,6 +158,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 		 */
 		public function get endOfStream():Boolean
 		{
+			return _endOfStream;
+			/*
 			var fh:HTTPStreamingMP2TSFileHandler = _fileHandler as HTTPStreamingMP2TSFileHandler;
 			if (fh) {
 				var eof:Boolean = _endOfStream;
@@ -170,6 +172,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 			} else {
 				return _endOfStream;
 			}
+			*/
 		}
 		
 		/**

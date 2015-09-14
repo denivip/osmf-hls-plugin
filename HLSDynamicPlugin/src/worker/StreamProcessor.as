@@ -88,9 +88,9 @@ package worker
 			}
 			
 			if(_inputCache.bytesAvailable < 187) {
-				if(_inputCache.bytesAvailable == 0 && _input.bytesAvailable == 0){
+				/*if(_inputCache.bytesAvailable == 0 && _input.bytesAvailable == 0){
 					wtm.send(Messages.DONE);
-				}
+				}*/
 				return;
 			}
 			
