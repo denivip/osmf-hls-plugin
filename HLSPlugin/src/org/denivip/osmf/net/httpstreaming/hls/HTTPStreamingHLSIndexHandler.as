@@ -25,9 +25,6 @@
  package org.denivip.osmf.net.httpstreaming.hls
 {
 	import flash.net.URLRequest;
-	import flash.net.URLRequestHeader;
-	import flash.net.URLRequestMethod;
-	import flash.net.URLVariables;
 	import flash.utils.ByteArray;
 	import flash.utils.getQualifiedClassName;
 	import flash.utils.getTimer;
@@ -135,16 +132,6 @@
 			}
 			
 			var request:URLRequest = new URLRequest();
-			if(HLSSettings.headerParamName){
-				var header:Array = [
-					new URLRequestHeader(HLSSettings.headerParamName, HLSSettings.headerParamValue)
-				];
-				request.requestHeaders = header;
-				var formVars:URLVariables = new URLVariables();
-				formVars.blah = "blue";
-				request.data = formVars;
-				request.method = URLRequestMethod.POST;
-			}
 			request.url = _streamURLs[index];
 			
 			dispatchEvent(new HTTPStreamingIndexHandlerEvent(HTTPStreamingIndexHandlerEvent.REQUEST_LOAD_INDEX, false, false, false, NaN, null, null, request, index, true));
@@ -293,12 +280,6 @@
 							keyRequest = new Array(keyItem, quality);
 							
 							var request:URLRequest = new URLRequest();
-							if(HLSSettings.headerParamName){
-								var header:Array = [
-									new URLRequestHeader(HLSSettings.headerParamName, HLSSettings.headerParamValue)
-								];
-								request.requestHeaders = header;
-							}
 							request.url = keyUrl;
 							
 							dispatchEvent(new HTTPStreamingIndexHandlerEvent(HTTPStreamingIndexHandlerEvent.REQUEST_LOAD_INDEX, false, false, false, NaN, null, null, request, keyRequest, true));
@@ -424,16 +405,6 @@
 					}
 					
 					var urlrequest:URLRequest = new URLRequest();
-					if(HLSSettings.headerParamName){
-						var header:Array = [
-							new URLRequestHeader(HLSSettings.headerParamName, HLSSettings.headerParamValue)
-						];
-						urlrequest.requestHeaders = header;
-						var formVars:URLVariables = new URLVariables();
-						formVars.blah = "blue";
-						urlrequest.data = formVars;
-						urlrequest.method = URLRequestMethod.POST;
-					}
 					urlrequest.url = _rateVec[quality].url;
 					
 					dispatchEvent(new HTTPStreamingIndexHandlerEvent(HTTPStreamingIndexHandlerEvent.REQUEST_LOAD_INDEX, false, false, item.isLive, 0, _streamNames, _streamQualityRates, urlrequest, quality, false));						
@@ -514,12 +485,6 @@
 			if(!_rateVec[quality]){
 				if(_streamQualityRates.length > quality){
 					var request:URLRequest = new URLRequest();
-					if(HLSSettings.headerParamName){
-						var header:Array = [
-							new URLRequestHeader(HLSSettings.headerParamName, HLSSettings.headerParamValue)
-						];
-						request.requestHeaders = header;
-					}
 					request.url = _streamURLs[quality];
 					
 					dispatchEvent(new HTTPStreamingIndexHandlerEvent(HTTPStreamingIndexHandlerEvent.REQUEST_LOAD_INDEX, false, false, false, NaN, null, null, request, quality, true));

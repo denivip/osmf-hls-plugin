@@ -62,7 +62,7 @@ package org.denivip.osmf.elements
 		override public function get resource():MediaResourceBase
 		{
 			return _resource;
-		}		
+		}
 		
 		// Internals
 		//
@@ -73,7 +73,7 @@ package org.denivip.osmf.elements
 			removeTrait(MediaTraitType.LOAD);
 			
 			proxiedElement = loadTrait.mediaElement;
-		}		
+		}
 		
 		private function onLoadStateChange(event:LoadEvent):void
 		{

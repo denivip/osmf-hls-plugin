@@ -11,27 +11,20 @@
 	<fx:Script>
 		<![CDATA[
 			import flash.events.NetStatusEvent;
-			import flash.events.TimerEvent;
 			import flash.net.NetStream;
-			import flash.system.Security;
-			import flash.utils.Timer;
 			
 			import mx.collections.ArrayCollection;
 			import mx.events.FlexEvent;
-			import mx.events.IndexChangedEvent;
 			
 			import org.denivip.osmf.plugins.HLSPluginInfo;
 			import org.osmf.containers.MediaContainer;
-			import org.osmf.elements.DurationElement;
 			import org.osmf.events.AlternativeAudioEvent;
-			import org.osmf.events.BufferEvent;
 			import org.osmf.events.HTTPStreamingEvent;
 			import org.osmf.events.LoadEvent;
 			import org.osmf.events.MediaErrorEvent;
 			import org.osmf.events.MediaFactoryEvent;
 			import org.osmf.events.MediaPlayerCapabilityChangeEvent;
 			import org.osmf.events.MediaPlayerStateChangeEvent;
-			import org.osmf.events.PlayEvent;
 			import org.osmf.events.TimeEvent;
 			import org.osmf.layout.HorizontalAlign;
 			import org.osmf.layout.LayoutMetadata;
@@ -47,23 +40,14 @@
 			import org.osmf.media.MediaResourceBase;
 			import org.osmf.media.PluginInfoResource;
 			import org.osmf.media.URLResource;
-			import org.osmf.metadata.Metadata;
-			import org.osmf.metadata.MetadataNamespaces;
-			import org.osmf.net.DynamicStreamingItem;
-			import org.osmf.net.NetStreamAlternativeAudioTrait;
-			import org.osmf.net.NetStreamBufferTrait;
-			import org.osmf.net.NetStreamCodes;
 			import org.osmf.net.NetStreamLoadTrait;
 			import org.osmf.net.StreamingItem;
 			import org.osmf.net.StreamingURLResource;
-			import org.osmf.traits.AlternativeAudioTrait;
 			import org.osmf.traits.LoadState;
 			import org.osmf.traits.MediaTraitBase;
 			import org.osmf.traits.MediaTraitType;
-			import org.osmf.traits.PlayState;
 			import org.osmf.utils.OSMFSettings;
 			
-			import spark.components.supportClasses.DropDownController;
 			import spark.events.IndexChangeEvent;
 			
 			/**
