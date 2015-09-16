@@ -16,6 +16,8 @@
 			import mx.collections.ArrayCollection;
 			import mx.events.FlexEvent;
 			
+			import spark.events.IndexChangeEvent;
+			
 			import org.denivip.osmf.plugins.HLSPluginInfo;
 			import org.osmf.containers.MediaContainer;
 			import org.osmf.events.AlternativeAudioEvent;
@@ -47,8 +49,6 @@
 			import org.osmf.traits.MediaTraitBase;
 			import org.osmf.traits.MediaTraitType;
 			import org.osmf.utils.OSMFSettings;
-			
-			import spark.events.IndexChangeEvent;
 			
 			/**
 			 * @private
@@ -145,6 +145,13 @@
 			{
 				var currentTime:Date = new Date();
 				trace("NetStatus event:" + event.info.code + "[" + currentTime + "]");
+				
+				if(event.info.code == "NetStream.Seek.Notify"){
+					var timeDiff:Number = Math.abs(player.currentTime - latestSeekTarget);
+					if(timeDiff > 0.1)
+						player.seek(latestSeekTarget);
+				}
+				
 			}
 			
 			private function onDownloadError(event:HTTPStreamingEvent):void
@@ -407,7 +414,9 @@
 
 			private function onSeekRequest():void
 			{
-				var seekTarget:Number = sldSeek.value;	
+				var seekTarget:Number = sldSeek.value;
+				latestSeekTarget = seekTarget;
+				
 				if (player.canSeek)
 					player.seek(seekTarget);
 			}
@@ -524,6 +533,8 @@
 			
 			private var seekedToLive:Boolean = false;
 			
+			private var latestSeekTarget:Number;
+			
 			[Bindable]
 			protected var streams:ArrayCollection = null;
 			
@@ -537,6 +548,10 @@
 					{
 						label:"Test1",
 						data:"http://www.codecomposer.net/hls/playlist.m3u8"
+					},
+					{
+						label:"Test2",
+						data:"https://84fe5b423dfef37189c5-df1cfed6c5272ff7ad9ab0ba69bfbe57.ssl.cf2.rackcdn.com/playlist.m3u8"
 					}
 				];
 
