@@ -30,6 +30,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 	import org.denivip.osmf.events.HTTPHLSStreamingEvent;
 	import org.denivip.osmf.net.HLSDynamicStreamingResource;
 	import org.denivip.osmf.net.IAlternativeVideoResource;
+	import org.denivip.osmf.plugins.HLSSettings;
 	import org.osmf.events.DVRStreamInfoEvent;
 	import org.osmf.events.HTTPStreamingEvent;
 	import org.osmf.events.HTTPStreamingIndexHandlerEvent;
@@ -455,6 +456,11 @@ package org.denivip.osmf.net.httpstreaming.hls
 					_fragmentDuration = -1;
 					_endOfStream = false;
 					
+					if(_chunksLoaded >= HLSSettings.maxLoadedChunks){
+						setState(HTTPStreamingState.BEGIN_FRAGMENT);
+						break;
+					}
+					
 					// Ask the index handler to provide the url for 
 					// the next chunk of data we need to load.
 					var wasSeek:Boolean = false;
@@ -505,8 +511,10 @@ package org.denivip.osmf.net.httpstreaming.hls
 								logger.debug("downloader.open "+_request.url);
 							}
 							_downloader.open(_request.urlRequest, downloaderMonitor, OSMFSettings.hdsFragmentDownloadTimeout);
+							_chunksLoaded++;
 							
 							trace("["+new Date().toLocaleString()+"] ----> Start load chunk: ("+_request.url+")");
+							trace("["+new Date().toLocaleString()+"] ----> Chunks loaded: "+_chunksLoaded);
 							
 							setState(HTTPStreamingState.BEGIN_FRAGMENT);
 							break;
@@ -623,6 +631,11 @@ package org.denivip.osmf.net.httpstreaming.hls
 							ExternalInterface.call('console.log', "["+new Date().toLocaleString()+"] ----> "+msg);
 						*/
 						
+						bytes = _fileHandler.processFileSegment(input);
+						if(bytes){
+							_chunksLoaded = 0;
+						}
+						
 						if (input != null)
 						{
 							if(_discontinuityOnNextSegment){
@@ -636,14 +649,17 @@ package org.denivip.osmf.net.httpstreaming.hls
 							
 							var input_l:int = input.bytesAvailable;
 							
-							bytes = _fileHandler.processFileSegment(input);
 							if(bytes != null){
-								trace("["+new Date().toLocaleString()+"] ----> Sent "+input_l.toString()+" bytes to fileHandler. Got "+bytes.length+" bytes processed");
-								
+								var msg_t:String = "Sent "+input_l.toString()+" bytes";
+								trace("["+new Date().toLocaleString()+"] ----> "+msg_t+" to fileHandler. Got "+bytes.length+" bytes processed");
+								//trace('reset loaded chunks counter');
+								//_chunksLoaded = 0;
 							}
 						}
 						else
 						{
+							//trace('reset loaded chunks counter');
+							//_chunksLoaded = 0;
 							/*trace("["+new Date().toLocaleString()+"] ----> I don't have some bytes :(");
 							if(ExternalInterface.available)
 								ExternalInterface.call('console.log', "["+new Date().toLocaleString()+"] ----> I don't have some bytes :(");
@@ -1021,6 +1037,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 			_desiredQualityLevel = -1;
 			_desiredQualityStreamName = null;
 			_qualityLevelChanged = false;
+			_chunksLoaded = 0;
 			
 			_dispatcher.dispatchEvent(
 				new HTTPStreamingEvent(
@@ -1055,6 +1072,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 			}
 			
 			_videoStreamChanged = false;
+			_chunksLoaded = 0;
 			_indexInfo['streams'] = IAlternativeVideoResource(_resource).alternativeVideoStream(_streamName, _qualityLevel); //new HLSStreamInfo(_streamName, 0);
 			var args:Object = {};
 			args.indexInfo = _indexInfo;
@@ -1173,6 +1191,8 @@ package org.denivip.osmf.net.httpstreaming.hls
 		private var _isLiveStalled:Boolean = false;
 		
 		private var _discontinuityOnNextSegment:Boolean = false;
+		
+		private var _chunksLoaded:int = 0;
 		
 		CONFIG::LOGGING
 		{

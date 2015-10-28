@@ -6,6 +6,7 @@ package org.denivip.osmf.elements.m3u8Classes
 	import org.denivip.osmf.net.HLSDynamicStreamingResource;
 	import org.denivip.osmf.net.HLSStreamingResource;
 	import org.denivip.osmf.net.IAlternativeVideoResource;
+	import org.denivip.osmf.plugins.HLSSettings;
 	import org.denivip.osmf.utility.Url;
 	import org.osmf.events.ParseEvent;
 	import org.osmf.media.MediaResourceBase;
@@ -228,7 +229,7 @@ package org.denivip.osmf.elements.m3u8Classes
 			
 			if(alternateVideo && result is IAlternativeVideoResource){
 				(result as IAlternativeVideoResource).alternativeVideoStreamItems = alternateVideo;
-				baseResource['alternativeVideoStreamItems'] = alternateVideo; // f** spike
+				baseResource.addMetadataValue(HLSSettings.ALTERNATIVE_VIDEO_METADATA, alternateVideo); // f** spike
 			}
 			
 			if(alternateAudio && result is StreamingURLResource){

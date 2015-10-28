@@ -7,13 +7,9 @@ package org.denivip.osmf.elements
 	import flash.events.SecurityErrorEvent;
 	import flash.net.URLLoader;
 	import flash.net.URLRequest;
-	import flash.net.URLRequestHeader;
-	import flash.net.URLRequestMethod;
-	import flash.net.URLVariables;
 	
 	import org.denivip.osmf.elements.m3u8Classes.M3U8PlaylistParser;
 	import org.denivip.osmf.net.httpstreaming.hls.HTTPStreamingHLSNetLoader;
-	import org.denivip.osmf.plugins.HLSSettings;
 	import org.osmf.elements.VideoElement;
 	import org.osmf.elements.proxyClasses.LoadFromDocumentLoadTrait;
 	import org.osmf.events.MediaError;

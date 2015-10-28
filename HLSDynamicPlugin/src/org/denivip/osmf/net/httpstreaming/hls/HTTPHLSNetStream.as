@@ -905,7 +905,7 @@ package org.denivip.osmf.net.httpstreaming.hls
 						}
 						else if(!isNaN(_duration))
 						{
-							var iTime:int = Math.round(time);
+							var iTime:int = Math.ceil(time);
 							var iTTime:int = int(_duration);
 							// if we reached the end of stream then we need stop and
 							// dispatch this event to all our clients.						

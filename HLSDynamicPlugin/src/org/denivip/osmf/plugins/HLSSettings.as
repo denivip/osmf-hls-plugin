@@ -5,6 +5,9 @@ package org.denivip.osmf.plugins
 	public class HLSSettings
 	{
 		public static const NAMESPACE:String = "org.denivip.osmf.hls";
+		public static const ALTERNATIVE_VIDEO_METADATA:String = "alternative.video.stream.items";
+		
+		public static var maxLoadedChunks		:int = 3;//int.MAX_VALUE;
 		
 		// Buffer control
 		public static var hlsBufferSizePause	:Number = 64;

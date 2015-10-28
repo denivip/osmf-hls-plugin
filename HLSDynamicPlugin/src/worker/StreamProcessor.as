@@ -16,6 +16,7 @@ package worker
 	public class StreamProcessor extends Sprite
 	{
 		private static const PROCESS_INTERVAL:int = 1000;
+		private static const DECRYPT_CHUNK_SIZE:int = 2048;
 		
 		private var _syncFound:Boolean;
 		private var _pmtPID:uint;
@@ -282,7 +283,7 @@ package worker
 							} else {
 								var bytesLeft:uint = input.bytesAvailable - 176;
 								if (bytesLeft > 0 && bytesLeft < 15) {
-									if (!decryptToBuffer(input, input.bytesAvailable)) {
+									if (!decryptToBuffer(input, DECRYPT_CHUNK_SIZE)) {
 										break;
 									}
 								} else {
@@ -403,6 +404,7 @@ package worker
 		// service funcs
 		private function decryptToBuffer(input:ByteArray, blockSize:int):Boolean{
 			if (_key) {
+				//trace('---------------------> decryption!');
 				// Clear buffer
 				if (_decryptBuffer.bytesAvailable == 0) {
 					_decryptBuffer.clear();
@@ -452,6 +454,7 @@ package worker
 		
 		private function processPacket(packet:ByteArray):ByteArray
 		{
+			//trace('---------------------> processing!');
 			// decode rest of transport stream prefix (after the 0x47 flag byte)
 			
 			// top of second byte

@@ -48,13 +48,13 @@ package org.denivip.osmf.net
 		
 		public function get alternativeVideoStreamItems():Vector.<StreamingItem>
 		{
-			/*
+			
 			if (_alternativeVideoStreamItems == null)
 			{
-				_alternativeVideoStreamItems = new Vector.<StreamingItem>();
+				_alternativeVideoStreamItems = [];
 			}
-			*/
-			return _alternativeVideoStreamItems[_currentQuality];
+			
+			return (_alternativeVideoStreamItems.length > 0) ? _alternativeVideoStreamItems[_currentQuality] : null;
 		}
 		public function set alternativeVideoStreamItems(value:Vector.<StreamingItem>):void
 		{
