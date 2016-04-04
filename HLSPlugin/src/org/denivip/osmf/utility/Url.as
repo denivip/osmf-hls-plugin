@@ -24,6 +24,11 @@ package org.denivip.osmf.utility
 			if (url.search(/(ftp|file|https?):\/\//) == 0)
 				return url;
 						
+			var queryStringStart:Number = rootUrl.indexOf('?');
+			if (queryStringStart != -1) {
+				rootUrl = rootUrl.substr(0, queryStringStart);
+			}
+
 			if (url.charAt(0) == '/') {
 				var urlParts:Array = rootUrl.split('/', 4);
 				rootUrl = urlParts[2]
